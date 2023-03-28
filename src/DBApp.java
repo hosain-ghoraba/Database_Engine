@@ -165,10 +165,111 @@ init();
 
 
     public void updateTable(String strTableName,String strClusteringKeyValue,Hashtable<String,Object> htblColNameValue )throws DBAppException{
+    	
+    	if(!listofCreatedTables.contains(strTableName))
+            throw new DBAppException("You cannot update a table that has not been created yet");
+    	
+    	//1- fetch the table from the disk
+    	String path = "src/resources/tables/" + strTableName + "/" + strTableName + ".ser";
+        Table tblToUpdate = (Table) deserialize(path);
+        
+        Enumeration<Page> strEnumeration = (Enumeration<Page>) tblToUpdate.getVecPages();
+        while (strEnumeration.hasMoreElements()) {
+        	int clusteringKeyIndex = strEnumeration.nextElement().getPid(); 
+        }
+        
+        
+        
+        
+        
+        if (!tblToUpdate.getStrClusteringKeyColumn().contains(strClusteringKeyValue)) {
+            throw new DBAppException("Clustering key value not found in table " + strTableName);
+        }
+        
+        
+        
+        
+//        //2- update the row in the table
+//        Enumeration<String> strEnumeration = htblColNameValue.keys();
+//        while (strEnumeration.hasMoreElements()){
+//            String strColName = strEnumeration.nextElement();
+//            Column c = tblToUpdate.getColumn(strColName);
+//            //if this Column does not exist , throw exception
+//            if(!tblToUpdate.getVecColumns().contains(strColName))
+//                throw new DBAppException("No such column");
+//            //get the value
+//            Object strColValue = htblColNameValue.get(strColName);
+//            //check the value type
+//            try {
+//				tblToUpdate.validateValueType(c, strColValue);
+//
+//				// if it is the value of the clustering kry, insert into the first cell
+//				if (strColName.equals(tblToUpdate.getStrClusteringKeyColumn())) {
+//					int a;
+//				}
+//				
+//
+//				
+//			} 
+//			catch (DBAppException dbe) {
+//                dbe.printStackTrace();
+//				throw new DBAppException(dbe.getMessage());
+//			}
+//        }
+        
+            
+            
+          //3-return table back to disk after update
+            serialize(path,tblToUpdate);
 
     }
-    public void deleteFromTable(String strTableName,Hashtable<String,Object> htblColNameValue)throws DBAppException{
-      listofCreatedTables.remove(strTableName);
+    public void deleteFromTable(String strTableName,Hashtable<String,Object> htblColNameValue)throws DBAppException, ParseException{
+//		listofCreatedTables.remove(strTableName);
+		
+		if(!listofCreatedTables.contains(strTableName))
+            throw new DBAppException("You cannot update a table that has not been created yet");
+	
+	    //1- fetch the table from the disk
+	    String path = "src/resources/tables/" + strTableName + "/" + strTableName + ".ser";
+        Table tblToUpdate = (Table) deserialize(path);
+    
+      //2- delete the row from the table
+        Enumeration<String> strEnumeration = htblColNameValue.keys();
+        while (strEnumeration.hasMoreElements()){
+            String strColName = strEnumeration.nextElement();
+            Column c = tblToUpdate.getColumn(strColName);
+            //if this Column does not exist , throw exception
+            if(!tblToUpdate.getVecColumns().contains(strColName))
+                throw new DBAppException("No such column");
+            //get the value
+            Object strColValue = htblColNameValue.get(strColName);
+          //check the value type
+            try {
+        	    tblToUpdate.validateValueType(c,strColValue);
+        	
+        	    // if it is the value of the clustering kry, insert into the first cell
+                if(strColName.equals(tblToUpdate.getStrClusteringKeyColumn())) {
+                	int a;
+                }
+            	
+            }
+            catch (DBAppException dbe){
+                dbe.printStackTrace();
+                throw new DBAppException(dbe.getMessage());
+            }
+        }
+        
+        int i = 0;
+    
+       //3- delete page if empty
+        while (!tblToUpdate.getVecPages().isEmpty()){
+        Page pagetodelete =  tblToUpdate.getVecPages().get(i);
+            if (pagetodelete.getNoOfCurrentRows() == 0)
+              tblToUpdate.getVecPages().remove(pagetodelete.getPid());
+        }
+    
+      //4-return table back to disk after update
+        serialize(path,tblToUpdate);
     }
    //    public static Iterator selectFromTable(SQLTerm[] arrSQLTerms,String[] strarrOperators)throws DBAppException{
   //  }
