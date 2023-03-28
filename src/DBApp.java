@@ -220,6 +220,7 @@ d.insertIntoTable("University",htColNameVal2);
 Table x = (Table)deserialize("src/resources/tables/University/University.ser");
 
 System.out.println(x.toString());
+        System.out.println("hello");
 
 // 0,2,1,3
 // 0,2,3,1
