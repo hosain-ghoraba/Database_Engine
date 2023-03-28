@@ -307,6 +307,19 @@ ______
         return strTblOutput;
 
     }
+    
+    
+    public Row findRowToUpdORdel(Object key, int candidateIdx) {
+		Vector<Row> candidatePageData =vecPages.get(candidateIdx).getData() ;
+		
+		for (Row row : candidatePageData) {
+			if (row.getData().get(0).equals(key)) {//the clustering key
+				return row;
+			}
+		}
+		
+		return null;
+	}
 
 }
 

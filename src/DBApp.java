@@ -234,6 +234,8 @@ init();
         Table tblToUpdate = (Table) deserialize(path);
     
       //2- delete the row from the table   (not yet deleted)
+        Object clusteringKeyVal = null;
+        
         Enumeration<String> strEnumeration = htblColNameValue.keys();
         while (strEnumeration.hasMoreElements()){
             String strColName = strEnumeration.nextElement();
@@ -247,9 +249,9 @@ init();
             try {
         	    tblToUpdate.validateValueType(c,strColValue);
         	
-        	    // if it is the value of the clustering kry, insert into the first cell
+        	    // if it is the value of the clustering key, insert into the first cell
                 if(strColName.equals(tblToUpdate.getStrClusteringKeyColumn())) {
-                	int a;
+                	clusteringKeyVal = strColValue;
                 }
             	
             }
@@ -259,14 +261,28 @@ init();
             }
         }
         
+        if(clusteringKeyVal != null) {
+        	int candidateIdx = tblToUpdate.binarySrch(clusteringKeyVal);
+        	Page candidatePage = tblToUpdate.getVecPages().get(candidateIdx);
+        
+        	Row rowtodelete = tblToUpdate.findRowToUpdORdel(clusteringKeyVal, candidateIdx);
+        	
+        	candidatePage.deleteEntry(rowtodelete);
+        	
+        
+        }
         int i = 0;
     
        //3- delete page if empty
         int size = tblToUpdate.getVecPages().size();
-        while (!tblToUpdate.getVecPages().isEmpty() && size-->0){
+        while (!tblToUpdate.getVecPages().isEmpty() && i<size){
         Page pagetodelete =  tblToUpdate.getVecPages().get(i);
-            if (pagetodelete.getNoOfCurrentRows() == 0)
-              tblToUpdate.getVecPages().remove(pagetodelete.getPid());
+            if (pagetodelete.isEmpty()) {
+	           tblToUpdate.getVecPages().remove(pagetodelete.getPid());
+	           size--;
+            }else {
+				i++;
+			}
         }
     
       //4-return table back to disk after update
@@ -276,56 +292,60 @@ init();
   //  }
 
     public static void main(String[] args) throws DBAppException,InterruptedException,ParseException {
+    	
+    	starty();
 
-DBApp d = new DBApp();
-Hashtable<String,String> htNameType = new Hashtable<>();
-htNameType.put("Id","java.lang.Integer");
-htNameType.put("Name","java.lang.String");
-htNameType.put("Job","java.lang.String");
-Hashtable<String,String> htNameMin = new Hashtable<>();
-htNameMin.put("Id","1");
-htNameMin.put("Name","AAA");
-htNameMin.put("Job","blacksmith");
-Hashtable<String,String> htNameMax = new Hashtable<>();
-htNameMax.put("Id","1000");
-htNameMax.put("Name","zaky");
-htNameMax.put("Job","zzz");
+		DBApp d = new DBApp();
+		Hashtable<String, String> htNameType = new Hashtable<>();
+		htNameType.put("Id", "java.lang.Integer");
+		htNameType.put("Name", "java.lang.String");
+		htNameType.put("Job", "java.lang.String");
+		Hashtable<String, String> htNameMin = new Hashtable<>();
+		htNameMin.put("Id", "1");
+		htNameMin.put("Name", "AAA");
+		htNameMin.put("Job", "blacksmith");
+		Hashtable<String, String> htNameMax = new Hashtable<>();
+		htNameMax.put("Id", "1000");
+		htNameMax.put("Name", "zaky");
+		htNameMax.put("Job", "zzz");
 
-d.createTable("University","Id",htNameType,htNameMin,htNameMax);
-Hashtable<String,Object> htColNameVal0 = new Hashtable<>();
-htColNameVal0.put("Id" , 23 );
-htColNameVal0.put("Name",new String("ahmed"));
-htColNameVal0.put("Job" , new String("blacksmith"));
+		d.createTable("University", "Id", htNameType, htNameMin, htNameMax);
+		Hashtable<String, Object> htColNameVal0 = new Hashtable<>();
+		htColNameVal0.put("Id", 23);
+		htColNameVal0.put("Name", new String("ahmed"));
+		htColNameVal0.put("Job", new String("blacksmith"));
 
-Hashtable<String,Object> htColNameVal1 = new Hashtable<>();
-htColNameVal1.put("Id" , 33 );
-htColNameVal1.put("Name",new String("ali"));
-htColNameVal1.put("Job" , new String("engineer"));
+		Hashtable<String, Object> htColNameVal1 = new Hashtable<>();
+		htColNameVal1.put("Id", 33);
+		htColNameVal1.put("Name", new String("ali"));
+		htColNameVal1.put("Job", new String("engineer"));
 
-Hashtable<String,Object> htColNameVal2 = new Hashtable<>();
-htColNameVal2.put("Id" , 11 );
-htColNameVal2.put("Name",new String("dani"));
-htColNameVal2.put("Job" , new String("doctor"));
+		Hashtable<String, Object> htColNameVal2 = new Hashtable<>();
+		htColNameVal2.put("Id", 11);
+		htColNameVal2.put("Name", new String("dani"));
+		htColNameVal2.put("Job", new String("doctor"));
 
+		Hashtable<String, Object> htColNameVal3 = new Hashtable<>();
+		htColNameVal3.put("Id", 15);
+		htColNameVal3.put("Job", new String("teacher"));
+		htColNameVal3.put("Name", new String("basem"));
 
-Hashtable<String,Object> htColNameVal3 = new Hashtable<>();
-htColNameVal3.put("Id" , 15 );
-        htColNameVal3.put("Job" , new String("teacher"));
-htColNameVal3.put("Name",new String("basem"));
+		
+		//insertion test
+		d.insertIntoTable("University", htColNameVal0);
+		d.insertIntoTable("University", htColNameVal1);
+		d.insertIntoTable("University", htColNameVal3);
+		d.insertIntoTable("University", htColNameVal2);
 
+		
+		//deletion test
+		d.deleteFromTable("University", htColNameVal0);
+		d.deleteFromTable("University", htColNameVal1);
 
-d.insertIntoTable("University",htColNameVal0);
-d.insertIntoTable("University",htColNameVal1);
-d.insertIntoTable("University",htColNameVal3);
-d.insertIntoTable("University",htColNameVal2);
+		Table x = (Table) deserialize("src/resources/tables/University/University.ser");
 
-//d.deleteFromTable("University", htColNameVal0);
-//d.deleteFromTable("University", htColNameVal1);
-
-Table x = (Table)deserialize("src/resources/tables/University/University.ser");
-
-System.out.println(x.toString());
-        System.out.println("hello");
+		System.out.println(x.toString());
+		System.out.println("Hello, Database World!");
 
 // 0,2,1,3
 // 0,2,3,1
@@ -354,9 +374,9 @@ System.out.println(x.toString());
     }
 
 */
-
+		endy();
     }
-}
+
 //Iterator class
 // Make a collection
         /*ArrayList<String> cars = new ArrayList<String>();
@@ -393,3 +413,17 @@ Trying to remove items using a for loop or a for-each loop would not work correc
  because the collection is changing size at the same time that the code is trying to loop
 
          */
+
+
+
+
+private static long start, end;
+
+public static void starty() {
+	if(start==0)	start =System.currentTimeMillis();
+}
+public static void endy() {
+	end =System.currentTimeMillis();
+	System.out.println('\n'+"exited with execution time: " /*+start+" " +start+" "*/ + ((float)(end-start))/1000+ "_seconds");
+}
+}

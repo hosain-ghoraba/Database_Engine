@@ -28,12 +28,30 @@ public class Page implements Serializable {
         data.add(entry);
         noOfCurrentRows++;
         Collections.sort(data);
-        minValInThePage = data.get(0).getData().get(0); // minValueOfThPage is the primary key value of the first tuple
-        maxValInThePage = data.get(data.size()-1).getData().get(0);// maxValueOfThPage is the primary key value of the last tuple
+    	if(!isEmpty()) {
+    		minValInThePage = data.get(0).getData().get(0); // minValueOfThPage is the primary key value of the first tuple
+        	maxValInThePage = data.get(data.size()-1).getData().get(0);// maxValueOfThPage is the primary key value of the last tuple
+    	}
         DBApp.serialize(path,data);
 
 
     }
+    
+    public void deleteEntry(Row entry) throws DBAppException {
+    	DBApp.serialize(path, data);
+    	if(entry != null) {
+    		data.remove(entry);
+    		setNoOfCurrentRowsBYOFFSET(-1);
+    		if(!isEmpty()) {
+    			minValInThePage = data.get(0).getData().get(0); // minValueOfThPage is the primary key value of the first tuple
+    			maxValInThePage = data.get(data.size()-1).getData().get(0);// maxValueOfThPage is the primary key value of the last tuple
+    		}
+    		DBApp.serialize(path,data);
+    	}
+    	else {
+			throw new DBAppException("You cannot delete a non existent row");
+		}
+	}
 
     public Object getMaxValInThePage() {
         return maxValInThePage;
@@ -50,6 +68,9 @@ public class Page implements Serializable {
     public void setNoOfCurrentRows(int noOfCurrentRows) {
         this.noOfCurrentRows = noOfCurrentRows;
     }
+    public void setNoOfCurrentRowsBYOFFSET(int offset) {
+		this.noOfCurrentRows += offset;
+	}
 
     public int getPid() {
         return pid;
@@ -85,5 +106,8 @@ public class Page implements Serializable {
     
     public boolean isFull() {
 		return DBApp.MaximumRowsCountinTablePage >= getNoOfCurrentRows();
+	}
+    public boolean isEmpty() {
+		return data.isEmpty();
 	}
 }
