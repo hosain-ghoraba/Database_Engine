@@ -81,7 +81,7 @@ init();
                     MaximumEntriesinOctreeNode = Integer.parseInt(strTokenizer.nextToken());
             }
 
-
+            br.close();
         }
         catch (FileNotFoundException fnfe){
              fnfe.printStackTrace();
@@ -233,13 +233,13 @@ init();
 	    String path = "src/resources/tables/" + strTableName + "/" + strTableName + ".ser";
         Table tblToUpdate = (Table) deserialize(path);
     
-      //2- delete the row from the table
+      //2- delete the row from the table   (not yet deleted)
         Enumeration<String> strEnumeration = htblColNameValue.keys();
         while (strEnumeration.hasMoreElements()){
             String strColName = strEnumeration.nextElement();
             Column c = tblToUpdate.getColumn(strColName);
             //if this Column does not exist , throw exception
-            if(!tblToUpdate.getVecColumns().contains(strColName))
+            if(!tblToUpdate.getVecColumns().contains(c))
                 throw new DBAppException("No such column");
             //get the value
             Object strColValue = htblColNameValue.get(strColName);
@@ -262,7 +262,8 @@ init();
         int i = 0;
     
        //3- delete page if empty
-        while (!tblToUpdate.getVecPages().isEmpty()){
+        int size = tblToUpdate.getVecPages().size();
+        while (!tblToUpdate.getVecPages().isEmpty() && size-->0){
         Page pagetodelete =  tblToUpdate.getVecPages().get(i);
             if (pagetodelete.getNoOfCurrentRows() == 0)
               tblToUpdate.getVecPages().remove(pagetodelete.getPid());
@@ -277,38 +278,38 @@ init();
     public static void main(String[] args) throws DBAppException,InterruptedException,ParseException {
 
 DBApp d = new DBApp();
-Hashtable htNameType = new Hashtable();
+Hashtable<String,String> htNameType = new Hashtable<>();
 htNameType.put("Id","java.lang.Integer");
 htNameType.put("Name","java.lang.String");
 htNameType.put("Job","java.lang.String");
-Hashtable htNameMin = new Hashtable();
+Hashtable<String,String> htNameMin = new Hashtable<>();
 htNameMin.put("Id","1");
 htNameMin.put("Name","AAA");
 htNameMin.put("Job","blacksmith");
-Hashtable htNameMax = new Hashtable();
+Hashtable<String,String> htNameMax = new Hashtable<>();
 htNameMax.put("Id","1000");
 htNameMax.put("Name","zaky");
 htNameMax.put("Job","zzz");
 
 d.createTable("University","Id",htNameType,htNameMin,htNameMax);
-Hashtable htColNameVal0 = new Hashtable();
-htColNameVal0.put("Id" , new Integer(23) );
+Hashtable<String,Object> htColNameVal0 = new Hashtable<>();
+htColNameVal0.put("Id" , 23 );
 htColNameVal0.put("Name",new String("ahmed"));
 htColNameVal0.put("Job" , new String("blacksmith"));
 
-Hashtable htColNameVal1 = new Hashtable();
-htColNameVal1.put("Id" , new Integer(33) );
+Hashtable<String,Object> htColNameVal1 = new Hashtable<>();
+htColNameVal1.put("Id" , 33 );
 htColNameVal1.put("Name",new String("ali"));
 htColNameVal1.put("Job" , new String("engineer"));
 
-Hashtable htColNameVal2 = new Hashtable();
-htColNameVal2.put("Id" , new Integer(11) );
+Hashtable<String,Object> htColNameVal2 = new Hashtable<>();
+htColNameVal2.put("Id" , 11 );
 htColNameVal2.put("Name",new String("dani"));
 htColNameVal2.put("Job" , new String("doctor"));
 
 
-Hashtable htColNameVal3 = new Hashtable();
-htColNameVal3.put("Id" , new Integer(15) );
+Hashtable<String,Object> htColNameVal3 = new Hashtable<>();
+htColNameVal3.put("Id" , 15 );
         htColNameVal3.put("Job" , new String("teacher"));
 htColNameVal3.put("Name",new String("basem"));
 
@@ -317,6 +318,9 @@ d.insertIntoTable("University",htColNameVal0);
 d.insertIntoTable("University",htColNameVal1);
 d.insertIntoTable("University",htColNameVal3);
 d.insertIntoTable("University",htColNameVal2);
+
+//d.deleteFromTable("University", htColNameVal0);
+//d.deleteFromTable("University", htColNameVal1);
 
 Table x = (Table)deserialize("src/resources/tables/University/University.ser");
 
