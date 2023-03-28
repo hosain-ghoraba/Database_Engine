@@ -219,7 +219,7 @@ ______
 		} else if(lo > hi){ 		// NOTE that: we reached a case that lo exceeds hi, so lo is the higher page and hi is the lower page
 			if(((Comparable) key).compareTo(vecPages.get(hi).getMaxValInThePage()) >= 0  // key is greater than the max value of the page at hi
 				&& ((Comparable) key).compareTo(vecPages.get(lo).getMinValInThePage()) <= 0){// key is greater than the min value of the page at lo
-					return (vecPages.get(lo).isFull()) ? hi : lo;
+					return (!vecPages.get(hi).isFull()) ? hi : lo;
 				}
                 ///////////// example of the case above: insert 5 in:  hi->Page0(1,2,4);  lo->Page1(6,9,10,11)
                 ///// first iteration was lo = mid = 0, hi =1
