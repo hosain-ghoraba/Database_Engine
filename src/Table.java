@@ -203,7 +203,7 @@ ______
 				return mid;//key within range of page
 			else if (((Comparable) key).compareTo(p.getMaxValInThePage()) > 0)
 				lo = mid + 1;
-			else if (((Comparable) key).compareTo(p.getMaxValInThePage()) < 0)
+			else if (((Comparable) key).compareTo(p.getMinValInThePage()) < 0)
 				hi = mid - 1;
 
 //			else  return mid;
