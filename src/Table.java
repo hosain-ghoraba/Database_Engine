@@ -102,7 +102,7 @@ public class Table implements Serializable
 
             Page correctPage = vecPages.get(pidOfCorrectPage);
 
-            if(correctPage.getNoOfCurrentRows() < MaximumRowsCountinTablePage) { // fortunately , there is a place
+            if(!correctPage.isFull()) { // fortunately , there is a place
                 correctPage.insertAnEntry(entry);
                 return;
             }
@@ -193,7 +193,7 @@ ______
 	//a method to binary search from the pages vector to find the page in which the entry with the given key can be inserted
 
 	public int binarySrch(Object key) {
-		int lo = 1;
+		int lo = 0;
 		int hi = vecPages.size() - 1;
 		int mid = 0;
 		while (lo <= hi) {

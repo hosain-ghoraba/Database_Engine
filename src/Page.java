@@ -84,6 +84,6 @@ public class Page implements Serializable {
     }
     
     public boolean isFull() {
-		return DBApp.MaximumRowsCountinTablePage == getNoOfCurrentRows();
+		return DBApp.MaximumRowsCountinTablePage >= getNoOfCurrentRows();
 	}
 }
