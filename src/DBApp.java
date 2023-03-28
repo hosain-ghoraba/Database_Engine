@@ -3,7 +3,7 @@ import java.text.ParseException;
 import java.util.*;
 
 public class DBApp  {
-    public int MaximumRowsCountinTablePage;
+    public static int MaximumRowsCountinTablePage;
     public int MaximumEntriesinOctreeNode;
     private LinkedList<String> listofCreatedTables;
     public DBApp(){

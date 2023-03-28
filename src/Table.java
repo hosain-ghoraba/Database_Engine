@@ -147,38 +147,90 @@ public class Table implements Serializable
 
     }
 
-    public int binarySrch(Object obj) {
-        int left = 0;
-        int right = vecPages.size()-1;
-        int middle = (left + right) / 2;
-        Page p = vecPages.get(middle);
-        while (left != right+1) {
 
-                if(((Comparable) obj).compareTo(p.getMaxValInThePage()) <= 0  && ((Comparable) obj).compareTo(p.getMinValInThePage()) > 0 || ((Comparable) obj).compareTo(p.getMaxValInThePage()) < 0  && ((Comparable) obj).compareTo(p.getMinValInThePage()) >= 0 )
-                        return middle;
+//consider these cases in binary searching
+/*
+----insert 5 in:
+_____2,3
+-
+2
+3
+-
+____6,8
+-
+6
+7
+8
+___9,10
+9
+10
+-
+-
+______
+*/
 
-                //if the pointer points to the last page and the key is larger than the largest value in that page
-                if(middle == vecPages.size()-1)
-                    if(((Comparable) obj).compareTo(p.getMaxValInThePage()) >= 0)
-                        return middle;
+/*
+-----insert 5 in:
+_____1,4
+1
+2
+3
+4
+____6,9
+6
+7
+8
+9
+___10,11
+10
+11
+-
+-
+______
+*/	
+/* insertion in page sizes 2,3,4 and others in old code */
 
-                //if the pointer points to the first page and the key is smaller than the smallest value in that page
-               if(middle == 0)
-                if(((Comparable) obj).compareTo(p.getMaxValInThePage()) <= 0)
-                    return middle;
+	//a method to binary search from the pages vector to find the page in which the entry with the given key can be inserted
 
+	public int binarySrch(Object key) {
+		int lo = 1;
+		int hi = vecPages.size() - 1;
+		int mid = 0;
+		while (lo <= hi) {
+			mid = (lo + hi) / 2;
+			Page p = vecPages.get(mid);
+			if(((Comparable) key).compareTo(p.getMaxValInThePage()) <= 0 && ((Comparable) key).compareTo(p.getMinValInThePage()) >= 0)
+				return mid;//key within range of page
+			else if (((Comparable) key).compareTo(p.getMaxValInThePage()) > 0)
+				lo = mid + 1;
+			else if (((Comparable) key).compareTo(p.getMaxValInThePage()) < 0)
+				hi = mid - 1;
 
-               // the above 3 if condition can be combined only in 1 if condition using ORing , but I preferred to split them for simplicity
+//			else  return mid;
+		}
 
-                if (((Comparable) obj).compareTo(p.getMaxValInThePage()) > 0)
-                    left = middle + 1;
-                else if (((Comparable) obj).compareTo(p.getMaxValInThePage()) < 0)
-                    right = middle - 1;
-                middle = (left + right) / 2;
-        }
+        //exited loop without finding a page that contains the key in range
+		if(hi == -1){ // reached lower bound (by reaching condition that mid is 0 and key is less than the smallest value in the page so automatically it is less than the min value in the page, then the key is the minimum one)
+			return 0;
 
-        return -1;
-    }
+		} else if(lo == vecPages.size()){ // reached upper bound (same for lower bound but vice versa)
+			return vecPages.size() - 1;
+
+		} else if(lo > hi){ 		// NOTE that: we reached a case that lo exceeds hi, so lo is the higher page and hi is the lower page
+			if(((Comparable) key).compareTo(vecPages.get(hi).getMaxValInThePage()) >= 0  // key is greater than the max value of the page at hi
+				&& ((Comparable) key).compareTo(vecPages.get(lo).getMinValInThePage()) <= 0){// key is greater than the min value of the page at lo
+					return (vecPages.get(lo).isFull()) ? hi : lo;
+				}
+                ///////////// example of the case above: insert 5 in:  hi->Page0(1,2,4);  lo->Page1(6,9,10,11)
+                ///// first iteration was lo = mid = 0, hi =1
+                ///// second iteration was lo = 1 = hi = mid
+                ///// 3rd loop iteration was lo = 1, hi = '0'
+                ////////so we check that condidtion
+
+		}
+
+		return mid;
+	}
 
     public String getStrTableName() {
         return strTableName;
