@@ -1,6 +1,8 @@
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.Hashtable;
 import java.util.Vector;
+import java.util.function.UnaryOperator;
 
 public class Page implements Serializable {
      private String tblBelongTo;
@@ -52,7 +54,7 @@ public class Page implements Serializable {
 			throw new DBAppException("You cannot delete a non existent row");
 		}
 	}
-
+    
     public Object getMaxValInThePage() {
         return maxValInThePage;
     }

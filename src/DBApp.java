@@ -164,7 +164,7 @@ init();
 
 
 
-    public void updateTable(String strTableName,String strClusteringKeyValue,Hashtable<String,Object> htblColNameValue )throws DBAppException{
+    public void updateTable(String strTableName,String strClusteringKeyValue,Hashtable<String,Object> htblColNameValue )throws DBAppException, ParseException{
     	
     	if(!listofCreatedTables.contains(strTableName))
             throw new DBAppException("You cannot update a table that has not been created yet");
@@ -173,52 +173,49 @@ init();
     	String path = "src/resources/tables/" + strTableName + "/" + strTableName + ".ser";
         Table tblToUpdate = (Table) deserialize(path);
         
-        Enumeration<Page> strEnumeration = (Enumeration<Page>) tblToUpdate.getVecPages();
-        while (strEnumeration.hasMoreElements()) {
-        	int clusteringKeyIndex = strEnumeration.nextElement().getPid(); 
+        
+//        2- delete the row from the table   (not yet deleted)
+        Object clusteringKeyVal = null;
+        
+        Enumeration<String> strEnumeration = htblColNameValue.keys();
+        while (strEnumeration.hasMoreElements()){
+            String strColName = strEnumeration.nextElement();
+            Column c = tblToUpdate.getColumn(strColName);
+            //if this Column does not exist , throw exception
+            if(!tblToUpdate.getVecColumns().contains(c))
+                throw new DBAppException("No such column");
+            //get the value
+            Object strColValue = htblColNameValue.get(strColName);
+          //check the value type
+            try {
+        	    tblToUpdate.validateValueType(c,strColValue);
+        	
+        	    // if it is the value of the clustering key, insert into the first cell
+                if(strColName.equals(tblToUpdate.getStrClusteringKeyColumn())) {
+                	clusteringKeyVal = strColValue;
+                }
+            	
+            }
+            catch (DBAppException dbe){
+                dbe.printStackTrace();
+                throw new DBAppException(dbe.getMessage());
+            }
         }
         
+//        if(clusteringKeyVal != (Object) strClusteringKeyValue) {
+        	int candidateIdx = tblToUpdate.binarySrch(clusteringKeyVal);
+        	Page candidatePage = tblToUpdate.getVecPages().get(candidateIdx);
         
-        
-        
-        
-        if (!tblToUpdate.getStrClusteringKeyColumn().contains(strClusteringKeyValue)) {
-            throw new DBAppException("Clustering key value not found in table " + strTableName);
-        }
-        
-        
-        
-        
-//        //2- update the row in the table
-//        Enumeration<String> strEnumeration = htblColNameValue.keys();
-//        while (strEnumeration.hasMoreElements()){
-//            String strColName = strEnumeration.nextElement();
-//            Column c = tblToUpdate.getColumn(strColName);
-//            //if this Column does not exist , throw exception
-//            if(!tblToUpdate.getVecColumns().contains(strColName))
-//                throw new DBAppException("No such column");
-//            //get the value
-//            Object strColValue = htblColNameValue.get(strColName);
-//            //check the value type
-//            try {
-//				tblToUpdate.validateValueType(c, strColValue);
-//
-//				// if it is the value of the clustering kry, insert into the first cell
-//				if (strColName.equals(tblToUpdate.getStrClusteringKeyColumn())) {
-//					int a;
-//				}
-//				
-//
-//				
-//			} 
-//			catch (DBAppException dbe) {
-//                dbe.printStackTrace();
-//				throw new DBAppException(dbe.getMessage());
-//			}
+        	Row rowtodelete = tblToUpdate.findRowToUpdORdel(clusteringKeyVal, candidateIdx);
+        	
+//        	candidatePage.UpdateEntry(rowtodelete,htblColNameValue);
+//        	Vector<Object> v = new Vector<Object>();
+//    		v.add(htblColNameValue.get("Id"));
+//    		v.add(htblColNameValue.get("Name"));
+//    		v.add(htblColNameValue.get("Job"));
+//    		tblToUpdate.findRowToUpdORdel(clusteringKeyVal, candidateIdx).setData(v);
 //        }
         
-            
-            
           //3-return table back to disk after update
             serialize(path,tblToUpdate);
 
@@ -341,11 +338,17 @@ init();
 		//deletion test
 		d.deleteFromTable("University", htColNameVal0);
 		d.deleteFromTable("University", htColNameVal1);
+		
+		
+		
 
 		Table x = (Table) deserialize("src/resources/tables/University/University.ser");
 
 		System.out.println(x.toString());
 		System.out.println("Hello, Database World!");
+//		d.updateTable("University",  "15", htColNameVal1);
+//		System.out.println(x.toString());
+
 
 // 0,2,1,3
 // 0,2,3,1
