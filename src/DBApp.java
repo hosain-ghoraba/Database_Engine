@@ -173,25 +173,39 @@ init();
 		String path = "src/resources/tables/" + strTableName + "/" + strTableName + ".ser";
 		Table tblToUpdate = (Table) deserialize(path);
 		
-		Row rowtodelete = null;
+		Vector<Object> v = new Vector<>();
+		Row rowtodelete = new Row(v) ;
 		
 		// Find the row to update using the clustering key value
 		if (strClusteringKeyValue != null) {
-		int candidateIdx = tblToUpdate.binarySrch(strClusteringKeyValue);
-		Page candidatePage = tblToUpdate.getVecPages().get(candidateIdx);
+			int candidateIdx = tblToUpdate.binarySrch(11);
+			Page candidatePage = tblToUpdate.getVecPages().get(candidateIdx);
 
-		rowtodelete = tblToUpdate.findRowToUpdORdel(strClusteringKeyValue, candidateIdx);
+			rowtodelete = tblToUpdate.findRowToUpdORdel(11, candidateIdx);
 			if(rowtodelete == null) 
 				System.out.println("No rows matches these conditions.");
-			else
+//			else {
 				candidatePage.deleteEntry(rowtodelete);
-		}
-		else {
-			tblToUpdate.deleteRowsWithoutCKey(htblColNameValue);
-		}
+//				int size = tblToUpdate.getVecPages().size();
+////				int i =0;
+//				Iterator<Page> iteratePg = tblToUpdate.getVecPages().iterator();
+//				while (iteratePg.hasNext()) {
+//					Page pagetodelete = (Page) iteratePg.next();
+//					//delete
+//					if (pagetodelete.isEmpty()) { 
+//						iteratePg.remove();
+//						
+//					}
+////					i++;
+//					
+//				}
+//			}
+//				
+//		}
+//		else {
+//			tblToUpdate.deleteRowsWithoutCKey(htblColNameValue);
+//		}
 		
-		Vector<Object> v = new Vector<Object>();
-
 		// Update the values of the columns in the row
 		for (String columnName : htblColNameValue.keySet()) {
 		    Object newValue = htblColNameValue.get(columnName);
@@ -203,6 +217,7 @@ init();
             else
             	v.add(newValue);
 		}
+		
 		//test
 		System.out.println(v.toString());
 		rowtodelete.setData(v);
@@ -211,12 +226,13 @@ init();
 		
 
 		// Save the updated row back to the table file
-		tblToUpdate.insertAnEntry(rowtodelete);
+//		tblToUpdate.insertAnEntry(rowtodelete);
 		
 		// 4-return table back to disk after update
 				serialize(path, tblToUpdate);
 				System.out.println(tblToUpdate.toString());
 
+	}
 	}
 
 	public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue)
@@ -355,6 +371,8 @@ init();
 		//d.deleteFromTable("University", htColNameVal1);
 		d.deleteFromTable("University", htNameValdelete1);//without PK
 		
+
+		
 		
 		
 
@@ -362,7 +380,8 @@ init();
 
 		System.out.println(x.toString());
 		System.out.println("Hello, Database World!");
-		d.updateTable("University","23", htColNameVal1);
+		//update test
+		d.updateTable("University","11", htColNameVal1);
 		System.out.println(x.toString());
 
 
