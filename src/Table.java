@@ -12,6 +12,7 @@ public class Table implements Serializable
     private Hashtable<String,String> htblColNameType;
     private Hashtable<String,String> htblColNameMin;
     private Hashtable<String,String> htblColNameMax;
+    private Hashtable<String,Integer> htblColNameIndex = new Hashtable<>(); //helper
     private int MaximumRowsCountinTablePage;
 
 
@@ -41,14 +42,22 @@ public class Table implements Serializable
         } // end while
 
         this.vecPages = new Vector<>(0);
+        
+        
+        for (int i = 0; i < vecColumns.size(); i++) {
+        	Column column = vecColumns.get(i);
+			htblColNameIndex.put(column.getStrColName(), i);
+		}
 
     }
     public  Column getColumn(String colName){
-        for (Column c: getVecColumns()) {
-           if(c.getStrColName().equals(colName))
-               return c;
-        }
-        return null;
+//        for (Column c: getVecColumns()) {
+//           if(c.getStrColName().equals(colName))
+//               return c;
+//        }
+//        return null;
+    	int index = getColumnEquivalentIndex(colName); //O(1)
+    	return (index == -1)? null : getVecColumns().get(index);
     }
     public void validateValueType(Column column ,Object valueToCheck) throws DBAppException,ParseException{
         if(valueToCheck instanceof  String){
@@ -287,6 +296,11 @@ ______
     public void setHtblColNameMax(Hashtable<String,String> htblColNameMax) {
         this.htblColNameMax = htblColNameMax;
     }
+    
+    public int getColumnEquivalentIndex(String colName) {
+    	//gets index or returns -1 in case it doesn't exist
+		return htblColNameIndex.getOrDefault(colName, -1);
+	}
 
     public String  toString(){
         String strTblOutput = getStrTableName() + " Table \n"  + "-------------------------------" + "\n";
@@ -320,6 +334,36 @@ ______
 		
 		return null;
 	}
+    
+    public int deleteRowsWithoutCKey(Hashtable<String, Object> colNameVal) throws DBAppException {
+    	int items = 0;
+		for (Page page : vecPages) {
+			Iterator<Row> iterator = page.getData().iterator();
+			while (iterator.hasNext()) {
+				Row row = (Row) iterator.next();
+				boolean ANDING = false;
+				
+				Enumeration<String> strEnumeration = colNameVal.keys();
+				while (strEnumeration.hasMoreElements()) {
+					String strColName = strEnumeration.nextElement();
+					if(!row.getData().get(getColumnEquivalentIndex(strColName)).equals(colNameVal.get(strColName))) {
+						ANDING = false;
+						break;
+					}else ANDING = true;
+				}
+				
+				if(ANDING /*is true*/) {	
+					iterator.remove(); //same as page.deleteEntry(row)
+					items++;
+				}
+			}
+		}
+    	
+    	
+    	return items;
+	}
+    
+    
 
 }
 

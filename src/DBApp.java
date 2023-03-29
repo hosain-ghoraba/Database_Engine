@@ -163,51 +163,49 @@ init();
 
 
 
+	public void updateTable(String strTableName, String strClusteringKeyValue,
+			Hashtable<String, Object> htblColNameValue) throws DBAppException, ParseException {
 
-    public void updateTable(String strTableName,String strClusteringKeyValue,Hashtable<String,Object> htblColNameValue )throws DBAppException, ParseException{
-    	
-    	if(!listofCreatedTables.contains(strTableName))
-            throw new DBAppException("You cannot update a table that has not been created yet");
-    	
-    	//1- fetch the table from the disk
-    	String path = "src/resources/tables/" + strTableName + "/" + strTableName + ".ser";
-        Table tblToUpdate = (Table) deserialize(path);
-        
-        
+		if (!listofCreatedTables.contains(strTableName))
+			throw new DBAppException("You cannot update a table that has not been created yet");
+
+		// 1- fetch the table from the disk
+		String path = "src/resources/tables/" + strTableName + "/" + strTableName + ".ser";
+		Table tblToUpdate = (Table) deserialize(path);
+
 //        2- delete the row from the table   (not yet deleted)
-        Object clusteringKeyVal = null;
-        
-        Enumeration<String> strEnumeration = htblColNameValue.keys();
-        while (strEnumeration.hasMoreElements()){
-            String strColName = strEnumeration.nextElement();
-            Column c = tblToUpdate.getColumn(strColName);
-            //if this Column does not exist , throw exception
-            if(!tblToUpdate.getVecColumns().contains(c))
-                throw new DBAppException("No such column");
-            //get the value
-            Object strColValue = htblColNameValue.get(strColName);
-          //check the value type
-            try {
-        	    tblToUpdate.validateValueType(c,strColValue);
-        	
-        	    // if it is the value of the clustering key, insert into the first cell
-                if(strColName.equals(tblToUpdate.getStrClusteringKeyColumn())) {
-                	clusteringKeyVal = strColValue;
-                }
-            	
-            }
-            catch (DBAppException dbe){
-                dbe.printStackTrace();
-                throw new DBAppException(dbe.getMessage());
-            }
-        }
-        
+		Object clusteringKeyVal = null;
+
+		Enumeration<String> strEnumeration = htblColNameValue.keys();
+		while (strEnumeration.hasMoreElements()) {
+			String strColName = strEnumeration.nextElement();
+			Column c = tblToUpdate.getColumn(strColName);
+			// if this Column does not exist , throw exception
+			if (!tblToUpdate.getVecColumns().contains(c))
+				throw new DBAppException("No such column");
+			// get the value
+			Object strColValue = htblColNameValue.get(strColName);
+			// check the value type
+			try {
+				tblToUpdate.validateValueType(c, strColValue);
+
+				// if it is the value of the clustering key, insert into the first cell
+				if (strColName.equals(tblToUpdate.getStrClusteringKeyColumn())) {
+					clusteringKeyVal = strColValue;
+				}
+
+			} catch (DBAppException dbe) {
+				dbe.printStackTrace();
+				throw new DBAppException(dbe.getMessage());
+			}
+		}
+
 //        if(clusteringKeyVal != (Object) strClusteringKeyValue) {
-        	int candidateIdx = tblToUpdate.binarySrch(clusteringKeyVal);
-        	Page candidatePage = tblToUpdate.getVecPages().get(candidateIdx);
-        
-        	Row rowtodelete = tblToUpdate.findRowToUpdORdel(clusteringKeyVal, candidateIdx);
-        	
+		int candidateIdx = tblToUpdate.binarySrch(clusteringKeyVal);
+		Page candidatePage = tblToUpdate.getVecPages().get(candidateIdx);
+
+		Row rowtodelete = tblToUpdate.findRowToUpdORdel(clusteringKeyVal, candidateIdx);
+
 //        	candidatePage.UpdateEntry(rowtodelete,htblColNameValue);
 //        	Vector<Object> v = new Vector<Object>();
 //    		v.add(htblColNameValue.get("Id"));
@@ -215,76 +213,83 @@ init();
 //    		v.add(htblColNameValue.get("Job"));
 //    		tblToUpdate.findRowToUpdORdel(clusteringKeyVal, candidateIdx).setData(v);
 //        }
-        
-          //3-return table back to disk after update
-            serialize(path,tblToUpdate);
 
-    }
-    public void deleteFromTable(String strTableName,Hashtable<String,Object> htblColNameValue)throws DBAppException, ParseException{
+		// 3-return table back to disk after update
+		serialize(path, tblToUpdate);
+
+	}
+
+	public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue)
+			throws DBAppException, ParseException {
 //		listofCreatedTables.remove(strTableName);
-		
-		if(!listofCreatedTables.contains(strTableName))
-            throw new DBAppException("You cannot update a table that has not been created yet");
-	
-	    //1- fetch the table from the disk
-	    String path = "src/resources/tables/" + strTableName + "/" + strTableName + ".ser";
-        Table tblToUpdate = (Table) deserialize(path);
-    
-      //2- delete the row from the table   (not yet deleted)
-        Object clusteringKeyVal = null;
-        
-        Enumeration<String> strEnumeration = htblColNameValue.keys();
-        while (strEnumeration.hasMoreElements()){
-            String strColName = strEnumeration.nextElement();
-            Column c = tblToUpdate.getColumn(strColName);
-            //if this Column does not exist , throw exception
-            if(!tblToUpdate.getVecColumns().contains(c))
-                throw new DBAppException("No such column");
-            //get the value
-            Object strColValue = htblColNameValue.get(strColName);
-          //check the value type
-            try {
-        	    tblToUpdate.validateValueType(c,strColValue);
-        	
-        	    // if it is the value of the clustering key, insert into the first cell
-                if(strColName.equals(tblToUpdate.getStrClusteringKeyColumn())) {
-                	clusteringKeyVal = strColValue;
-                }
-            	
-            }
-            catch (DBAppException dbe){
-                dbe.printStackTrace();
-                throw new DBAppException(dbe.getMessage());
-            }
-        }
-        
-        if(clusteringKeyVal != null) {
-        	int candidateIdx = tblToUpdate.binarySrch(clusteringKeyVal);
-        	Page candidatePage = tblToUpdate.getVecPages().get(candidateIdx);
-        
-        	Row rowtodelete = tblToUpdate.findRowToUpdORdel(clusteringKeyVal, candidateIdx);
-        	
-        	candidatePage.deleteEntry(rowtodelete);
-        	
-        
-        }
-        int i = 0;
-    
-       //3- delete page if empty
-        int size = tblToUpdate.getVecPages().size();
-        while (!tblToUpdate.getVecPages().isEmpty() && i<size){
-        Page pagetodelete =  tblToUpdate.getVecPages().get(i);
-            if (pagetodelete.isEmpty()) {
-	           tblToUpdate.getVecPages().remove(pagetodelete.getPid());
-	           size--;
-            }else {
-				i++;
+
+		if (!listofCreatedTables.contains(strTableName))
+			throw new DBAppException("You cannot update a table that has not been created yet");
+
+		// 1- fetch the table from the disk
+		String path = "src/resources/tables/" + strTableName + "/" + strTableName + ".ser";
+		Table tblToUpdate = (Table) deserialize(path);
+
+		// 2- delete the row from the table (not yet deleted)
+		Object clusteringKeyVal = null;
+
+		Enumeration<String> strEnumeration = htblColNameValue.keys();
+		while (strEnumeration.hasMoreElements()) {
+			String strColName = strEnumeration.nextElement();
+			Column c = tblToUpdate.getColumn(strColName);
+			// if this Column does not exist , throw exception
+			if (!tblToUpdate.getVecColumns().contains(c))
+				throw new DBAppException("No such column");
+			// get the value
+			Object strColValue = htblColNameValue.get(strColName);
+			// check the value type
+			tblToUpdate.validateValueType(c, strColValue);
+
+			// if it is the value of the clustering key, insert into the first cell
+			if (strColName.equals(tblToUpdate.getStrClusteringKeyColumn())) {
+				clusteringKeyVal = strColValue;
 			}
-        }
-    
-      //4-return table back to disk after update
-        serialize(path,tblToUpdate);
-    }
+
+		}
+
+		if (clusteringKeyVal != null) {
+			int candidateIdx = tblToUpdate.binarySrch(clusteringKeyVal);
+			Page candidatePage = tblToUpdate.getVecPages().get(candidateIdx);
+
+			Row rowtodelete = tblToUpdate.findRowToUpdORdel(clusteringKeyVal, candidateIdx);
+			if(rowtodelete == null) 
+				System.out.println("No rows matches these conditions.");
+			else
+				candidatePage.deleteEntry(rowtodelete);
+		}else {
+			tblToUpdate.deleteRowsWithoutCKey(htblColNameValue);
+		}
+		
+		
+		int i = 0;
+
+		// 3- delete page if empty
+		int size = tblToUpdate.getVecPages().size();
+		Iterator<Page> iteratePg = tblToUpdate.getVecPages().iterator();
+		while (iteratePg.hasNext()) {
+			Page pagetodelete = (Page) iteratePg.next();
+			if (pagetodelete.isEmpty()) iteratePg.remove();//delete
+		}
+		
+//		
+//		while (!tblToUpdate.getVecPages().isEmpty() && i < size) {
+//			Page pagetodelete = tblToUpdate.getVecPages().get(i);
+//			if (pagetodelete.isEmpty()) {
+//				tblToUpdate.getVecPages().remove(pagetodelete.getPid());
+//				size--;
+//			} else {
+//				i++;
+//			}
+//		}
+
+		// 4-return table back to disk after update
+		serialize(path, tblToUpdate);
+	}
    //    public static Iterator selectFromTable(SQLTerm[] arrSQLTerms,String[] strarrOperators)throws DBAppException{
   //  }
 
@@ -327,17 +332,28 @@ init();
 		htColNameVal3.put("Job", new String("teacher"));
 		htColNameVal3.put("Name", new String("basem"));
 
+		Hashtable<String, Object> htColNameVal4 = new Hashtable<>();
+		htColNameVal4.put("Id", 14);
+		htColNameVal4.put("Name", new String("mostafa"));
+		htColNameVal4.put("Job", new String("engineer"));
+		
+		
+		
+		Hashtable<String, Object> htNameValdelete1 = new Hashtable<>();
+		htNameValdelete1.put("Job", new String("engineer"));
 		
 		//insertion test
 		d.insertIntoTable("University", htColNameVal0);
 		d.insertIntoTable("University", htColNameVal1);
 		d.insertIntoTable("University", htColNameVal3);
 		d.insertIntoTable("University", htColNameVal2);
+		d.insertIntoTable("University", htColNameVal4);
 
 		
 		//deletion test
-		d.deleteFromTable("University", htColNameVal0);
-		d.deleteFromTable("University", htColNameVal1);
+		//d.deleteFromTable("University", htColNameVal0);
+		//d.deleteFromTable("University", htColNameVal1);
+		d.deleteFromTable("University", htNameValdelete1);//without PK
 		
 		
 		

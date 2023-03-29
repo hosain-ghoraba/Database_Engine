@@ -64,7 +64,7 @@ public class Page implements Serializable {
     }
 
     public int getNoOfCurrentRows() {
-        return noOfCurrentRows;
+        return data.size();
     }
 
     public void setNoOfCurrentRows(int noOfCurrentRows) {
@@ -107,7 +107,7 @@ public class Page implements Serializable {
     }
     
     public boolean isFull() {
-		return DBApp.MaximumRowsCountinTablePage >= getNoOfCurrentRows();
+		return DBApp.MaximumRowsCountinTablePage <= getNoOfCurrentRows();
 	}
     public boolean isEmpty() {
 		return data.isEmpty();
