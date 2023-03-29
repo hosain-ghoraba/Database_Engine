@@ -172,50 +172,50 @@ init();
 		// 1- fetch the table from the disk
 		String path = "src/resources/tables/" + strTableName + "/" + strTableName + ".ser";
 		Table tblToUpdate = (Table) deserialize(path);
-
-//        2- delete the row from the table   (not yet deleted)
-		Object clusteringKeyVal = null;
-
-		Enumeration<String> strEnumeration = htblColNameValue.keys();
-		while (strEnumeration.hasMoreElements()) {
-			String strColName = strEnumeration.nextElement();
-			Column c = tblToUpdate.getColumn(strColName);
-			// if this Column does not exist , throw exception
-			if (!tblToUpdate.getVecColumns().contains(c))
-				throw new DBAppException("No such column");
-			// get the value
-			Object strColValue = htblColNameValue.get(strColName);
-			// check the value type
-			try {
-				tblToUpdate.validateValueType(c, strColValue);
-
-				// if it is the value of the clustering key, insert into the first cell
-				if (strColName.equals(tblToUpdate.getStrClusteringKeyColumn())) {
-					clusteringKeyVal = strColValue;
-				}
-
-			} catch (DBAppException dbe) {
-				dbe.printStackTrace();
-				throw new DBAppException(dbe.getMessage());
-			}
-		}
-
-//        if(clusteringKeyVal != (Object) strClusteringKeyValue) {
-		int candidateIdx = tblToUpdate.binarySrch(clusteringKeyVal);
+		
+		Row rowtodelete = null;
+		
+		// Find the row to update using the clustering key value
+		if (strClusteringKeyValue != null) {
+		int candidateIdx = tblToUpdate.binarySrch(strClusteringKeyValue);
 		Page candidatePage = tblToUpdate.getVecPages().get(candidateIdx);
 
-		Row rowtodelete = tblToUpdate.findRowToUpdORdel(clusteringKeyVal, candidateIdx);
+		rowtodelete = tblToUpdate.findRowToUpdORdel(strClusteringKeyValue, candidateIdx);
+			if(rowtodelete == null) 
+				System.out.println("No rows matches these conditions.");
+			else
+				candidatePage.deleteEntry(rowtodelete);
+		}
+		else {
+			tblToUpdate.deleteRowsWithoutCKey(htblColNameValue);
+		}
+		
+		Vector<Object> v = new Vector<Object>();
 
-//        	candidatePage.UpdateEntry(rowtodelete,htblColNameValue);
-//        	Vector<Object> v = new Vector<Object>();
-//    		v.add(htblColNameValue.get("Id"));
-//    		v.add(htblColNameValue.get("Name"));
-//    		v.add(htblColNameValue.get("Job"));
-//    		tblToUpdate.findRowToUpdORdel(clusteringKeyVal, candidateIdx).setData(v);
-//        }
+		// Update the values of the columns in the row
+		for (String columnName : htblColNameValue.keySet()) {
+		    Object newValue = htblColNameValue.get(columnName);
 
-		// 3-return table back to disk after update
-		serialize(path, tblToUpdate);
+            // if it is the value of the clustering kry, insert into the first cell		    
+		    if(columnName.equals(tblToUpdate.getStrClusteringKeyColumn())) 
+            	v.add(0,newValue);
+
+            else
+            	v.add(newValue);
+		}
+		//test
+		System.out.println(v.toString());
+		rowtodelete.setData(v);
+		System.out.println(rowtodelete.toString());
+		//test
+		
+
+		// Save the updated row back to the table file
+		tblToUpdate.insertAnEntry(rowtodelete);
+		
+		// 4-return table back to disk after update
+				serialize(path, tblToUpdate);
+				System.out.println(tblToUpdate.toString());
 
 	}
 
@@ -362,8 +362,8 @@ init();
 
 		System.out.println(x.toString());
 		System.out.println("Hello, Database World!");
-//		d.updateTable("University",  "15", htColNameVal1);
-//		System.out.println(x.toString());
+		d.updateTable("University","23", htColNameVal1);
+		System.out.println(x.toString());
 
 
 // 0,2,1,3
