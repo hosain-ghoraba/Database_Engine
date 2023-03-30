@@ -2,6 +2,8 @@ import java.io.*;
 import java.text.ParseException;
 import java.util.*;
 
+import javax.print.DocFlavor.STRING;
+
 public class DBApp  {
     public static int MaximumRowsCountinTablePage;
     public int MaximumEntriesinOctreeNode;
@@ -165,6 +167,10 @@ init();
 
 	public void updateTable(String strTableName, String strClusteringKeyValue,
 			Hashtable<String, Object> htblColNameValue) throws DBAppException, ParseException {
+		
+//		  not handled yet:
+//			1-update page number correctly
+//			2-casting integer to string issue
 
 		if (!listofCreatedTables.contains(strTableName))
 			throw new DBAppException("You cannot update a table that has not been created yet");
@@ -178,33 +184,33 @@ init();
 		
 		// Find the row to update using the clustering key value
 		if (strClusteringKeyValue != null) {
-			int candidateIdx = tblToUpdate.binarySrch(11);
+			int candidateIdx = tblToUpdate.binarySrch(strClusteringKeyValue);
 			Page candidatePage = tblToUpdate.getVecPages().get(candidateIdx);
 
-			rowtodelete = tblToUpdate.findRowToUpdORdel(11, candidateIdx);
+			rowtodelete = tblToUpdate.findRowToUpdORdel(strClusteringKeyValue, candidateIdx);
 			if(rowtodelete == null) 
 				System.out.println("No rows matches these conditions.");
-//			else {
+			else {
 				candidatePage.deleteEntry(rowtodelete);
-//				int size = tblToUpdate.getVecPages().size();
-////				int i =0;
-//				Iterator<Page> iteratePg = tblToUpdate.getVecPages().iterator();
-//				while (iteratePg.hasNext()) {
-//					Page pagetodelete = (Page) iteratePg.next();
-//					//delete
-//					if (pagetodelete.isEmpty()) { 
-//						iteratePg.remove();
-//						
-//					}
-////					i++;
-//					
-//				}
-//			}
-//				
-//		}
-//		else {
-//			tblToUpdate.deleteRowsWithoutCKey(htblColNameValue);
-//		}
+				int size = tblToUpdate.getVecPages().size();
+				int i =0;
+				Iterator<Page> iteratePg = tblToUpdate.getVecPages().iterator();
+				while (iteratePg.hasNext()) {
+					Page pagetodelete = (Page) iteratePg.next();
+					//delete
+					if (pagetodelete.isEmpty()) { 
+						iteratePg.remove();
+						
+					}
+					i++;					
+				}
+			}
+		}
+				
+		
+		else {
+			tblToUpdate.deleteRowsWithoutCKey(htblColNameValue);
+		}
 		
 		// Update the values of the columns in the row
 		for (String columnName : htblColNameValue.keySet()) {
@@ -220,7 +226,9 @@ init();
 		
 		//test
 		System.out.println(v.toString());
-		rowtodelete.setData(v);
+		Row entry = new Row(v);
+		tblToUpdate.insertAnEntry(entry);
+//		rowtodelete.setData(v);
 		System.out.println(rowtodelete.toString());
 		//test
 		
@@ -233,7 +241,7 @@ init();
 				System.out.println(tblToUpdate.toString());
 
 	}
-	}
+	
 
 	public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue)
 			throws DBAppException, ParseException {
