@@ -181,27 +181,29 @@ init();
 		Vector<Object> v = new Vector<>();
 		Row rowtodelete = new Row(v) ;
 		
+		int i = 0;
+		int candidateIdx = 0;
+
 		// Find the row to update using the clustering key value
 		if (strClusteringKeyValue != null) {
-			int candidateIdx = tblToUpdate.binarySrch(Integer.parseInt(strClusteringKeyValue));
+			candidateIdx = tblToUpdate.binarySrch(Integer.parseInt(strClusteringKeyValue));
 			Page candidatePage = tblToUpdate.getVecPages().get(candidateIdx);
-
+			
 			rowtodelete = tblToUpdate.findRowToUpdORdel(Integer.parseInt(strClusteringKeyValue), candidateIdx);
 			if(rowtodelete == null) 
 				System.out.println("No rows matches these conditions.");
 			else {
 				candidatePage.deleteEntry(rowtodelete);
-				int size = tblToUpdate.getVecPages().size();
-				int i =0;
 				Iterator<Page> iteratePg = tblToUpdate.getVecPages().iterator();
 				while (iteratePg.hasNext()) {
 					Page pagetodelete = (Page) iteratePg.next();
 					//delete
 					if (pagetodelete.isEmpty()) { 
 						iteratePg.remove();
+						i = pagetodelete.getPid();
+						tblToUpdate.getVecPages().get(i).setPid(candidateIdx);
 						
 					}
-					i++;					
 				}
 			}
 		}
@@ -224,15 +226,17 @@ init();
 		}
 		
 		//test
-		Row entry = new Row(v);
-		tblToUpdate.insertAnEntry(entry);
+//		Row entry = new Row(v);
 //		rowtodelete.setData(v);
 //		System.out.println(rowtodelete.toString());
 //		System.out.println(v.toString());
+//		System.out.println(candidateIdx);
 		//test
 		
 
 		// Save the updated row back to the table file
+		rowtodelete.setData(v);
+		tblToUpdate.insertAnEntry(rowtodelete);
 //		tblToUpdate.insertAnEntry(rowtodelete);
 		
 		// 4-return table back to disk after update
@@ -378,7 +382,7 @@ init();
 		d.deleteFromTable("University", htNameValdelete1);//without PK
 		
 		//Update Test
-		d.updateTable("University","11", htColNameVal1);
+		d.updateTable("University","23", htColNameVal1);
 		
 
 		Table x = (Table) deserialize("src/resources/tables/University/University.ser");
