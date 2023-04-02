@@ -170,7 +170,6 @@ init();
 		
 //		  not handled yet:
 //			1-update page number correctly
-//			2-casting integer to string issue
 
 		if (!listofCreatedTables.contains(strTableName))
 			throw new DBAppException("You cannot update a table that has not been created yet");
@@ -184,10 +183,10 @@ init();
 		
 		// Find the row to update using the clustering key value
 		if (strClusteringKeyValue != null) {
-			int candidateIdx = tblToUpdate.binarySrch(strClusteringKeyValue);
+			int candidateIdx = tblToUpdate.binarySrch(Integer.parseInt(strClusteringKeyValue));
 			Page candidatePage = tblToUpdate.getVecPages().get(candidateIdx);
 
-			rowtodelete = tblToUpdate.findRowToUpdORdel(strClusteringKeyValue, candidateIdx);
+			rowtodelete = tblToUpdate.findRowToUpdORdel(Integer.parseInt(strClusteringKeyValue), candidateIdx);
 			if(rowtodelete == null) 
 				System.out.println("No rows matches these conditions.");
 			else {
@@ -225,11 +224,11 @@ init();
 		}
 		
 		//test
-		System.out.println(v.toString());
 		Row entry = new Row(v);
 		tblToUpdate.insertAnEntry(entry);
 //		rowtodelete.setData(v);
-		System.out.println(rowtodelete.toString());
+//		System.out.println(rowtodelete.toString());
+//		System.out.println(v.toString());
 		//test
 		
 
@@ -237,8 +236,8 @@ init();
 //		tblToUpdate.insertAnEntry(rowtodelete);
 		
 		// 4-return table back to disk after update
-				serialize(path, tblToUpdate);
-				System.out.println(tblToUpdate.toString());
+				serialize(path,tblToUpdate);
+//				System.out.println(tblToUpdate.toString());
 
 	}
 	
@@ -373,15 +372,13 @@ init();
 		d.insertIntoTable("University", htColNameVal2);
 		d.insertIntoTable("University", htColNameVal4);
 
-		
 		//deletion test
 		//d.deleteFromTable("University", htColNameVal0);
 		//d.deleteFromTable("University", htColNameVal1);
 		d.deleteFromTable("University", htNameValdelete1);//without PK
 		
-
-		
-		
+		//Update Test
+		d.updateTable("University","11", htColNameVal1);
 		
 
 		Table x = (Table) deserialize("src/resources/tables/University/University.ser");
@@ -389,8 +386,7 @@ init();
 		System.out.println(x.toString());
 		System.out.println("Hello, Database World!");
 		//update test
-		d.updateTable("University","11", htColNameVal1);
-		System.out.println(x.toString());
+//		System.out.println(x.toString());
 
 
 // 0,2,1,3
