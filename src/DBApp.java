@@ -202,13 +202,11 @@ init();
 						iteratePg.remove();
 						i = pagetodelete.getPid();
 						tblToUpdate.getVecPages().get(i).setPid(candidateIdx);
-						
 					}
 				}
 			}
 		}
 				
-		
 		else {
 			tblToUpdate.deleteRowsWithoutCKey(htblColNameValue);
 		}
@@ -228,21 +226,19 @@ init();
 		//test
 //		Row entry = new Row(v);
 //		rowtodelete.setData(v);
+//		tblToUpdate.insertAnEntry(rowtodelete);
 //		System.out.println(rowtodelete.toString());
 //		System.out.println(v.toString());
 //		System.out.println(candidateIdx);
 		//test
 		
-
 		// Save the updated row back to the table file
 		rowtodelete.setData(v);
 		tblToUpdate.insertAnEntry(rowtodelete);
-//		tblToUpdate.insertAnEntry(rowtodelete);
 		
 		// 4-return table back to disk after update
 				serialize(path,tblToUpdate);
 //				System.out.println(tblToUpdate.toString());
-
 	}
 	
 
