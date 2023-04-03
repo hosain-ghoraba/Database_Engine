@@ -184,6 +184,17 @@ init();
 		int i = 0;
 		int candidateIdx = 0;
 
+		for (String columnName : htblColNameValue.keySet()) {
+			Object newValue = htblColNameValue.get(columnName);
+			
+			// if it is the value of the clustering kry, insert into the first cell		    
+			if(columnName.equals(tblToUpdate.getStrClusteringKeyColumn())) 
+				v.add(0,newValue);
+			
+			else
+				v.add(newValue);
+		}
+		
 		// Find the row to update using the clustering key value
 		if (strClusteringKeyValue != null) {
 			candidateIdx = tblToUpdate.binarySrch(Integer.parseInt(strClusteringKeyValue));
@@ -200,9 +211,10 @@ init();
 					//delete
 					if (pagetodelete.isEmpty()) { 
 						iteratePg.remove();
-						i = pagetodelete.getPid();
-						tblToUpdate.getVecPages().get(i).setPid(candidateIdx);
+//						i = pagetodelete.getPid();
 					}
+//					tblToUpdate.getVecPages().get(i).setPid(i);
+//					i++;
 				}
 			}
 		}
@@ -212,16 +224,6 @@ init();
 		}
 		
 		// Update the values of the columns in the row
-		for (String columnName : htblColNameValue.keySet()) {
-		    Object newValue = htblColNameValue.get(columnName);
-
-            // if it is the value of the clustering kry, insert into the first cell		    
-		    if(columnName.equals(tblToUpdate.getStrClusteringKeyColumn())) 
-            	v.add(0,newValue);
-
-            else
-            	v.add(newValue);
-		}
 		
 		//test
 //		Row entry = new Row(v);
@@ -230,6 +232,7 @@ init();
 //		System.out.println(rowtodelete.toString());
 //		System.out.println(v.toString());
 //		System.out.println(candidateIdx);
+//		System.out.println(i);
 		//test
 		
 		// Save the updated row back to the table file
@@ -352,15 +355,18 @@ init();
 
 		Hashtable<String, Object> htColNameVal3 = new Hashtable<>();
 		htColNameVal3.put("Id", 15);
-		htColNameVal3.put("Job", new String("teacher"));
 		htColNameVal3.put("Name", new String("basem"));
+		htColNameVal3.put("Job", new String("teacher"));
 
 		Hashtable<String, Object> htColNameVal4 = new Hashtable<>();
 		htColNameVal4.put("Id", 14);
 		htColNameVal4.put("Name", new String("mostafa"));
 		htColNameVal4.put("Job", new String("engineer"));
 		
-		
+//		Hashtable<String, Object> htColNameVal5 = new Hashtable<>();
+//		htColNameVal5.put("Id", 70);
+//		htColNameVal5.put("Name", new String("7amood"));
+//		htColNameVal5.put("Job", new String("m4 la2i"));
 		
 		Hashtable<String, Object> htNameValdelete1 = new Hashtable<>();
 		htNameValdelete1.put("Job", new String("engineer"));
@@ -378,7 +384,7 @@ init();
 		d.deleteFromTable("University", htNameValdelete1);//without PK
 		
 		//Update Test
-		d.updateTable("University","23", htColNameVal1);
+		d.updateTable("University","11", htColNameVal1);
 		
 
 		Table x = (Table) deserialize("src/resources/tables/University/University.ser");
