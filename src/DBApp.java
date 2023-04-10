@@ -168,9 +168,6 @@ init();
 	public void updateTable(String strTableName, String strClusteringKeyValue,
 			Hashtable<String, Object> htblColNameValue) throws DBAppException, ParseException {
 		
-//		  not handled yet:
-//			1-update page number correctly
-
 		if (!listofCreatedTables.contains(strTableName))
 			throw new DBAppException("You cannot update a table that has not been created yet");
 
@@ -179,71 +176,48 @@ init();
 		Table tblToUpdate = (Table) deserialize(path);
 		
 		Vector<Object> v = new Vector<>();
-		Row rowtodelete = new Row(v) ;
+		Row rowToUpdate = new Row(v) ;
 		
-		int i = 0;
-		int candidateIdx = 0;
-
+		// 2- Insert hashTable elements into vector
 		for (String columnName : htblColNameValue.keySet()) {
 			Object newValue = htblColNameValue.get(columnName);
 			
-			// if it is the value of the clustering kry, insert into the first cell		    
+			// if it is the value of the clustering key, insert into the first cell		    
 			if(columnName.equals(tblToUpdate.getStrClusteringKeyColumn())) 
-				v.add(0,newValue);
-			
+				v.add(0,strClusteringKeyValue);
 			else
-				v.add(newValue);
+					v.add(newValue);			
 		}
 		
-		// Find the row to update using the clustering key value
+		// 3- Find the row to update using the clustering key value
+		int candidateIdx = 0;
 		if (strClusteringKeyValue != null) {
 			candidateIdx = tblToUpdate.binarySrch(Integer.parseInt(strClusteringKeyValue));
 			Page candidatePage = tblToUpdate.getVecPages().get(candidateIdx);
 			
-			rowtodelete = tblToUpdate.findRowToUpdORdel(Integer.parseInt(strClusteringKeyValue), candidateIdx);
-			if(rowtodelete == null) 
-				System.out.println("No rows matches these conditions.");
-			else {
-				candidatePage.deleteEntry(rowtodelete);
-				Iterator<Page> iteratePg = tblToUpdate.getVecPages().iterator();
-				while (iteratePg.hasNext()) {
-					Page pagetodelete = (Page) iteratePg.next();
-					//delete
-					if (pagetodelete.isEmpty()) { 
-						iteratePg.remove();
-//						i = pagetodelete.getPid();
-					}
-//					tblToUpdate.getVecPages().get(i).setPid(i);
-//					i++;
-				}
-			}
+			rowToUpdate = tblToUpdate.findRowToUpdORdel(Integer.parseInt(strClusteringKeyValue), candidateIdx);
 		}
 				
 		else {
 			tblToUpdate.deleteRowsWithoutCKey(htblColNameValue);
 		}
 		
-		// Update the values of the columns in the row
+		// 4- Update the values of the columns in the row
+		rowToUpdate.setData(v);
 		
+		// 5- return table back to disk after update
+				serialize(path,tblToUpdate);
+				
 		//test
 //		Row entry = new Row(v);
 //		rowtodelete.setData(v);
-//		tblToUpdate.insertAnEntry(rowtodelete);
+//		tblToUpdate.insertAnEntry(rowToUpdate);
 //		System.out.println(rowtodelete.toString());
 //		System.out.println(v.toString());
 //		System.out.println(candidateIdx);
 //		System.out.println(i);
 		//test
-		
-		// Save the updated row back to the table file
-		rowtodelete.setData(v);
-		tblToUpdate.insertAnEntry(rowtodelete);
-		
-		// 4-return table back to disk after update
-				serialize(path,tblToUpdate);
-//				System.out.println(tblToUpdate.toString());
 	}
-	
 
 	public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue)
 			throws DBAppException, ParseException {

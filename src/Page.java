@@ -55,6 +55,8 @@ public class Page implements Serializable {
 		}
 	}
     
+    
+    
     public Object getMaxValInThePage() {
         return maxValInThePage;
     }
