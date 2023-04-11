@@ -221,7 +221,7 @@ init();
 
 	public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue)
 			throws DBAppException, ParseException {
-//		listofCreatedTables.remove(strTableName);
+
 
 		if (!listofCreatedTables.contains(strTableName))
 			throw new DBAppException("You cannot update a table that has not been created yet");
@@ -261,9 +261,10 @@ init();
 				System.out.println("No rows matches these conditions.");
 			else
 				candidatePage.deleteEntry(rowtodelete);
-		}else {
-			tblToUpdate.deleteRowsWithoutCKey(htblColNameValue);
 		}
+//		else {
+//			tblToUpdate.deleteRowsWithoutCKey(htblColNameValue);
+//		}
 		
 		
 		int i = 0;
@@ -273,7 +274,10 @@ init();
 		Iterator<Page> iteratePg = tblToUpdate.getVecPages().iterator();
 		while (iteratePg.hasNext()) {
 			Page pagetodelete = (Page) iteratePg.next();
-			if (pagetodelete.isEmpty()) iteratePg.remove();//delete
+			if (pagetodelete.isEmpty()) {
+				iteratePg.remove();//deleted
+			}
+			i++;
 		}
 		
 //		
@@ -286,6 +290,7 @@ init();
 //				i++;
 //			}
 //		}
+		
 
 		// 4-return table back to disk after update
 		serialize(path, tblToUpdate);
@@ -355,10 +360,16 @@ init();
 		//deletion test
 		//d.deleteFromTable("University", htColNameVal0);
 		//d.deleteFromTable("University", htColNameVal1);
-		d.deleteFromTable("University", htNameValdelete1);//without PK
+//		d.deleteFromTable("University", htNameValdelete1);//without PK
+//		d.deleteFromTable("University", htColNameVal0);
+//		d.deleteFromTable("University", htColNameVal1);
+//		d.deleteFromTable("University", htColNameVal2);
+//		d.deleteFromTable("University", htColNameVal3);
+//		d.deleteFromTable("University", htColNameVal4);
+
 		
 		//Update Test
-		d.updateTable("University","11", htColNameVal1);
+//		d.updateTable("University","11", htColNameVal1);
 		
 
 		Table x = (Table) deserialize("src/resources/tables/University/University.ser");
