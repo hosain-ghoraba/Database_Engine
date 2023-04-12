@@ -3,6 +3,7 @@ import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Vector;
 import java.util.function.UnaryOperator;
+import java.util.Optional;
 
 public class Page implements Serializable {
      private String tblBelongTo;
@@ -35,8 +36,6 @@ public class Page implements Serializable {
         	maxValInThePage = data.get(data.size()-1).getData().get(0);// maxValueOfThPage is the primary key value of the last tuple
     	}
         DBApp.serialize(path,data);
-
-
     }
     
     public void deleteEntry(Row entry) throws DBAppException {
@@ -54,8 +53,6 @@ public class Page implements Serializable {
 			throw new DBAppException("You cannot delete a non existent row");
 		}
 	}
-    
-    
     
     public Object getMaxValInThePage() {
         return maxValInThePage;

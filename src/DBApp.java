@@ -3,6 +3,7 @@ import java.text.ParseException;
 import java.util.*;
 
 import javax.print.DocFlavor.STRING;
+import javax.swing.text.html.HTML;
 
 public class DBApp  {
     public static int MaximumRowsCountinTablePage;
@@ -162,9 +163,7 @@ init();
 
     }
 
-
-
-
+    
 	public void updateTable(String strTableName, String strClusteringKeyValue,
 			Hashtable<String, Object> htblColNameValue) throws DBAppException, ParseException {
 		
@@ -222,7 +221,6 @@ init();
 	public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue)
 			throws DBAppException, ParseException {
 
-
 		if (!listofCreatedTables.contains(strTableName))
 			throw new DBAppException("You cannot update a table that has not been created yet");
 
@@ -262,9 +260,9 @@ init();
 			else
 				candidatePage.deleteEntry(rowtodelete);
 		}
-//		else {
-//			tblToUpdate.deleteRowsWithoutCKey(htblColNameValue);
-//		}
+		else {
+			tblToUpdate.deleteRowsWithoutCKey(htblColNameValue);
+		}
 		
 		
 		int i = 0;
@@ -290,11 +288,12 @@ init();
 //				i++;
 //			}
 //		}
-		
 
 		// 4-return table back to disk after update
 		serialize(path, tblToUpdate);
 	}
+
+	
    //    public static Iterator selectFromTable(SQLTerm[] arrSQLTerms,String[] strarrOperators)throws DBAppException{
   //  }
 
@@ -348,7 +347,8 @@ init();
 //		htColNameVal5.put("Job", new String("m4 la2i"));
 		
 		Hashtable<String, Object> htNameValdelete1 = new Hashtable<>();
-		htNameValdelete1.put("Job", new String("engineer"));
+		htNameValdelete1.put("Name", new String("mostafa"));
+
 		
 		//insertion test
 		d.insertIntoTable("University", htColNameVal0);
