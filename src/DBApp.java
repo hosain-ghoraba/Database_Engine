@@ -247,7 +247,6 @@ init();
 			if (strColName.equals(tblToUpdate.getStrClusteringKeyColumn())) {
 				clusteringKeyVal = strColValue;
 			}
-
 		}
 
 		if (clusteringKeyVal != null) {
@@ -264,9 +263,6 @@ init();
 			tblToUpdate.deleteRowsWithoutCKey(htblColNameValue);
 		}
 		
-		
-		int i = 0;
-
 		// 3- delete page if empty
 		int size = tblToUpdate.getVecPages().size();
 		Iterator<Page> iteratePg = tblToUpdate.getVecPages().iterator();
@@ -275,20 +271,8 @@ init();
 			if (pagetodelete.isEmpty()) {
 				iteratePg.remove();//deleted
 			}
-			i++;
 		}
-		
-//		
-//		while (!tblToUpdate.getVecPages().isEmpty() && i < size) {
-//			Page pagetodelete = tblToUpdate.getVecPages().get(i);
-//			if (pagetodelete.isEmpty()) {
-//				tblToUpdate.getVecPages().remove(pagetodelete.getPid());
-//				size--;
-//			} else {
-//				i++;
-//			}
-//		}
-
+	
 		// 4-return table back to disk after update
 		serialize(path, tblToUpdate);
 	}
@@ -347,9 +331,14 @@ init();
 //		htColNameVal5.put("Job", new String("m4 la2i"));
 		
 		Hashtable<String, Object> htNameValdelete1 = new Hashtable<>();
-		htNameValdelete1.put("Name", new String("mostafa"));
+		htNameValdelete1.put("Job", new String("engineer"));
 
 		
+
+
+
+		
+
 		//insertion test
 		d.insertIntoTable("University", htColNameVal0);
 		d.insertIntoTable("University", htColNameVal1);
@@ -358,8 +347,6 @@ init();
 		d.insertIntoTable("University", htColNameVal4);
 
 		//deletion test
-		//d.deleteFromTable("University", htColNameVal0);
-		//d.deleteFromTable("University", htColNameVal1);
 //		d.deleteFromTable("University", htNameValdelete1);//without PK
 //		d.deleteFromTable("University", htColNameVal0);
 //		d.deleteFromTable("University", htColNameVal1);
@@ -367,7 +354,6 @@ init();
 //		d.deleteFromTable("University", htColNameVal3);
 //		d.deleteFromTable("University", htColNameVal4);
 
-		
 		//Update Test
 //		d.updateTable("University","11", htColNameVal1);
 		
