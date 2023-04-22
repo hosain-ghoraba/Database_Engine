@@ -44,6 +44,9 @@ public class myOctPoint {
         result = 31 * result + z.hashCode();
         return result;
     }
+    public String toString(){
+        return "(" + x + "," + y + "," + z + ")";
+    }
 
 
     

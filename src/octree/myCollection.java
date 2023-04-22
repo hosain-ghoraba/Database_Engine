@@ -85,9 +85,19 @@ public class myCollection { // a collection of static methods that are used in t
         // considering that (x,y,z) is the center of a cube, and (x2,y2,z2) is an edge of the cube
         // look photo attached to the project with name "relevant positions" to understand better
 
-        int x_RelevantPosition = x.compareTo(x2) >= 0 ? 1 : 0;
-        int y_RelevantPosition = y.compareTo(y2) >= 0 ? 1 : 0;
-        int z_RelevantPosition = z.compareTo(z2) >= 0 ? 1 : 0;
+        // tester code : 
+		// System.out.println(myCollection.getRelevantPosition(0, 0, 0, -1, -1, -1));
+		// System.out.println(myCollection.getRelevantPosition(0, 0, 0, -1, -1, 1));
+		// System.out.println(myCollection.getRelevantPosition(0, 0, 0, -1, 1, -1));
+		// System.out.println(myCollection.getRelevantPosition(0, 0, 0, -1, 1, 1));
+		// System.out.println(myCollection.getRelevantPosition(0, 0, 0, 1, -1, -1));
+		// System.out.println(myCollection.getRelevantPosition(0, 0, 0, 1, -1, 1));
+		// System.out.println(myCollection.getRelevantPosition(0, 0, 0, 1, 1, -1));
+		// System.out.println(myCollection.getRelevantPosition(0, 0, 0, 1, 1, 1));
+
+        int x_RelevantPosition = x2.compareTo(x) >= 0 ? 1 : 0;
+        int y_RelevantPosition = y2.compareTo(y) >= 0 ? 1 : 0;
+        int z_RelevantPosition = z2.compareTo(z) >= 0 ? 1 : 0;
         String direction = "" + x_RelevantPosition + y_RelevantPosition + z_RelevantPosition;
         switch (direction) {
             case "000":
