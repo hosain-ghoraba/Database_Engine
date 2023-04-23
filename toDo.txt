@@ -1,2 +1,4 @@
-* when inserting a string into the database, convert it to small case first
+* when inserting a string into the database : 
+   1 - throw exception if string contains a character that is not a letter
+   2 - convert it to small case first
 * when running program, catch any exception and re-throw it as DB exception
