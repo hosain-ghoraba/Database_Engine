@@ -1,7 +1,5 @@
 package octree;
 
-import M1.Methods;
-import java.sql.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedList;
@@ -9,14 +7,15 @@ import java.util.Vector;
 
 import M1.DBApp;
 import M1.DBAppException;
+import M1.Methods;
 import M1.Page;
 import M1.Row;
 
 public class Octree {
 	
-	private int size; // sum of records in all leaves
+	private int size; // number of records in all leaves (non leaf subtrees not counted)
 	private OctPoint leftBackBottom; // this is edge number 0 in the "edge numbers" photo in github 
-	private OctPoint rightForwardUp; // the bounding box of the octree
+	private OctPoint rightForwardUp; // this is edge number 7 in the "edge numbers" photo in github 
 	private OctPoint point; // this is null if the octree is a leaf
 	private Octree[] children; // this is null if the octree is a leaf
 	private HashMap<OctPoint,LinkedList<Page> > records; // this is null if the octree is NOT a leaf
@@ -32,6 +31,7 @@ public class Octree {
 		records = new HashMap<OctPoint, LinkedList<Page> >();
 	}
 	public void insertPageIntoTree(Comparable x, Comparable y, Comparable z , Page page) {
+
 		this.insertHelper(x, y, z , page, new LinkedList<Octree>());
 	}
 	public void deletePageFromTree(Comparable x, Comparable y, Comparable z , Page page) { // deletes ONLY one instance of the page, in case multiple instances of the same page exist in the same point
@@ -237,7 +237,7 @@ public class Octree {
 		return sb.toString();
 
 	}
-    public static void main(String[] args) throws DBAppException {
+    public static void main(String[] args) throws DBAppException {		
 		DBApp d = new DBApp();
 		Hashtable<String, String> htNameType = new Hashtable<>();
 		htNameType.put("Id", "java.lang.Integer");
@@ -303,7 +303,7 @@ public class Octree {
 		
 
 		Octree octree = new Octree(new OctPoint(0,0,0), new OctPoint(100,100,100),2);
-
+		octree.insertPageIntoTree(10, 10, null, page1);
 		octree.insertPageIntoTree(10, 10, 10, page1);
 		octree.insertPageIntoTree(15, 15, 15, page1);
 		octree.insertPageIntoTree(20, 20, 20, page2);

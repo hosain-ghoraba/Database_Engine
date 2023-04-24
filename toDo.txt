@@ -1,2 +1,3 @@
-
+when creating an index on a colulmn,throw exception if it contains null values
+when inserting a null value on a column that has an index built on, throw an exception
 * when running program, catch any exception and re-throw it as DB exception
