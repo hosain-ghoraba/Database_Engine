@@ -1,17 +1,37 @@
-package octree;
+package M1;
 
 import java.math.BigInteger;
 import java.sql.Date;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Hashtable;
 
-import M1.Page;
+public class Methods { // a collection of methods that are used all over the project
 
-public class myCollection { // a collection of static methods that are used in the myOctree class
-
-    // doesn't return a value EXACTLY in the middle of the two strings, 
-    //but approximately in the middle (can't do better than this!) (and the doctor said that in piazza anyway)    
-    public static String medianString(String s1,String s2){ 
+    public static void check_strings_are_Alphabitical(Hashtable<String, Object> htblColNameValue) throws DBAppException{
+        for(String colName : htblColNameValue.keySet()) // make sure that inserted strings are alphabetical, then convert them to lowercase (hosain)
+        {
+            Object insertedValue = htblColNameValue.get(colName);
+            if(insertedValue instanceof String)          
+               if(!(Methods.isAlphabetical((String) insertedValue)))
+                  throw new DBAppException("the record " + (String) insertedValue + " in column " + colName + " is not alphabetical)");
+        }    
+    }
+    public static void convert_strings_To_Lower_Case(Hashtable<String,Object> htblColNameValue) throws DBAppException{ // convert all strings to lowercase (if the objects inside the hashmap is indeed strings) (hosain)
+    
+        for(String colName : htblColNameValue.keySet()) 
+        {
+            Object data = htblColNameValue.get(colName);
+            if(data instanceof String)           
+               htblColNameValue.put(colName, ((String) data).toLowerCase());           
+        }      
+    }
+    public static boolean isAlphabetical(String str) {
+        
+        for(int i = 0 ; i < str.length() ; i++)       
+            if(!Character.isLetter(str.charAt(i)))
+                return false;     
+        return true;
+    }
+    public static String medianString(String s1,String s2){  // doesn't return a value EXACTLY in the middle of the two strings,but approximately in the middle (can't do better than this!) (and the doctor said that in piazza anyway)    
         
         StringBuilder sb1 = new StringBuilder(s1);
         StringBuilder sb2 = new StringBuilder(s2);
@@ -25,7 +45,7 @@ public class myCollection { // a collection of static methods that are used in t
         String smallerString = s1.compareTo(s2) < 0 ? s1 : s2;
         String biggerString = smallerString.equals(s1) ? s2 : s1;
 			
-        return myCollection.medianFromGeeksForGeeks(smallerString, biggerString);
+        return medianFromGeeksForGeeks(smallerString, biggerString);
 
     }
     public static String medianFromGeeksForGeeks(String s1, String s2)
@@ -54,7 +74,7 @@ public class myCollection { // a collection of static methods that are used in t
             result.append((char)(a1[i] + 97));
         return result.toString();
     }
-    public static Comparable getMiddleValue(Comparable firstValue,Comparable secondValue) {
+    public static Comparable getMiddleValue(Comparable firstValue,Comparable secondValue) { // median of any 2 objects int/double/string/date
 		if(!(firstValue.getClass().equals(secondValue.getClass()))) 
 			throw new IllegalArgumentException("Values must be of the same type");
 		
@@ -66,7 +86,7 @@ public class myCollection { // a collection of static methods that are used in t
 			return (double)firstValue/2 + (double)secondValue/2;
 		}
 		else if(firstValue instanceof String){
-			return myCollection.medianString((String)firstValue, (String)secondValue);
+			return Methods.medianString((String)firstValue, (String)secondValue);
 			
 		}
 		else if(firstValue instanceof java.util.Date){
@@ -121,8 +141,10 @@ public class myCollection { // a collection of static methods that are used in t
 
      }
 
+    public static void main(String[] args) {
+        
+    }    
 
-    }
-
-
-
+   
+    
+}

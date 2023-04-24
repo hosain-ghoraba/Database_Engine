@@ -1,5 +1,7 @@
 package octree;
 
+import M1.Methods;
+import java.sql.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedList;
@@ -18,14 +20,15 @@ public class Octree {
 	private OctPoint point; // this is null if the octree is a leaf
 	private Octree[] children; // this is null if the octree is a leaf
 	private HashMap<OctPoint,LinkedList<Page> > records; // this is null if the octree is NOT a leaf
-	int maxNodeCapacity = 2; // to be read from the config file 
+	private int maxNodeCapacity;
 
-	//// below are the methods that will be used by the DBApp class ////
+	//// below are the methods that will be used in the DBApp class ////
 	
-	public Octree(OctPoint leftBackBottom,OctPoint rightForwardUp) { // constructor for a leaf octree, leaf octrees are converted to non-leaf octrees by the split method when their capacity is exceeded
+	public Octree(OctPoint leftBackBottom,OctPoint rightForwardUp,int maxNodeCapacity) { // constructor for a leaf octree, leaf octrees are converted to non-leaf octrees by the split method when their capacity is exceeded
 		size = 0;
 		this.leftBackBottom = leftBackBottom;
 		this.rightForwardUp = rightForwardUp;
+		this.maxNodeCapacity = maxNodeCapacity;
 		records = new HashMap<OctPoint, LinkedList<Page> >();
 	}
 	public void insertPageIntoTree(Comparable x, Comparable y, Comparable z , Page page) {
@@ -35,12 +38,12 @@ public class Octree {
 		this.deleteHelper(x, y, z , page, new LinkedList<Octree>());
 	}
 	public boolean pointExists(Comparable x, Comparable y, Comparable z){
-		validatePointIsInTreesBounday(x, y, z);
+		validatePointIsInTreeBounday(x, y, z);
 		if(this.isLeaf())
 			return records.containsKey(new OctPoint(x,y,z));
 		else
 		{
-			int position = myCollection.getRelevantPosition(this.point.getX(), this.point.getY(), this.point.getZ(), x, y, z);
+			int position = Methods.getRelevantPosition(this.point.getX(), this.point.getY(), this.point.getZ(), x, y, z);
 			return children[position].pointExists(x, y, z);
 		}
 
@@ -52,7 +55,7 @@ public class Octree {
 			return records.get(new OctPoint(x,y,z));
 		else
 		{
-			int position = myCollection.getRelevantPosition(this.point.getX(), this.point.getY(), this.point.getZ(), x, y, z);
+			int position = Methods.getRelevantPosition(this.point.getX(), this.point.getY(), this.point.getZ(), x, y, z);
 			return children[position].getPagesAtPoint(x, y, z);
 		}
 	} 
@@ -61,6 +64,9 @@ public class Octree {
 			throw new IllegalArgumentException("Point " + x + " " + y + " " + z + " doesn't exist in the octree");
 		deletePageFromTree(x, y, z, oldPage);
 		insertPageIntoTree(x, y, z, newPage);
+	}	
+	public int getSize() {
+		return size;
 	}
 	public void printTree() {
 		printTreeHelper(0);
@@ -69,11 +75,11 @@ public class Octree {
 	//// below are helper private methods ////
 	private void insertHelper(Comparable x, Comparable y, Comparable z , Page page , LinkedList<Octree> traversedSoFar) {
 
-		validatePointIsInTreesBounday(x, y, z);		
+		validatePointIsInTreeBounday(x, y, z);		
 		traversedSoFar.add(this);
 		if(! this.isLeaf())
 		{
-			int position = myCollection.getRelevantPosition(this.point.getX(), this.point.getY(), this.point.getZ(), x, y, z);
+			int position = Methods.getRelevantPosition(this.point.getX(), this.point.getY(), this.point.getZ(), x, y, z);
 			children[position].insertHelper(x, y, z , page, traversedSoFar);
 		}	
 		else
@@ -105,7 +111,7 @@ public class Octree {
 		traversedSoFar.addLast(this);
 		if(! this.isLeaf())
 		{
-			int position = myCollection.getRelevantPosition(this.point.getX(), this.point.getY(), this.point.getZ(), x, y, z);
+			int position = Methods.getRelevantPosition(this.point.getX(), this.point.getY(), this.point.getZ(), x, y, z);
 			children[position].deleteHelper(x, y, z , page, traversedSoFar);
 		}	
 		else
@@ -161,26 +167,26 @@ public class Octree {
 		Comparable Ybig = this.rightForwardUp.getY();
 		Comparable Zbig = this.rightForwardUp.getZ();
 		
-		Comparable xCenter = myCollection.getMiddleValue(Xsmall, Xbig);
-		Comparable yCenter = myCollection.getMiddleValue(Ysmall, Ybig);
-		Comparable zCenter = myCollection.getMiddleValue(Zsmall, Zbig);
+		Comparable xCenter = Methods.getMiddleValue(Xsmall, Xbig);
+		Comparable yCenter = Methods.getMiddleValue(Ysmall, Ybig);
+		Comparable zCenter = Methods.getMiddleValue(Zsmall, Zbig);
 
 		this.point = new OctPoint(xCenter,yCenter,zCenter);
 		children = new Octree[8];
 
-		children[0] = new Octree(new OctPoint(Xsmall, Ysmall, Zsmall), new OctPoint(xCenter,yCenter,zCenter));
-		children[1] = new Octree(new OctPoint(Xsmall,Ysmall,zCenter), new OctPoint(xCenter,yCenter,Zbig));
-		children[2] = new Octree(new OctPoint(Xsmall,yCenter,Zsmall), new OctPoint(xCenter,Ybig,zCenter));
-		children[3] = new Octree(new OctPoint(Xsmall,yCenter,zCenter), new OctPoint(xCenter,Ybig,Zbig));	
-		children[4] = new Octree(new OctPoint(xCenter,Ysmall,Zsmall), new OctPoint(Xbig,yCenter,zCenter));
-		children[5] = new Octree(new OctPoint(xCenter,Ysmall,zCenter), new OctPoint(Xbig,yCenter,Zbig));
-		children[6] = new Octree(new OctPoint(xCenter,yCenter,Zsmall), new OctPoint(Xbig,Ybig,zCenter));
-		children[7] = new Octree(new OctPoint(xCenter,yCenter,zCenter), new OctPoint(Xbig,Ybig,Zbig));
+		children[0] = new Octree(new OctPoint(Xsmall, Ysmall, Zsmall), new OctPoint(xCenter,yCenter,zCenter), maxNodeCapacity);
+		children[1] = new Octree(new OctPoint(Xsmall,Ysmall,zCenter), new OctPoint(xCenter,yCenter,Zbig), maxNodeCapacity);
+		children[2] = new Octree(new OctPoint(Xsmall,yCenter,Zsmall), new OctPoint(xCenter,Ybig,zCenter), maxNodeCapacity);
+		children[3] = new Octree(new OctPoint(Xsmall,yCenter,zCenter), new OctPoint(xCenter,Ybig,Zbig), maxNodeCapacity);	
+		children[4] = new Octree(new OctPoint(xCenter,Ysmall,Zsmall), new OctPoint(Xbig,yCenter,zCenter), maxNodeCapacity);
+		children[5] = new Octree(new OctPoint(xCenter,Ysmall,zCenter), new OctPoint(Xbig,yCenter,Zbig), maxNodeCapacity);
+		children[6] = new Octree(new OctPoint(xCenter,yCenter,Zsmall), new OctPoint(Xbig,Ybig,zCenter), maxNodeCapacity);
+		children[7] = new Octree(new OctPoint(xCenter,yCenter,zCenter), new OctPoint(Xbig,Ybig,Zbig), maxNodeCapacity);
 
 		for(OctPoint recordPoint : records.keySet()) // transfer the records to the children
 		{
 			LinkedList<Page> recordPages = records.get(recordPoint);
-			int childPositionToInsertInto = myCollection.getRelevantPosition(this.point.getX(), this.point.getY(), this.point.getZ(), recordPoint.getX(), recordPoint.getY(), recordPoint.getZ());
+			int childPositionToInsertInto = Methods.getRelevantPosition(this.point.getX(), this.point.getY(), this.point.getZ(), recordPoint.getX(), recordPoint.getY(), recordPoint.getZ());
 			for(Page page : recordPages)
 			{				
 				LinkedList<Octree> traversedSoFar = new LinkedList<Octree>();
@@ -193,7 +199,7 @@ public class Octree {
 	private boolean isLeaf() {
 		return (children == null);
 	}	
-	private void  validatePointIsInTreesBounday(Comparable x, Comparable y, Comparable z) {
+	private void  validatePointIsInTreeBounday(Comparable x, Comparable y, Comparable z) {
 		boolean xIsInBoundary = (x.compareTo(this.leftBackBottom.getX()) >= 0) && (x.compareTo(this.rightForwardUp.getX()) <= 0);
 		boolean yIsInBoundary = (y.compareTo(this.leftBackBottom.getY()) >= 0) && (y.compareTo(this.rightForwardUp.getY()) <= 0);
 		boolean zIsInBoundary = (z.compareTo(this.leftBackBottom.getZ()) >= 0) && (z.compareTo(this.rightForwardUp.getZ()) <= 0);
@@ -232,7 +238,6 @@ public class Octree {
 
 	}
     public static void main(String[] args) throws DBAppException {
-
 		DBApp d = new DBApp();
 		Hashtable<String, String> htNameType = new Hashtable<>();
 		htNameType.put("Id", "java.lang.Integer");
@@ -297,7 +302,7 @@ public class Octree {
 
 		
 
-		Octree octree = new Octree(new OctPoint(0,0,0), new OctPoint(100,100,100));
+		Octree octree = new Octree(new OctPoint(0,0,0), new OctPoint(100,100,100),2);
 
 		octree.insertPageIntoTree(10, 10, 10, page1);
 		octree.insertPageIntoTree(15, 15, 15, page1);
