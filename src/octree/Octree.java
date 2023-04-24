@@ -20,13 +20,14 @@ public class Octree {
 	private HashMap<OctPoint,LinkedList<Page> > records; // this is null if the octree is NOT a leaf
 	int maxNodeCapacity = 2; // to be read from the config file 
 
+	//// below are the methods that will be used by the DBApp class ////
+	
 	public Octree(OctPoint leftBackBottom,OctPoint rightForwardUp) { // constructor for a leaf octree, leaf octrees are converted to non-leaf octrees by the split method when their capacity is exceeded
 		size = 0;
 		this.leftBackBottom = leftBackBottom;
 		this.rightForwardUp = rightForwardUp;
 		records = new HashMap<OctPoint, LinkedList<Page> >();
 	}
-	
 	public void insertPageIntoTree(Comparable x, Comparable y, Comparable z , Page page) {
 		this.insertHelper(x, y, z , page, new LinkedList<Octree>());
 	}
@@ -61,7 +62,11 @@ public class Octree {
 		deletePageFromTree(x, y, z, oldPage);
 		insertPageIntoTree(x, y, z, newPage);
 	}
-
+	public void printTree() {
+		printTreeHelper(0);
+	}
+	
+	//// below are helper private methods ////
 	private void insertHelper(Comparable x, Comparable y, Comparable z , Page page , LinkedList<Octree> traversedSoFar) {
 
 		validatePointIsInTreesBounday(x, y, z);		
@@ -129,7 +134,6 @@ public class Octree {
 		
 		}
 	}
-	
 	private void devourChildren() {
 		if(this.isLeaf())
 			return;
@@ -188,20 +192,14 @@ public class Octree {
 	}
 	private boolean isLeaf() {
 		return (children == null);
-	}
-	
+	}	
 	private void  validatePointIsInTreesBounday(Comparable x, Comparable y, Comparable z) {
 		boolean xIsInBoundary = (x.compareTo(this.leftBackBottom.getX()) >= 0) && (x.compareTo(this.rightForwardUp.getX()) <= 0);
 		boolean yIsInBoundary = (y.compareTo(this.leftBackBottom.getY()) >= 0) && (y.compareTo(this.rightForwardUp.getY()) <= 0);
 		boolean zIsInBoundary = (z.compareTo(this.leftBackBottom.getZ()) >= 0) && (z.compareTo(this.rightForwardUp.getZ()) <= 0);
 		if(!xIsInBoundary || !yIsInBoundary || !zIsInBoundary)
 			throw new IllegalArgumentException("Point " + x + " " + y + " " + z + " can't exist in the tree because it is not even between " + leftBackBottom + " and " + rightForwardUp + " !");
-	}
-	
-	
-	public void printTree() {
-		printTreeHelper(0);
-	}
+	}	
 	private void printTreeHelper(int curLevel) { // to visualize the output, each level has a unique indentation before it
 
 		String levelSpaces = createSpaces(curLevel*5);
@@ -226,7 +224,7 @@ public class Octree {
 		}
 
 	}
-	public String createSpaces(int spaces){
+	private String createSpaces(int spaces){
 		StringBuilder sb = new StringBuilder();
 		for(int i = 0 ; i < spaces ; i++)
 			sb.append(" ");

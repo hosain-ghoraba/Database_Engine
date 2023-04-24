@@ -10,8 +10,7 @@ import M1.Page;
 public class myCollection { // a collection of static methods that are used in the myOctree class
 
     // doesn't return a value EXACTLY in the middle of the two strings, 
-    //but approximately in the middle (can't do better than this!) (and the doctor said that in piazza anyway)
-    
+    //but approximately in the middle (can't do better than this!) (and the doctor said that in piazza anyway)    
     public static String medianString(String s1,String s2){ 
         
         StringBuilder sb1 = new StringBuilder(s1);
