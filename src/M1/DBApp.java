@@ -56,7 +56,7 @@ public class DBApp {
             String strColName = strEnumeration.nextElement();
             Column c = tblToInsertInto.getColumn(strColName);
             // if this Column does not exist , throw exception
-            if (!tblToInsertInto.getVecColumns().contains(c))
+            if (/*!tblToInsertInto.getVecColumns().contains(c)*/ c == null)
                 throw new DBAppException("No such column");
             // get the value
             Object strColValue = htblColNameValue.get(strColName);
@@ -64,7 +64,7 @@ public class DBApp {
             try {
                 tblToInsertInto.validateValueType(c, strColValue);
 
-                // if it is the value of the clustering kry, insert into the first cell
+                // if it is the value of the clustering key, insert into the first cell
                 if (strColName.equals(tblToInsertInto.getStrClusteringKeyColumn())) // if(c.isPrimary())
                     vecValues.add(0, strColValue);
                 else
@@ -108,7 +108,7 @@ public class DBApp {
         int candidateIdx = 0;
         if (strClusteringKeyValue != null) {
             candidateIdx = tblToUpdate.binarySrch(Integer.parseInt(strClusteringKeyValue));
-            Page candidatePage = tblToUpdate.getVecPages().get(candidateIdx);
+            Page candidatePage = tblToUpdate.loadPage(candidateIdx);
 
             rowToUpdate = tblToUpdate.findRowToUpdORdel(Integer.parseInt(strClusteringKeyValue), candidateIdx);
         }
@@ -165,7 +165,7 @@ public class DBApp {
 
         if (clusteringKeyVal != null) {
             int candidateIdx = tblToUpdate.binarySrch(clusteringKeyVal);
-            Page candidatePage = tblToUpdate.getVecPages().get(candidateIdx);
+            Page candidatePage = tblToUpdate.loadPage(candidateIdx);
 
             Row rowtodelete = tblToUpdate.findRowToUpdORdel(clusteringKeyVal, candidateIdx);
             if (rowtodelete == null)
@@ -177,13 +177,23 @@ public class DBApp {
         }
 
         // 3- delete page if empty
-        int size = tblToUpdate.getVecPages().size();
-        Iterator<Page> iteratePg = tblToUpdate.getVecPages().iterator();
-        while (iteratePg.hasNext()) {
-            Page pagetodelete = (Page) iteratePg.next();
-            if (pagetodelete.isEmpty()) {
-                iteratePg.remove();// deleted
-            }
+        //int size = tblToUpdate.getVecPages().size();
+        //Iterator<String> iteratePg = tblToUpdate.getVecPages().iterator();
+        
+        List<String> tempPages = new ArrayList<String>();
+        for (int i = 0; i < tblToUpdate.getVecPages().size(); i++) {
+            tempPages.add(tblToUpdate.getVecPages().get(i));
+        }
+
+        ListIterator<String> iteratetmp = tempPages.listIterator();
+        int index = iteratetmp.nextIndex();
+
+        while (iteratetmp.hasNext()) {
+            String pagetodelete = (String) iteratetmp.next();
+            if (tblToUpdate.loadPage(index).isEmpty()) {
+                iteratetmp.remove();// deleted from temporary list
+                tblToUpdate.getVecPages().remove(index);// deleted from original list
+            }else index = iteratetmp.nextIndex();
         }
 
         // 4-return table back to disk after update
@@ -305,6 +315,8 @@ public class DBApp {
         htNameMax.put("Job", "zzz");
 
         d.createTable("University", "Id", htNameType, htNameMin, htNameMax);
+        
+        
         Hashtable<String, Object> htColNameVal0 = new Hashtable<>();
         htColNameVal0.put("Id", 23);
         htColNameVal0.put("Name", new String("ahmed"));
@@ -338,12 +350,6 @@ public class DBApp {
         Hashtable<String, Object> htNameValdelete1 = new Hashtable<>();
         htNameValdelete1.put("Job", new String("engineer"));
 
-        // insertion test
-        d.insertIntoTable("University", htColNameVal0);
-        d.insertIntoTable("University", htColNameVal1);
-        d.insertIntoTable("University", htColNameVal3);
-        d.insertIntoTable("University", htColNameVal2);
-        d.insertIntoTable("University", htColNameVal4);
 
         // deletion test
         // d.deleteFromTable("University", htNameValdelete1);//without PK
@@ -356,8 +362,22 @@ public class DBApp {
         // Update Test
         // d.updateTable("University","11", htColNameVal1);
 
-        Table x = (Table) deserialize("src/resources/tables/University/University.ser");
+        // insertion test
+        d.insertIntoTable("University", htColNameVal0);///////////////////////
 
+        Table x = (Table) deserialize("src/resources/tables/University/University.ser");
+        System.out.println(x.toString());
+        d.insertIntoTable("University", htColNameVal1);///////////////////////////////
+x = (Table) deserialize("src/resources/tables/University/University.ser");
+        System.out.println(x.toString());
+        d.insertIntoTable("University", htColNameVal3);////////////////////////////
+x = (Table) deserialize("src/resources/tables/University/University.ser");
+        System.out.println(x.toString());
+        d.insertIntoTable("University", htColNameVal2);////////////////////////////////
+x = (Table) deserialize("src/resources/tables/University/University.ser");
+        System.out.println(x.toString());
+        d.insertIntoTable("University", htColNameVal4);//////////////////////////////
+x = (Table) deserialize("src/resources/tables/University/University.ser");
         System.out.println(x.toString());
         System.out.println("Hello, Database World!");
         // update test

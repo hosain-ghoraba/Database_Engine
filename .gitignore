@@ -33,7 +33,8 @@ bin/
 .project
 .classpath
 .settings/
-
+.vscode/
+src/resources/tables/
 
 
 
