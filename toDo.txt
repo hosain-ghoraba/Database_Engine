@@ -1,3 +1,30 @@
-when creating an index on a colulmn,throw exception if it contains null values
-when inserting a null value on a column that has an index built on, throw an exception
-* when running program, catch any exception and re-throw it as DB exception
+
+in M1 :
+1 -  when running program, catch any exception and re-throw it as DB exception
+        https://piazza.com/class/lel8rsvwc4e7j6/post/60
+
+2 -  I think that the vector<row> in page should be initialized with max no.rows allowed in one page as input to its constructor, to increase performance
+    https://piazza.com/class/lel8rsvwc4e7j6/post/45
+
+3 - important : should write table info in meta data when createing table!
+
+3 - throw exception in create table if the 3 hashtables don't have exactly the same keys
+    https://piazza.com/class/lel8rsvwc4e7j6/post/125
+
+4 - important :  Meta data file should be used to learn about TYPES of columns, as well check if inserted value is between column min and max in a table with every insert/delete/update,for example, in insert, it only checks for exsistance of table name in listofCreated tables,but doesn't check columns and compare their types with input parameters !
+             (Project grading schema)
+
+5 - handle null values insertion/update/ delete 
+      https://piazza.com/class/lel8rsvwc4e7j6/post/72   
+      https://piazza.com/class/lel8rsvwc4e7j6/post/81 
+
+6 -  update method assumes that the clustering key is always integer, which is not neccessary
+        https://piazza.com/class/lel8rsvwc4e7j6/post/58
+
+7 -  delete all pages if input hashTable is empty :
+             https://piazza.com/class/lel8rsvwc4e7j6/post/35
+             https://piazza.com/class/lel8rsvwc4e7j6/post/55
+
+in M2 :
+1 - when creating an index on a colulmn,throw exception if it contains null values
+2 - when inserting a null value on a column that has an index built on, throw an exception
