@@ -9,12 +9,12 @@ public class Table implements Serializable
     private String strTableName;
     private String strClusteringKeyColumn;
     private Vector<Column> vecColumns;
-    private Vector<Page> vecPages;
+    private Vector<String> vecPages;
     private Hashtable<String,String> htblColNameType;
     private Hashtable<String,String> htblColNameMin;
     private Hashtable<String,String> htblColNameMax;
     private Hashtable<String,Integer> htblColNameIndex = new Hashtable<>(); //helper
-    private int MaximumRowsCountinTablePage;
+    private int MaximumRowsCountinTablePage, pagesIDcounter = 0;
 
 
     public Table(String strTableName, String strClusteringKeyColumn, Hashtable<String,String> htblColNameType,
@@ -101,8 +101,9 @@ public class Table implements Serializable
     public void insertAnEntry(Row entry) throws DBAppException{
         if(vecPages.size() == 0){ // table has no page
             Page page = new Page(strTableName,0);
-            vecPages.add(page);
+            this.addNewPage(page);
             page.insertAnEntry(entry);
+            this.savePageToDisk(page, vecPages.size()-1);
         }
         else{ // there are some pages in the table
             Object clustringKey = entry.getData().get(0) ;
@@ -110,16 +111,18 @@ public class Table implements Serializable
             int pidOfCorrectPage = binarySrch(clustringKey) ;
 
 
-            Page correctPage = vecPages.get(pidOfCorrectPage);
+            Page correctPage = loadPage(pidOfCorrectPage);
 
             if(!correctPage.isFull()) { // fortunately , there is a place
                 correctPage.insertAnEntry(entry);
+                this.savePageToDisk(correctPage, vecPages.size()-1);
                 return;
             }
             else{  // Unfortunately , page is full
                 if(pidOfCorrectPage == vecPages.size()-1  ) { //correct page is last page and it is full
-                    Page newPage = new Page(strTableName, vecPages.size());
-                    vecPages.add(newPage);
+                    Page newPage = new Page(strTableName, pagesIDcounter + 1);
+                    this.addNewPage(newPage);
+
                     if(((Comparable)clustringKey).compareTo(correctPage.getMaxValInThePage()) >= 0)
                          newPage.insertAnEntry(entry);
                     else{
@@ -127,29 +130,39 @@ public class Table implements Serializable
                         correctPage.insertAnEntry(entry);
                         newPage.insertAnEntry(tmp);
                     }
+                    this.savePageToDisk(newPage, vecPages.size()-1);
+                    this.savePageToDisk(correctPage, vecPages.size()-2);
                     return;
                 }else { // correct page is not last page and it is full
                       int i ;
                       for ( i = pidOfCorrectPage; i <vecPages.size();i++) // check other next pages , if they are all full or not
-                          if(vecPages.get(i).getNoOfCurrentRows() < MaximumRowsCountinTablePage)
+                          if(loadPage(i).getNoOfCurrentRows() < MaximumRowsCountinTablePage)
                               break;
 
                       Row tmp;
                       if(i==vecPages.size()) {   // all next pages are full , no option other than creating new page
-                          Page newPage = new Page(strTableName, vecPages.size());
-                          vecPages.add(newPage);
+                          Page newPage = new Page(strTableName, pagesIDcounter+1);
+                          this.addNewPage(newPage);
                           for(int j = vecPages.size()-1 ; j> pidOfCorrectPage ; j--) {
-                              tmp = vecPages.get(j-1).getData().remove(MaximumRowsCountinTablePage - 1);
-                              vecPages.get(j).insertAnEntry(tmp);
+                        	  Page fromPage = this.loadPage(j-1), toPage = this.loadPage(j);
+                              tmp = fromPage.getData().remove(MaximumRowsCountinTablePage - 1);
+                              toPage.insertAnEntry(tmp);
+                              this.savePageToDisk(fromPage, j-1);
+                              this.savePageToDisk(toPage, j);
                           }
                       }
                       else{                     // some page has an empty place
                           for (int j = i; j > pidOfCorrectPage ; j--) {
-                              tmp = vecPages.get(j-1).getData().remove(MaximumRowsCountinTablePage - 1);
-                              vecPages.get(j).insertAnEntry(tmp);
+                        	  Page fromPage = this.loadPage(j-1), toPage = this.loadPage(j);
+                              tmp = fromPage.getData().remove(MaximumRowsCountinTablePage - 1);
+                              toPage.insertAnEntry(tmp);
+                              this.savePageToDisk(fromPage, j-1);
+                              this.savePageToDisk(toPage, j);
                           }
                       }
+                      correctPage = this.loadPage(pidOfCorrectPage);
                       correctPage.insertAnEntry(entry);
+                      this.savePageToDisk(correctPage, pidOfCorrectPage);
                       return;
                 }
             }
@@ -202,13 +215,13 @@ ______
 
 	//a method to binary search from the pages vector to find the page in which the entry with the given key can be inserted
 
-	public int binarySrch(Object key) {
+	public int binarySrch(Object key) throws DBAppException {
 		int lo = 0;
 		int hi = vecPages.size() - 1;
 		int mid = 0;
 		while (lo <= hi) {
 			mid = (lo + hi) / 2;
-			Page p = vecPages.get(mid);
+			Page p = this.loadPage(mid);
 			if(((Comparable) key).compareTo(p.getMaxValInThePage()) <= 0 && ((Comparable) key).compareTo(p.getMinValInThePage()) >= 0)
 				return mid;//key within range of page
 			else if (((Comparable) key).compareTo(p.getMaxValInThePage()) > 0)
@@ -227,9 +240,10 @@ ______
 			return vecPages.size() - 1;
 
 		} else if(lo > hi){ 		// NOTE that: we reached a case that lo exceeds hi, so lo is the higher page and hi is the lower page
-			if(((Comparable) key).compareTo(vecPages.get(hi).getMaxValInThePage()) >= 0  // key is greater than the max value of the page at hi
-				&& ((Comparable) key).compareTo(vecPages.get(lo).getMinValInThePage()) <= 0){// key is greater than the min value of the page at lo
-					return (!vecPages.get(hi).isFull()) ? hi : lo;
+			if(((Comparable) key).compareTo(loadPage(hi).getMaxValInThePage()) >= 0  // key is greater than the max value of the page at hi
+				&& ((Comparable) key).compareTo(loadPage(lo).getMinValInThePage()) <= 0){// key is greater than the min value of the page at lo
+					return (!loadPage(hi).isFull()) ? hi : lo;
+                        // if the page at hi is not full, return hi, otherwise return lo
 				}
                 ///////////// example of the case above: insert 5 in:  hi->Page0(1,2,4);  lo->Page1(6,9,10,11)
                 ///// first iteration was lo = mid = 0, hi =1
@@ -241,6 +255,25 @@ ______
 
 		return mid;
 	}
+
+    public Page loadPage(int index) throws DBAppException {
+        if(index < 0 || index >= vecPages.size())
+            throw new DBAppException("Page index not valid or out of bounds");
+
+        String path ="src/resources/tables/"+strTableName+ "/page" + vecPages.get(index) + ".ser";
+        Page page = (Page) DBApp.deserialize(path);
+
+        return page;
+    }
+
+    public void savePageToDisk( Page page , int pageIndex) throws DBAppException {
+        String path ="src/resources/tables/"+strTableName+ "/page" + vecPages.get(pageIndex) + ".ser";
+        DBApp.serialize( path,page );
+    }
+    public void addNewPage(Page newPage) throws DBAppException { // add new page to the vector of pages
+        vecPages.add("page" + pagesIDcounter); // add file name\path to the vector of pages 
+        savePageToDisk(newPage, pagesIDcounter++); // save the page to disk
+    }
 
     public String getStrTableName() {
         return strTableName;
@@ -266,11 +299,11 @@ ______
         this.vecColumns = vecColumns;
     }
 
-    public Vector<Page> getVecPages() {
+    public Vector<String> getVecPages() {
         return vecPages;
     }
 
-    public void setVecPages(Vector<Page> vecPages) {
+    public void setVecPages(Vector<String> vecPages) {
         this.vecPages = vecPages;
     }
 
@@ -303,6 +336,10 @@ ______
 		return htblColNameIndex.getOrDefault(colName, -1);
 	}
 
+    /*public int getNextNewPageIDToBeCreated() {
+        return pagesIDcounter+1;
+    }*/
+
     public String  toString(){
         String strTblOutput = getStrTableName() + " Table \n"  + "-------------------------------" + "\n";
         Iterator iterateOverColumns = getVecColumns().iterator();
@@ -315,8 +352,15 @@ ______
         }
         strTblOutput+="\n" +"-------------------------------" +"\n";
 
-        for (Page x: getVecPages()) {
-            strTblOutput += "page"+x.getPid() + "\n" +"-------"+"\n"+x.toString()+"\n";
+
+        for (int i = 0; i < vecPages.size(); i++) {
+            Page page;
+            try {
+                page = this.loadPage(i);
+                strTblOutput += "page" + /*(page.getPid())*/ i + "\n" +"-------"+"\n" + page.toString()+"\n";
+            } catch (DBAppException e) {
+                e.printStackTrace();
+            }
         }
 
         return strTblOutput;
@@ -324,8 +368,8 @@ ______
     }
     
     
-    public Row findRowToUpdORdel(Object key, int candidateIdx) {
-		Vector<Row> candidatePageData =vecPages.get(candidateIdx).getData() ;
+    public Row findRowToUpdORdel(Object key, int candidateIdx) throws DBAppException {
+		Vector<Row> candidatePageData = this.loadPage(candidateIdx).getData() ;
 		
 		for (Row row : candidatePageData) {
 			if (row.getData().get(0).equals(key)) {//the clustering key
@@ -338,7 +382,8 @@ ______
     
     public int deleteRowsWithoutCKey(Hashtable<String, Object> colNameVal) throws DBAppException {
     	int items = 0;
-		for (Page page : vecPages) {
+		for (int i = 0; i < vecPages.size(); i++) {
+            Page page = loadPage(i);
 			Iterator<Row> iterator = page.getData().iterator();
 			while (iterator.hasNext()) {
 				Row row = (Row) iterator.next();
@@ -358,6 +403,7 @@ ______
 					items++;
 				}
 			}
+			this.savePageToDisk(page, i);
 		}
     	
     	
