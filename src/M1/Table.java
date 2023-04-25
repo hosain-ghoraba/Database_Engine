@@ -160,8 +160,9 @@ public class Table implements Serializable
                               this.savePageToDisk(toPage, j);
                           }
                       }
+                      correctPage = this.loadPage(pidOfCorrectPage);
                       correctPage.insertAnEntry(entry);
-                      this.savePageToDisk(correctPage, i);
+                      this.savePageToDisk(correctPage, pidOfCorrectPage);
                       return;
                 }
             }
