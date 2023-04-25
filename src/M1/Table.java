@@ -403,6 +403,7 @@ ______
 					items++;
 				}
 			}
+			this.savePageToDisk(page, i);
 		}
     	
     	

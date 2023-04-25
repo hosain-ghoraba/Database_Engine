@@ -98,8 +98,10 @@ public class DBApp {
             Object newValue = htblColNameValue.get(columnName);
 
             // if it is the value of the clustering key, insert into the first cell
-            if (columnName.equals(tblToUpdate.getStrClusteringKeyColumn()))
-                v.add(0, strClusteringKeyValue);
+            if (columnName.equals(tblToUpdate.getStrClusteringKeyColumn())) {
+                //v.add(0, strClusteringKeyValue);
+            	throw new DBAppException("You cannot update the clustering key");
+            }
             else
                 v.add(newValue);
         }
@@ -111,16 +113,24 @@ public class DBApp {
             Page candidatePage = tblToUpdate.loadPage(candidateIdx);
 
             rowToUpdate = tblToUpdate.findRowToUpdORdel(Integer.parseInt(strClusteringKeyValue), candidateIdx);
+            if (rowToUpdate == null) {
+                System.out.println("No such row matches to update it");
+                return;
+            } else {
+                //rowToUpdate.setData(v);
+                candidatePage.updateRow(tblToUpdate,rowToUpdate, htblColNameValue);
+            }
+            tblToUpdate.savePageToDisk(candidatePage, candidateIdx);
         }
 
-        else {
-            tblToUpdate.deleteRowsWithoutCKey(htblColNameValue);
-        }
+//        else {
+//            tblToUpdate.deleteRowsWithoutCKey(htblColNameValue);
+//        }
 
         // 4- Update the values of the columns in the row
-        rowToUpdate.setData(v);
+        //rowToUpdate.setData(v);
 
-        // 5- return table back to disk after update
+        // 5- return table & page back to disk after update
         serialize(path, tblToUpdate);
 
         // test
@@ -172,6 +182,8 @@ public class DBApp {
                 System.out.println("No rows matches these conditions.");
             else
                 candidatePage.deleteEntry(rowtodelete);
+            
+            tblToUpdate.savePageToDisk(candidatePage, candidateIdx);
         } else {
             tblToUpdate.deleteRowsWithoutCKey(htblColNameValue);
         }
@@ -349,36 +361,45 @@ public class DBApp {
 
         Hashtable<String, Object> htNameValdelete1 = new Hashtable<>();
         htNameValdelete1.put("Job", new String("engineer"));
+        Hashtable<String, Object> htNameValupdate1 = new Hashtable<>();
+        htNameValupdate1.put("Job", new String("engineer"));
 
-
-        // deletion test
-        // d.deleteFromTable("University", htNameValdelete1);//without PK
-        // d.deleteFromTable("University", htColNameVal0);
-        // d.deleteFromTable("University", htColNameVal1);
-        // d.deleteFromTable("University", htColNameVal2);
-        // d.deleteFromTable("University", htColNameVal3);
-        // d.deleteFromTable("University", htColNameVal4);
-
-        // Update Test
-        // d.updateTable("University","11", htColNameVal1);
 
         // insertion test
         d.insertIntoTable("University", htColNameVal0);///////////////////////
 
         Table x = (Table) deserialize("src/resources/tables/University/University.ser");
-        System.out.println(x.toString());
+        //System.out.println(x.toString());
         d.insertIntoTable("University", htColNameVal1);///////////////////////////////
 x = (Table) deserialize("src/resources/tables/University/University.ser");
-        System.out.println(x.toString());
+        //System.out.println(x.toString());
         d.insertIntoTable("University", htColNameVal3);////////////////////////////
 x = (Table) deserialize("src/resources/tables/University/University.ser");
-        System.out.println(x.toString());
+        //System.out.println(x.toString());
         d.insertIntoTable("University", htColNameVal2);////////////////////////////////
 x = (Table) deserialize("src/resources/tables/University/University.ser");
-        System.out.println(x.toString());
+        //System.out.println(x.toString());
         d.insertIntoTable("University", htColNameVal4);//////////////////////////////
 x = (Table) deserialize("src/resources/tables/University/University.ser");
+        //System.out.println(x.toString());
+        
+        
+        
+        // deletion test
+         //d.deleteFromTable("University", htNameValdelete1);//without PK
+         //d.deleteFromTable("University", htColNameVal0);
+//         d.deleteFromTable("University", htColNameVal1);
+//         d.deleteFromTable("University", htColNameVal2);
+//         d.deleteFromTable("University", htColNameVal3);
+//         d.deleteFromTable("University", htColNameVal4);
+//x = (Table) deserialize("src/resources/tables/University/University.ser");
+//        System.out.println(x.toString());
+
+        // Update Test
+         d.updateTable("University","34", htNameValupdate1);
+x = (Table) deserialize("src/resources/tables/University/University.ser");
         System.out.println(x.toString());
+
         System.out.println("Hello, Database World!");
         // update test
         // System.out.println(x.toString());

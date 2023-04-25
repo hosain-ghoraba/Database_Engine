@@ -1,6 +1,7 @@
 package M1;
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 import java.util.function.UnaryOperator;
@@ -44,7 +45,12 @@ public class Page implements Serializable {
     public void deleteEntry(Row entry) throws DBAppException {
     	DBApp.serialize(path, data);
     	if(entry != null) {
-    		data.remove(entry);
+    		for (Row row : data) {
+				if(row.compareTo(entry) == 0) {
+					data.remove(row);
+					break;
+				}
+			}
     		setNoOfCurrentRowsBYOFFSET(-1);
     		if(!isEmpty()) {
     			minValInThePage = data.get(0).getData().get(0); // minValueOfThPage is the primary key value of the first tuple
@@ -114,4 +120,21 @@ public class Page implements Serializable {
     public boolean isEmpty() {
 		return data.isEmpty();
 	}
+
+    public void updateRow(Table table ,Row entry, Hashtable<String, Object> htblColNameData) {
+        DBApp.serialize(path, data);
+    	for (Row row : data) {
+            if(row.compareTo(entry) == 0) {
+                Enumeration<String> strEnumeration = htblColNameData.keys();
+                while (strEnumeration.hasMoreElements()) {
+                    String strColName = strEnumeration.nextElement();
+                    Object objColValue = htblColNameData.get(strColName);
+                    row.getData().set(table.getColumnEquivalentIndex(strColName), objColValue);
+                }
+
+
+                break;
+            }
+        }        
+    }
 }
