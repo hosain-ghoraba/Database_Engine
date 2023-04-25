@@ -47,9 +47,8 @@ public class DBApp {
             throw new DBAppException(e.getMessage());
         }
 
-        
-        
     }
+    
     public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue)throws DBAppException {
         // surroud the whole method with try catch to catch any exception and re-throw it as DBAppException
         try
@@ -265,6 +264,9 @@ public class DBApp {
             }
 
         }
+        if (!( htblColNameType.size() == htblColNameMin.size() && htblColNameType.size() == htblColNameMax.size()))
+        	throw new DBAppException("Columns not matching");
+        
 
     }
     public void readConfig() {
@@ -397,7 +399,9 @@ public class DBApp {
         Hashtable<String, Object> htNameValdelete1 = new Hashtable<>();
         htNameValdelete1.put("Job", new String("engineer"));
         Hashtable<String, Object> htNameValupdate1 = new Hashtable<>();
-        htNameValupdate1.put("Job", new String("engineer"));
+        htNameValupdate1.put("Name", new String("SeragMohema"));
+        htNameValupdate1.put("Job", new String("AmnDawla"));
+
 
 
         // insertion test
@@ -405,33 +409,33 @@ public class DBApp {
 
         Table x = (Table) deserialize("src/resources/tables/University/University.ser");
         //System.out.println(x.toString());
-        d.insertIntoTable("University", htColNameVal1);///////////////////////////////
-x = (Table) deserialize("src/resources/tables/University/University.ser");
-        //System.out.println(x.toString());
-        d.insertIntoTable("University", htColNameVal3);////////////////////////////
-x = (Table) deserialize("src/resources/tables/University/University.ser");
-        //System.out.println(x.toString());
         d.insertIntoTable("University", htColNameVal2);////////////////////////////////
 x = (Table) deserialize("src/resources/tables/University/University.ser");
         //System.out.println(x.toString());
-        d.insertIntoTable("University", htColNameVal4);//////////////////////////////
+		d.insertIntoTable("University", htColNameVal1);///////////////////////////////
+x = (Table) deserialize("src/resources/tables/University/University.ser");
+        //System.out.println(x.toString());
+		d.insertIntoTable("University", htColNameVal4);//////////////////////////////
+x = (Table) deserialize("src/resources/tables/University/University.ser");
+        //System.out.println(x.toString());
+		d.insertIntoTable("University", htColNameVal3);////////////////////////////
 x = (Table) deserialize("src/resources/tables/University/University.ser");
         //System.out.println(x.toString());
         
         
         
         // deletion test
-         //d.deleteFromTable("University", htNameValdelete1);//without PK
-         //d.deleteFromTable("University", htColNameVal0);
-//         d.deleteFromTable("University", htColNameVal1);
-//         d.deleteFromTable("University", htColNameVal2);
-//         d.deleteFromTable("University", htColNameVal3);
+//         d.deleteFromTable("University", htNameValdelete1);//without PK
 //         d.deleteFromTable("University", htColNameVal4);
-//x = (Table) deserialize("src/resources/tables/University/University.ser");
+//		d.deleteFromTable("University", htColNameVal1);
+//         d.deleteFromTable("University", htColNameVal0);
+//         d.deleteFromTable("University", htColNameVal3);
+//         d.deleteFromTable("University", htColNameVal2);
+		x = (Table) deserialize("src/resources/tables/University/University.ser");
 //        System.out.println(x.toString());
 
         // Update Test
-         d.updateTable("University","34", htNameValupdate1);
+		d.updateTable("University","11", htNameValupdate1);
 x = (Table) deserialize("src/resources/tables/University/University.ser");
         System.out.println(x.toString());
 

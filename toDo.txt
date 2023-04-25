@@ -1,6 +1,6 @@
 
 in M1 :
-1 -  when running program, catch any exception and re-throw it as DB exception
+1 (Done) -  when running program, catch any exception and re-throw it as DB exception
         https://piazza.com/class/lel8rsvwc4e7j6/post/60
 
 2 -  I think that the vector<row> in page should be initialized with max no.rows allowed in one page as input to its constructor, to increase performance
@@ -8,8 +8,8 @@ in M1 :
 
 3 - important : should write table info in meta data when createing table!
 
-3 - throw exception in create table if the 3 hashtables don't have exactly the same keys
-    https://piazza.com/class/lel8rsvwc4e7j6/post/125
+3 (Done)- throw exception in create table if the 3 hashtables don't have exactly the same keys
+    https://piazza.com/class/lel8rsvwc4e7j6/post/125 
 
 4 - important :  Meta data file should be used to learn about TYPES of columns, as well check if inserted value is between column min and max in a table with every insert/delete/update,for example, in insert, it only checks for exsistance of table name in listofCreated tables,but doesn't check columns and compare their types with input parameters !
              (Project grading schema)
