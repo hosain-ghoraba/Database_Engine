@@ -22,6 +22,9 @@ public class DBApp {
         this.readConfig();
     };
     public void createTable(String strTableName, String strClusteringKeyColumn, Hashtable<String, String> htblColNameType,Hashtable<String, String> htblColNameMin, Hashtable<String, String> htblColNameMax) throws DBAppException {
+        // surroud the whole method with try catch to catch any exception and re-throw it as DBAppException
+        try
+        {
         validation(htblColNameType, htblColNameMin, htblColNameMax); // validation method checks if the type of table's columns is one of the 4 types specified in the description,validation also checks if any column does not have maxVal or minVal , hence throws exception
         for(String colName : htblColNameMin.keySet()) // converts all min and max column values to lowercase (hosain)
             htblColNameMin.put(colName, htblColNameMin.get(colName).toLowerCase());
@@ -38,9 +41,19 @@ public class DBApp {
         newFile.mkdir();
         // serialization
         serialize(strTablePath + "/" + strTableName + ".ser", tblCreated);
-    }
-    public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue)throws DBAppException, ParseException {
+        }
+        catch(Exception e)
+        {
+            throw new DBAppException(e.getMessage());
+        }
+
         
+        
+    }
+    public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue)throws DBAppException {
+        // surroud the whole method with try catch to catch any exception and re-throw it as DBAppException
+        try
+        {
         if (!listofCreatedTables.contains(strTableName))
             throw new DBAppException("You cannot insert into a table that has not been created yet");
         Methods.check_strings_are_Alphabitical(htblColNameValue);
@@ -78,10 +91,18 @@ public class DBApp {
         tblToInsertInto.insertAnEntry(entry);
         // 3-return table back to disk with the the new inserted value
         serialize(path, tblToInsertInto);
+        }
+        catch(Exception e)
+        {
+            throw new DBAppException(e.getMessage());
+        }
+        
 
     }
-    public void updateTable(String strTableName, String strClusteringKeyValue,Hashtable<String, Object> htblColNameValue) throws DBAppException, ParseException {
-
+    public void updateTable(String strTableName, String strClusteringKeyValue,Hashtable<String, Object> htblColNameValue) throws DBAppException {
+        // surroud the whole method with try catch to catch any exception and re-throw it as DBAppException
+        try
+        {
         if (!listofCreatedTables.contains(strTableName))
             throw new DBAppException("You cannot update a table that has not been created yet");
         Methods.check_strings_are_Alphabitical(htblColNameValue); // check if all string records inside the hashtable are alphabitical
@@ -132,6 +153,12 @@ public class DBApp {
 
         // 5- return table & page back to disk after update
         serialize(path, tblToUpdate);
+        }
+        catch(Exception e)
+        {
+            throw new DBAppException(e.getMessage());
+        }
+        
 
         // test
         // Row entry = new Row(v);
@@ -143,8 +170,10 @@ public class DBApp {
         // System.out.println(i);
         // test
     }
-    public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue)throws DBAppException, ParseException {
-
+    public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue)throws DBAppException {
+        // surroud the whole method with try catch to catch any exception and re-throw it as DBAppException
+        try
+        {
         if (!listofCreatedTables.contains(strTableName))
             throw new DBAppException("You cannot update a table that has not been created yet");
         Methods.convert_strings_To_Lower_Case(htblColNameValue); // convert all string records in hashtable to lower case
@@ -210,6 +239,12 @@ public class DBApp {
 
         // 4-return table back to disk after update
         serialize(path, tblToUpdate);
+        }
+        catch(Exception e)
+        {
+            throw new DBAppException(e.getMessage());
+        }
+        
     }
 
     private static void validation(Hashtable<String, String> htblColNameType, Hashtable<String, String> htblColNameMin,
