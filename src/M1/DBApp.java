@@ -1,5 +1,6 @@
 package M1;
 
+import java.awt.event.KeyListener;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -43,6 +44,7 @@ public class DBApp {
         newFile.mkdir();
         // serialization
         serialize(strTablePath + "/" + strTableName + ".ser", tblCreated);
+        OperationSignatureDisplay(tblCreated, htblColNameType,OpType.CREATE);
         }
         catch(Exception e)
         {
@@ -92,6 +94,7 @@ public class DBApp {
         tblToInsertInto.insertAnEntry(entry);
         // 3-return table back to disk with the the new inserted value
         serialize(path, tblToInsertInto);
+        OperationSignatureDisplay(OpType.INSERT, tblToInsertInto, htblColNameValue);
         }
         catch(Exception e)
         {
@@ -156,6 +159,7 @@ public class DBApp {
 
         // 5- return table & page back to disk after update
         serialize(path, tblToUpdate);
+        OperationSignatureDisplay(OpType.UPDATE, tblToUpdate, htblColNameValue, strClusteringKeyValue);
         
         
         
@@ -242,6 +246,7 @@ public class DBApp {
         }
 
         // 4-return table back to disk after update
+        OperationSignatureDisplay(OpType.DELETE, tblToUpdate, htblColNameValue);
         serialize(path, tblToUpdate);
         }
         catch(Exception e)
@@ -274,6 +279,125 @@ public class DBApp {
         
 
     }
+    
+    
+    
+    public static void OperationSignatureDisplay(OpType operation, Table table, Hashtable<String,Object> htblColNameVal) {
+        switch(operation) {
+            case INSERT:
+
+                StringBuilder output = new StringBuilder("-------SQL Equivalent Command:\n"
+                		+ "INSERT INTO " +table.getStrTableName() + "(");
+
+                Enumeration<String> en = htblColNameVal.keys();
+                String[] cols = new String[htblColNameVal.size()];
+                int k = 0;
+                while (en.hasMoreElements()) {
+                	cols[k] = (String) en.nextElement();
+                	output.append((k == cols.length-1)?cols[k++]+") VALUES (": cols[k++]+", ");
+                }
+                
+                for (int i = 0; i < cols.length; i++) {
+					output.append((i == cols.length-1)?htblColNameVal.getOrDefault(cols[i], "Null")+");"
+													: htblColNameVal.getOrDefault(cols[i], "Null")+", ");
+				}
+                output.append("\n\nand Result Set Output Table: ####################\n")
+                		.append(table.toString()).append("\n######################\n");
+                
+                System.out.println(output);
+                
+                break;
+            case DELETE:
+
+                StringBuilder output2 = new StringBuilder("-------SQL Equivalent Command:\n"
+                		+ "DELETE FROM " +table.getStrTableName());
+             if (htblColNameVal.size() > 0) {
+                	output2.append(" WHERE ");
+
+                Enumeration<String> en2 = htblColNameVal.keys();
+                String[] cols2 = new String[htblColNameVal.size()];
+                int k2 = 0;
+                while (en2.hasMoreElements())	cols2[k2++] = (String) en2.nextElement();
+                	
+                
+                for (int i = 0; i < cols2.length; i++) {
+                	
+                	output2.append(cols2[i]+" = ");
+					output2.append(htblColNameVal.getOrDefault(cols2[i], "Null"));
+					if( i < cols2.length-1) output2.append("AND ");
+					else output2.append(";");
+				}
+            }
+                output2.append("\n\nand Result Set output2 Table: ####################\n")
+                		.append(table.toString()).append("\n######################\n");
+                
+                System.out.println(output2);
+                
+                break;
+
+            
+            default: System.out.println("No enough or Wrong Info Given");
+
+        }
+    }
+    
+    public static void OperationSignatureDisplay(Table table, Hashtable<String,String> htblColNameType, OpType operation){
+        switch(operation){
+            case CREATE:
+                    
+                    StringBuilder output4 = new StringBuilder("-------SQL Equivalent Command:\n"
+                    		+ "CREATE TABLE " +table.getStrTableName() + " (\n");
+    
+                    Enumeration<String> en4 = htblColNameType.keys();
+                    String[] cols4 = new String[htblColNameType.size()];
+                    int k4 = 0;
+                    while (en4.hasMoreElements()) {
+                    	cols4[k4++] = (String) en4.nextElement();
+                    }
+                    
+                    for (int i = 0; i < cols4.length; i++) {
+                       	output4.append("\t" + cols4[i]+" :: ");
+                       	if(!table.getStrClusteringKeyColumn().equals(cols4[i]))
+                       		output4.append((i == cols4.length-1)?htblColNameType.getOrDefault(cols4[i], "Null")+"\n );\n\n"
+       													: htblColNameType.getOrDefault(cols4[i], "Null")+",\n");
+                       	else
+                       		output4.append((i == cols4.length-1)?htblColNameType.getOrDefault(cols4[i], "Null")+"  Primary Key\n );\n\n"
+       													: htblColNameType.getOrDefault(cols4[i], "Null")+"  Primary Key,\n");
+                    }
+                    System.out.println(output4);
+                    break;
+            default: System.out.println("No enough or Wrong Info Given");
+
+        }
+                    
+    }
+    public static void OperationSignatureDisplay(OpType operation, Table table, Hashtable<String,Object> htblColNameVal, String clusterKey) {
+	    if(operation == OpType.UPDATE) {
+	        StringBuilder output3 = new StringBuilder("-------SQL Equivalent Command:\n"
+	        		+ "UPDATE " +table.getStrTableName()+ " SET\n");
+	
+	        Enumeration<String> en3 = htblColNameVal.keys();
+	        String[] cols3 = new String[htblColNameVal.size()];
+	        int k3 = 0;
+	        while (en3.hasMoreElements())	cols3[k3++] = (String) en3.nextElement();
+	        	
+	        
+	        for (int i = 0; i < cols3.length; i++) {
+	        	
+	        	output3.append("\t"+cols3[i]+" = ");
+				output3.append(htblColNameVal.getOrDefault(cols3[i], "Null"));
+				if( i < cols3.length-1) output3.append(",\n");
+				else output3.append("\nWHERE " + table.getStrClusteringKeyColumn() + " = " + clusterKey+";");
+			}
+	        output3.append("\n\nand Result Set output3 Table: ####################\n")
+	        		.append(table.toString()).append("\n######################\n");
+	        
+	        System.out.println(output3);
+	        
+	    }else	System.out.println("No enough or Wrong Info Given");
+    }
+    
+    
     public void readConfig() {
         /*
          * this method objective is to read the DBApp configuration file in order to
@@ -404,7 +528,7 @@ try {
         // htColNameVal5.put("Job", new String("m4 la2i"));
 
         Hashtable<String, Object> htNameValdelete1 = new Hashtable<>();
-        //htNameValdelete1.put("Job", new String("engineer"));
+        htNameValdelete1.put("Job", new String("engineer"));
         Hashtable<String, Object> htNameValupdate1 = new Hashtable<>();
         htNameValupdate1.put("Name", new String("SeragMohema"));
         htNameValupdate1.put("Job", new String("AmnDawla"));
@@ -427,7 +551,7 @@ try {
 //        System.out.println(x.toString());
 		d.insertIntoTable("University", htColNameVal3);////////////////////////////
 x = (Table) deserialize("src/resources/tables/University/University.ser");
-        System.out.println(x.toString());
+//        System.out.println(x.toString());
         
         
         
@@ -439,12 +563,12 @@ x = (Table) deserialize("src/resources/tables/University/University.ser");
 //         d.deleteFromTable("University", htColNameVal3);
 //         d.deleteFromTable("University", htColNameVal2);
 		x = (Table) deserialize("src/resources/tables/University/University.ser");
-        System.out.println(x.toString());
+//        System.out.println(x.toString());
 
         // Update Test
 		d.updateTable("University","11", htNameValupdate1);
 x = (Table) deserialize("src/resources/tables/University/University.ser");
-        System.out.println(x.toString());
+//        System.out.println(x.toString());
 
         System.out.println("Hello, Database World!");
         // update test
