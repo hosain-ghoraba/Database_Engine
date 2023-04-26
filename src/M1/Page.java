@@ -42,15 +42,10 @@ public class Page implements Serializable {
         DBApp.serialize(path,data);
     }
     
-    public void deleteEntry(Row entry) throws DBAppException {
+    public void deleteEntry(int entryIdx) throws DBAppException {
     	DBApp.serialize(path, data);
-    	if(entry != null) {
-    		for (Row row : data) {
-				if(row.compareTo(entry) == 0) {
-					data.remove(row);
-					break;
-				}
-			}
+        if(entryIdx < data.size() && entryIdx >= 0) {
+			data.remove(entryIdx);
     		setNoOfCurrentRowsBYOFFSET(-1);
     		if(!isEmpty()) {
     			minValInThePage = data.get(0).getData().get(0); // minValueOfThPage is the primary key value of the first tuple
@@ -121,20 +116,22 @@ public class Page implements Serializable {
 		return data.isEmpty();
 	}
 
-    public void updateRow(Table table ,Row entry, Hashtable<String, Object> htblColNameData) {
+    public void updateRow(Table table ,int entryIdx, Hashtable<String, Object> htblColNameData) {
+        if(entryIdx < 0 || entryIdx >= data.size()) { //index out of bounds
+            System.out.println("You cannot update a non existent row");
+            return;
+        }
+        
         DBApp.serialize(path, data);
-    	for (Row row : data) {
-            if(row.compareTo(entry) == 0) {
-                Enumeration<String> strEnumeration = htblColNameData.keys();
-                while (strEnumeration.hasMoreElements()) {
-                    String strColName = strEnumeration.nextElement();
-                    Object objColValue = htblColNameData.get(strColName);
-                    row.getData().set(table.getColumnEquivalentIndex(strColName), objColValue);
-                }
 
+        Row row = data.get(entryIdx);
 
-                break;
-            }
-        }        
+        Enumeration<String> strEnumeration = htblColNameData.keys();
+        while (strEnumeration.hasMoreElements()) {
+            String strColName = strEnumeration.nextElement();
+            Object objColValue = htblColNameData.get(strColName);
+            row.getData().set(table.getColumnEquivalentIndex(strColName), objColValue);
+        }
+        DBApp.serialize(path, data);    
     }
 }

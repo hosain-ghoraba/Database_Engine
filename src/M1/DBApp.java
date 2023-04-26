@@ -132,13 +132,13 @@ public class DBApp {
             candidateIdx = tblToUpdate.binarySrch(Integer.parseInt(strClusteringKeyValue));
             Page candidatePage = tblToUpdate.loadPage(candidateIdx);
 
-            rowToUpdate = tblToUpdate.findRowToUpdORdel(Integer.parseInt(strClusteringKeyValue), candidateIdx);
-            if (rowToUpdate == null) {
+            int rowIdxToUpdate = tblToUpdate.findRowToUpdORdel(Integer.parseInt(strClusteringKeyValue), candidateIdx);
+            if (rowIdxToUpdate < 0) {
                 System.out.println("No such row matches to update it");
                 return;
             } else {
                 //rowToUpdate.setData(v);
-                candidatePage.updateRow(tblToUpdate,rowToUpdate, htblColNameValue);
+                candidatePage.updateRow(tblToUpdate,rowIdxToUpdate, htblColNameValue);
             }
             tblToUpdate.savePageToDisk(candidatePage, candidateIdx);
         }
@@ -205,8 +205,8 @@ public class DBApp {
             int candidateIdx = tblToUpdate.binarySrch(clusteringKeyVal);
             Page candidatePage = tblToUpdate.loadPage(candidateIdx);
 
-            Row rowtodelete = tblToUpdate.findRowToUpdORdel(clusteringKeyVal, candidateIdx);
-            if (rowtodelete == null)
+            int rowtodelete = tblToUpdate.findRowToUpdORdel(clusteringKeyVal, candidateIdx);
+            if (rowtodelete < 0)
                 System.out.println("No rows matches these conditions.");
             else
                 candidatePage.deleteEntry(rowtodelete);
@@ -411,28 +411,28 @@ public class DBApp {
         System.out.println(x.toString());
         d.insertIntoTable("University", htColNameVal2);////////////////////////////////
 x = (Table) deserialize("src/resources/tables/University/University.ser");
-        //System.out.println(x.toString());
+        System.out.println(x.toString());
 		d.insertIntoTable("University", htColNameVal1);///////////////////////////////
 x = (Table) deserialize("src/resources/tables/University/University.ser");
-        //System.out.println(x.toString());
+        System.out.println(x.toString());
 		d.insertIntoTable("University", htColNameVal4);//////////////////////////////
 x = (Table) deserialize("src/resources/tables/University/University.ser");
-        //System.out.println(x.toString());
+        System.out.println(x.toString());
 		d.insertIntoTable("University", htColNameVal3);////////////////////////////
 x = (Table) deserialize("src/resources/tables/University/University.ser");
-        //System.out.println(x.toString());
+        System.out.println(x.toString());
         
         
         
         // deletion test
-//         d.deleteFromTable("University", htNameValdelete1);//without PK
+         d.deleteFromTable("University", htNameValdelete1);//without PK
 //         d.deleteFromTable("University", htColNameVal4);
 //		d.deleteFromTable("University", htColNameVal1);
 //         d.deleteFromTable("University", htColNameVal0);
 //         d.deleteFromTable("University", htColNameVal3);
 //         d.deleteFromTable("University", htColNameVal2);
 		x = (Table) deserialize("src/resources/tables/University/University.ser");
-//        System.out.println(x.toString());
+        System.out.println(x.toString());
 
         // Update Test
 		d.updateTable("University","11", htNameValupdate1);

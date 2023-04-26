@@ -368,16 +368,21 @@ ______
     }
     
     
-    public Row findRowToUpdORdel(Object key, int candidateIdx) throws DBAppException {
+    public int findRowToUpdORdel(Object key, int candidateIdx) throws DBAppException {
 		Vector<Row> candidatePageData = this.loadPage(candidateIdx).getData() ;
+		//binary searching on row to be updated or deleted
+        int lo = 0, hi = candidatePageData.size() - 1;
+        while (lo <= hi) {
+            int mid = lo + (hi - lo) / 2;
+            if (((Comparable) key).compareTo(candidatePageData.get(mid).getData().get(getColumnEquivalentIndex(strClusteringKeyColumn))) < 0)
+                hi = mid - 1;
+            else if (((Comparable) key).compareTo(candidatePageData.get(mid).getData().get(getColumnEquivalentIndex(strClusteringKeyColumn))) > 0)
+                lo = mid + 1;
+            else
+                return mid;
+        }
 		
-		for (Row row : candidatePageData) {
-			if (row.getData().get(0).equals(key)) {//the clustering key
-				return row;
-			}
-		}
-		
-		return null;
+		return -1;
 	}
     
     public int deleteRowsWithoutCKey(Hashtable<String, Object> colNameVal) throws DBAppException {
