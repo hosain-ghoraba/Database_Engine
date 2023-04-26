@@ -141,9 +141,7 @@ public class Methods { // a collection of methods that are used all over the pro
 
      }
 
-    public static void main(String[] args) {
-        
-    }    
+
 
    
     
