@@ -1,6 +1,5 @@
 package M1;
 import java.io.Serializable;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.text.*;
 
@@ -60,44 +59,69 @@ public class Table implements Serializable
     	int index = getColumnEquivalentIndex(colName); //O(1)
     	return (index == -1)? null : getVecColumns().get(index);
     }
-    public void validateValueType(Column column ,Object valueToCheck) throws DBAppException,ParseException{
+    public void validateValueType(Column column ,Object valueToCheck) throws DBAppException{
         if(valueToCheck instanceof  String){
                   if(!column.getStrColType().equals("java.lang.String"))
                       throw new DBAppException("The value and its corresponding column must be of the same type");
                   String value =(String) valueToCheck;
                   if(value.compareTo(column.getStrMaxVal()) > 0 ||value.compareTo(column.getStrMinVal()) < 0 )
-                      throw new DBAppException("You cannot insert a value that is out of the bounds of this column");
+                      throw new DBAppException("You cannot use a value that is out of the bounds of this column");
         }
         else if(valueToCheck instanceof  Integer){
             if(!column.getStrColType().equals("java.lang.Integer"))
                 throw new DBAppException("The value and its corresponding column must be of the same type");
             Integer value =(Integer) valueToCheck;
             if(value.compareTo(Integer.valueOf(column.getStrMaxVal())) > 0 ||value.compareTo(Integer.valueOf(column.getStrMinVal())) < 0 )
-                throw new DBAppException("You cannot insert a value that is out of the bounds of this column");
+                throw new DBAppException("You cannot use a value that is out of the bounds of this column");
         }
         else if(valueToCheck instanceof  Double){
             if(!column.getStrColType().equals("java.lang.Double"))
                 throw new DBAppException("The value and its corresponding column must be of the same type");
             Double value =(Double) valueToCheck;
             if(value.compareTo(Double.valueOf(column.getStrMaxVal())) > 0 ||value.compareTo(Double.valueOf(column.getStrMinVal())) < 0 )
-                throw new DBAppException("You cannot insert a value that is out of the bounds of this column");
+                throw new DBAppException("You cannot use a value that is out of the bounds of this column");
         }
         else if (valueToCheck instanceof Date){
             if(!column.getStrColType().equals("java.lang.Date"))
                 throw new DBAppException("The value and its corresponding column must be of the same type");
             Date value =(Date) valueToCheck;
 
-            Date dMax = new SimpleDateFormat("yyyy/MM/dd").parse(column.getStrMaxVal());//throw parseException
-            Date dMin = new SimpleDateFormat("yyyy/MM/dd").parse(column.getStrMinVal());
+            Date dMax, dMin;
+            try {
+                dMax = new SimpleDateFormat("yyyy/MM/dd").parse(column.getStrMaxVal());
+                dMin = new SimpleDateFormat("yyyy/MM/dd").parse(column.getStrMinVal());
+            } catch (ParseException e) {            
+                throw new DBAppException("Error parsing date");
+            }//instead of throwing parseException
 
             if(value.compareTo(dMax) > 0 ||value.compareTo(dMin) < 0 )
-                throw new DBAppException("You cannot insert a value that is out of determined bounds of this column");
+                throw new DBAppException("You cannot usa a value that is out of determined bounds of this column");
 
         }
         else
             throw new DBAppException("This value type is not supported");
 
     }
+
+    public Object getValueBasedOnType(String valueObj, Column column) throws DBAppException {
+//        validateValueType(column, valueObj);
+
+        if(column.getStrColType().equals("java.lang.String"))
+            return valueObj;
+        else if(column.getStrColType().equals("java.lang.Integer"))
+            return Integer.valueOf(valueObj);
+        else if(column.getStrColType().equals("java.lang.Double"))
+            return Double.valueOf(valueObj);
+        else if(column.getStrColType().equals("java.lang.Date"))
+            try {
+                return new SimpleDateFormat("yyyy/MM/dd").parse(valueObj);
+            } catch (ParseException e) {
+                throw new DBAppException("Error parsing date");
+            }
+        else
+            return null;
+    }
+        
     public void insertAnEntry(Row entry) throws DBAppException{
         if(vecPages.size() == 0){ // table has no page
             Page page = new Page(strTableName,0);

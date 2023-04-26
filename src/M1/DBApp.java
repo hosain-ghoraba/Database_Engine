@@ -100,8 +100,7 @@ public class DBApp {
     }
     public void updateTable(String strTableName, String strClusteringKeyValue,Hashtable<String, Object> htblColNameValue) throws DBAppException {
         // surroud the whole method with try catch to catch any exception and re-throw it as DBAppException
-        try
-        {
+       
         if (!listofCreatedTables.contains(strTableName))
             throw new DBAppException("You cannot update a table that has not been created yet");
         Methods.check_strings_are_Alphabitical(htblColNameValue); // check if all string records inside the hashtable are alphabitical
@@ -129,10 +128,13 @@ public class DBApp {
         // 3- Find the row to update using the clustering key value
         int candidateIdx = 0;
         if (strClusteringKeyValue != null) {
-            candidateIdx = tblToUpdate.binarySrch(Integer.parseInt(strClusteringKeyValue));
+            String clustercolumn = tblToUpdate.getStrClusteringKeyColumn();
+            Column c = tblToUpdate.getColumn(clustercolumn);
+            Object objClusteringKeyVal = tblToUpdate.getValueBasedOnType(strClusteringKeyValue, c);
+            candidateIdx = tblToUpdate.binarySrch(objClusteringKeyVal);
             Page candidatePage = tblToUpdate.loadPage(candidateIdx);
 
-            int rowIdxToUpdate = tblToUpdate.findRowToUpdORdel(Integer.parseInt(strClusteringKeyValue), candidateIdx);
+            int rowIdxToUpdate = tblToUpdate.findRowToUpdORdel(objClusteringKeyVal, candidateIdx);
             if (rowIdxToUpdate < 0) {
                 System.out.println("No such row matches to update it");
                 return;
@@ -152,11 +154,8 @@ public class DBApp {
 
         // 5- return table & page back to disk after update
         serialize(path, tblToUpdate);
-        }
-        catch(Exception e)
-        {
-            throw new DBAppException(e.getMessage());
-        }
+        
+        
         
 
         // test
