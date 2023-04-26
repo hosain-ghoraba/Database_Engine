@@ -281,6 +281,8 @@ ______
 	}
 
     public Page loadPage(int index) throws DBAppException {
+    	if(vecPages.size() == 0)
+            throw new DBAppException("Table is Empty & Cannot perform any CRUD operations");
         if(index < 0 || index >= vecPages.size())
             throw new DBAppException("Page index not valid or out of bounds");
 
@@ -416,7 +418,7 @@ ______
 			Iterator<Row> iterator = page.getData().iterator();
 			while (iterator.hasNext()) {
 				Row row = (Row) iterator.next();
-				boolean ANDING = false;
+				boolean ANDING = true;
 				
 				Enumeration<String> strEnumeration = colNameVal.keys();
 				while (strEnumeration.hasMoreElements()) {

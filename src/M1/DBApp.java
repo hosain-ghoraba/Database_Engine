@@ -1,6 +1,8 @@
 package M1;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.*;
 
@@ -231,7 +233,11 @@ public class DBApp {
             String pagetodelete = (String) iteratetmp.next();
             if (tblToUpdate.loadPage(index).isEmpty()) {
                 iteratetmp.remove();// deleted from temporary list
+
                 tblToUpdate.getVecPages().remove(index);// deleted from original list
+
+                //new File(this.getClass().getResource("/resources/tables/" + strTableName + "/pages/" + pagetodelete + ".ser").toURI()).delete();
+                 // delete from disk
             }else index = iteratetmp.nextIndex();
         }
 
@@ -347,7 +353,9 @@ public class DBApp {
 
     public static void main(String[] args) throws DBAppException, InterruptedException, ParseException {
         starty();
-
+try {
+	
+	
         DBApp d = new DBApp();
         Hashtable<String, String> htNameType = new Hashtable<>();
         htNameType.put("Id", "java.lang.Integer");
@@ -396,7 +404,7 @@ public class DBApp {
         // htColNameVal5.put("Job", new String("m4 la2i"));
 
         Hashtable<String, Object> htNameValdelete1 = new Hashtable<>();
-        htNameValdelete1.put("Job", new String("engineer"));
+        //htNameValdelete1.put("Job", new String("engineer"));
         Hashtable<String, Object> htNameValupdate1 = new Hashtable<>();
         htNameValupdate1.put("Name", new String("SeragMohema"));
         htNameValupdate1.put("Job", new String("AmnDawla"));
@@ -407,16 +415,16 @@ public class DBApp {
         d.insertIntoTable("University", htColNameVal0);///////////////////////
 
         Table x = (Table) deserialize("src/resources/tables/University/University.ser");
-        System.out.println(x.toString());
+//        System.out.println(x.toString());
         d.insertIntoTable("University", htColNameVal2);////////////////////////////////
-x = (Table) deserialize("src/resources/tables/University/University.ser");
-        System.out.println(x.toString());
+//x = (Table) deserialize("src/resources/tables/University/University.ser");
+//        System.out.println(x.toString());
 		d.insertIntoTable("University", htColNameVal1);///////////////////////////////
-x = (Table) deserialize("src/resources/tables/University/University.ser");
-        System.out.println(x.toString());
+//x = (Table) deserialize("src/resources/tables/University/University.ser");
+//        System.out.println(x.toString());
 		d.insertIntoTable("University", htColNameVal4);//////////////////////////////
-x = (Table) deserialize("src/resources/tables/University/University.ser");
-        System.out.println(x.toString());
+//x = (Table) deserialize("src/resources/tables/University/University.ser");
+//        System.out.println(x.toString());
 		d.insertIntoTable("University", htColNameVal3);////////////////////////////
 x = (Table) deserialize("src/resources/tables/University/University.ser");
         System.out.println(x.toString());
@@ -468,6 +476,12 @@ x = (Table) deserialize("src/resources/tables/University/University.ser");
          * }
          * 
          */
+        
+        
+}catch (DBAppException e) {
+	e.printStackTrace();
+	System.out.println("\n\nExit status code = 1");
+}        
         endy();
     }
 

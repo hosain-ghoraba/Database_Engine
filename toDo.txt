@@ -21,7 +21,7 @@ in M1 :
 6 (done) -  update method assumes that the clustering key is always integer, which is not neccessary
         https://piazza.com/class/lel8rsvwc4e7j6/post/58
 
-7 -  delete all pages if input hashTable is empty :
+7 (done) -  delete all pages if input hashTable is empty :
              https://piazza.com/class/lel8rsvwc4e7j6/post/35
              https://piazza.com/class/lel8rsvwc4e7j6/post/55
 
