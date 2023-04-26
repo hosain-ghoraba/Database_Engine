@@ -408,7 +408,7 @@ public class DBApp {
         d.insertIntoTable("University", htColNameVal0);///////////////////////
 
         Table x = (Table) deserialize("src/resources/tables/University/University.ser");
-        //System.out.println(x.toString());
+        System.out.println(x.toString());
         d.insertIntoTable("University", htColNameVal2);////////////////////////////////
 x = (Table) deserialize("src/resources/tables/University/University.ser");
         //System.out.println(x.toString());

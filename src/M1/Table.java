@@ -260,14 +260,14 @@ ______
         if(index < 0 || index >= vecPages.size())
             throw new DBAppException("Page index not valid or out of bounds");
 
-        String path ="src/resources/tables/"+strTableName+ "/page" + vecPages.get(index) + ".ser";
+        String path ="src/resources/tables/"+strTableName+ "/pages/" + vecPages.get(index) + ".ser";
         Page page = (Page) DBApp.deserialize(path);
 
         return page;
     }
 
     public void savePageToDisk( Page page , int pageIndex) throws DBAppException {
-        String path ="src/resources/tables/"+strTableName+ "/page" + vecPages.get(pageIndex) + ".ser";
+        String path ="src/resources/tables/"+strTableName+ "/pages/" + vecPages.get(pageIndex) + ".ser";
         DBApp.serialize( path,page );
     }
     public void addNewPage(Page newPage) throws DBAppException { // add new page to the vector of pages
