@@ -1,0 +1,2 @@
+Table Name,Column Name,Column Type,ClusteringKey,IndexName,IndexType,min,max
+University,Job,java.lang.String,false,null,null,blacksmith,zzz
