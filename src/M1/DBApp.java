@@ -1,6 +1,7 @@
 package M1;
 
 import java.io.*;
+import java.text.BreakIterator;
 import java.text.ParseException;
 import java.util.*;
 
@@ -44,10 +45,81 @@ public class DBApp {
         {
             throw new DBAppException(e.getMessage());
         }
+        List<String> x = new ArrayList<>();
+        String a =  "false";
+        Enumeration<String> strkey = htblColNameType.keys();
+//        Enumeration<String> strelem = htblColNameType.elements();
+//        Enumeration<String> strmin = htblColNameMin.elements();
+//        Enumeration<String> strmax = htblColNameMax.elements();
 
+//        int i = 0;
+        
+        while(strkey.hasMoreElements()) {
+//        	System.out.println(strkey.nextElement());
+        	String s = strkey.nextElement();
+        	if(s.compareTo(strClusteringKeyColumn)==0)
+        		a = "true";
+        	x.add(strTableName);
+        	x.add(s);
+        	x.add(htblColNameType.get(s));
+        	x.add(a);
+        	x.add(null);
+        	x.add(null);
+        	x.add(htblColNameMin.get(s));
+        	x.add(htblColNameMax.get(s));
+        	intoMeta("MetaD0ata.csv", x);
+        	x.clear();
+        	a = "false";
+//        	i++;
+
+        }
     }
     
-    public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue)throws DBAppException {
+    public static void intoMeta(String filePath,List<String> y)
+    {
+        // first create file object for file placed at location
+        // specified by filepath
+        File file = new File(filePath);
+        try {
+            // create FileWriter object with file as parameter
+//            FileWriter outputfile = new FileWriter(file);
+      
+            // create CSVWriter object filewriter object as parameter
+//            BufferedWriter writer = new BufferedWriter(outputfile);
+            CsvWriter writer = new CsvWriter(file);
+            
+             //adding header to csv
+            String[] header = {"Table Name", "Column Name", "Column Type", "ClusteringKey", "IndexName","IndexType", "min", "max" };
+            List<String> x = new ArrayList<>();
+            for (int i = 0; i < header.length; i++) {
+				x.add(header[i]);
+			}
+            BufferedReader br = new BufferedReader(new FileReader(filePath));
+//            String line = br.readLine();
+//    		int i =0;
+//    		while (line != null) {
+//    			String[] content = line.split(",");
+//    			System.err.println(content[i]);
+//    			i++;
+//    			if(i==8) {
+//    				i=0;
+//    				line = br.readLine();
+//    			}
+//    			
+//    		}
+            writer.writeHeaders(x);
+            writer.writeRow(y);
+            
+            // closing writer connection
+            writer.close();
+        }
+        catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+    
+    public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue)throws DBAppException, IOException {
         // surroud the whole method with try catch to catch any exception and re-throw it as DBAppException
         try
         {
@@ -94,7 +166,6 @@ public class DBApp {
         {
             throw new DBAppException(e.getMessage());
         }
-        
 
     }
     public void updateTable(String strTableName, String strClusteringKeyValue,Hashtable<String, Object> htblColNameValue) throws DBAppException {
@@ -168,6 +239,8 @@ public class DBApp {
         // System.out.println(i);
         // test
     }
+    
+    
     public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue)throws DBAppException {
         // surroud the whole method with try catch to catch any exception and re-throw it as DBAppException
         try
@@ -298,7 +371,7 @@ public class DBApp {
                 output.append("\n\nand Result Set Output Table: ####################\n")
                 		.append(table.toString()).append("\n######################\n");
                 
-                System.out.println(output);
+//                System.out.println(output);
                 
                 break;
             case DELETE:
@@ -325,7 +398,7 @@ public class DBApp {
                 output2.append("\n\nand Result Set output2 Table: ####################\n")
                 		.append(table.toString()).append("\n######################\n");
                 
-                System.out.println(output2);
+//                System.out.println(output2);
                 
                 break;
 
@@ -358,7 +431,7 @@ public class DBApp {
                        		output4.append((i == cols4.length-1)?htblColNameType.getOrDefault(cols4[i], "Null")+"  Primary Key\n );\n\n"
        													: htblColNameType.getOrDefault(cols4[i], "Null")+"  Primary Key,\n");
                     }
-                    System.out.println(output4);
+//                    System.out.println(output4);
                     break;
             default: System.out.println("No enough or Wrong Info Given");
 
@@ -386,7 +459,7 @@ public class DBApp {
 	        output3.append("\n\nand Result Set output3 Table: ####################\n")
 	        		.append(table.toString()).append("\n######################\n");
 	        
-	        System.out.println(output3);
+//	        System.out.println(output3);
 	        
 	    }else	System.out.println("No enough or Wrong Info Given");
     }
@@ -469,7 +542,7 @@ public class DBApp {
     // strarrOperators)throws DBAppException{
     // }
 
-    public static void main(String[] args) throws DBAppException, InterruptedException, ParseException {
+    public static void main(String[] args) throws DBAppException, InterruptedException, ParseException, IOException {
         starty();
 try {
 	
