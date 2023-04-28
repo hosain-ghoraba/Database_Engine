@@ -1,2 +1,4 @@
 Table Name,Column Name,Column Type,ClusteringKey,IndexName,IndexType,min,max
-University,Job,java.lang.String,false,null,null,blacksmith,zzz
+University,Name,java.lang.String,false,null,null,aaa,zaky
+University,Id,java.lang.Integer,true,null,null,1,1000
+University,Job,java.lang.String,false,null,null,aaa,zzz

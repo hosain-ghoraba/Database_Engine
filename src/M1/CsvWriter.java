@@ -3,8 +3,10 @@ package M1;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.io.PrintWriter;
 
@@ -18,50 +20,67 @@ public class CsvWriter {
 		this.writer = writer;
 	}
 
-	private boolean headersWritten;
+	private static boolean headersWritten;
 
-    public CsvWriter(File file) throws IOException {
-        writer = new BufferedWriter(new FileWriter(file));
-        headersWritten = false;
-    }
-
-    public void writeHeaders(List<String> headers) throws IOException {
-        if (headersWritten) {
-            throw new IOException("Headers have already been written.");
+    public CsvWriter(File file) throws DBAppException {
+    	BufferedReader br;
+		try {
+            br = new BufferedReader(new FileReader("MetaData.csv"));
+            String line = br.readLine();
+            headersWritten = (line != null);
+            br.close();
+        } catch ( IOException e) {
+            throw new DBAppException("Error reading csv file");    
         }
-        File file = new File("MetaData.csv");
-    	FileWriter fr = new FileWriter(file, false);
-    	PrintWriter printWriter = new PrintWriter(fr);
-    	StringBuilder stringBuilder = new StringBuilder();
-    	for( String token: headers){
-    	stringBuilder.append(token);
-    	stringBuilder.append(',');
-    	}
-    	stringBuilder.deleteCharAt(stringBuilder.length() - 1);
-    	stringBuilder.append('\n');
-    	printWriter.write(stringBuilder.toString());
-    	printWriter.flush();
-    	printWriter.close();
+    }
+
+    public void writeHeaders(List<String> headers) throws DBAppException {
+        if (headersWritten) {
+            return;
+        }
+		try {
+	        File file = new File("MetaData.csv");
+	    	FileWriter fr;
+				fr = new FileWriter(file, false);
+			
+	    	PrintWriter printWriter = new PrintWriter(fr);
+	    	StringBuilder stringBuilder = new StringBuilder();
+	    	for( String token: headers){
+	    	stringBuilder.append(token);
+	    	stringBuilder.append(',');
+	    	}
+	    	stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+	    	stringBuilder.append('\n');
+	    	printWriter.write(stringBuilder.toString());
+	    	printWriter.flush();
+	    	printWriter.close();
         headersWritten = true;
+    	} catch (IOException e) {
+			throw new DBAppException("Error modifying CSV file");
+		}
     }
     
     
-    public void writeRow(List<String> data) throws IOException {
+    public void writeRow(List<String> data) throws DBAppException {
         if (!headersWritten) 
-            throw new IOException("Headers have not been written yet.");
-       File file = new File("MetaData.csv");
-    	FileWriter fr = new FileWriter(file, true);
-    	PrintWriter printWriter = new PrintWriter(fr);
-    	StringBuilder stringBuilder = new StringBuilder();
-    	for( String token: data){
-    	stringBuilder.append(token);
-    	stringBuilder.append(',');
-    	}
-    	stringBuilder.deleteCharAt(stringBuilder.length() - 1);
-    	stringBuilder.append('\n');
-    	printWriter.write(stringBuilder.toString());
-    	printWriter.flush();
-    	printWriter.close();
+            throw new DBAppException("Headers of CSV file have not been written yet.");
+        try {
+			File file = new File("MetaData.csv");
+			FileWriter fr = new FileWriter(file, true);
+			PrintWriter printWriter = new PrintWriter(fr);
+			StringBuilder stringBuilder = new StringBuilder();
+			for (String token : data) {
+				stringBuilder.append(token);
+				stringBuilder.append(',');
+			}
+			stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+			stringBuilder.append('\n');
+			printWriter.write(stringBuilder.toString());
+			printWriter.flush();
+			printWriter.close();
+        } catch (IOException e) {
+			throw new DBAppException(e.getMessage() + e.getStackTrace().toString());
+		}
     }
     
     

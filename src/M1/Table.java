@@ -13,7 +13,7 @@ public class Table implements Serializable
     private Hashtable<String,String> htblColNameMin;
     private Hashtable<String,String> htblColNameMax;
     private Hashtable<String,Integer> htblColNameIndex = new Hashtable<>(); //helper
-    private int MaximumRowsCountinTablePage, pagesIDcounter = 0;
+    private int MaximumRowsCountinTablePage, pagesIDcounter = -1;
 
 
     public Table(String strTableName, String strClusteringKeyColumn, Hashtable<String,String> htblColNameType,
@@ -124,7 +124,7 @@ public class Table implements Serializable
         
     public void insertAnEntry(Row entry) throws DBAppException{
         if(vecPages.size() == 0){ // table has no page
-            Page page = new Page(strTableName,0);
+            Page page = new Page(strTableName,pagesIDcounter + 1);
             this.addNewPage(page);
             page.insertAnEntry(entry);
             this.savePageToDisk(page, vecPages.size()-1);
@@ -293,12 +293,12 @@ ______
     }
 
     public void savePageToDisk( Page page , int pageIndex) throws DBAppException {
-        String path ="src/resources/tables/"+strTableName+ "/pages/" + vecPages.get(pageIndex) + ".ser";
+        String path ="src/resources/tables/"+strTableName+ "/pages/page" + page.getPid() + ".ser";
         DBApp.serialize( path,page );
     }
     public void addNewPage(Page newPage) throws DBAppException { // add new page to the vector of pages
-        vecPages.add("page" + pagesIDcounter); // add file name\path to the vector of pages 
-        savePageToDisk(newPage, pagesIDcounter++); // save the page to disk
+        vecPages.add("page" + ++pagesIDcounter); // add file name\path to the vector of pages 
+        savePageToDisk(newPage, pagesIDcounter); // save the page to disk
     }
 
     public String getStrTableName() {
@@ -383,7 +383,7 @@ ______
             Page page;
             try {
                 page = this.loadPage(i);
-                strTblOutput += "page" + /*(page.getPid())*/ i + "\n" +"-------"+"\n" + page.toString()+"\n";
+                strTblOutput += "page" + /*(page.getPid())*/ i + "\t\t-filename on disk[page" + page.getPid() + ".ser]\n" +"-------"+"\n" + page.toString()+"\n";
             } catch (DBAppException e) {
                 e.printStackTrace();
             }

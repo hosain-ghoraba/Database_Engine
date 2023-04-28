@@ -6,7 +6,7 @@ in M1 :
 2 -  I think that the vector<row> in page should be initialized with max no.rows allowed in one page as input to its constructor, to increase performance
     https://piazza.com/class/lel8rsvwc4e7j6/post/45
 
-3 - important : should write table info in meta data when createing table!
+3 (Done) - important : should write table info in meta data when createing table!
 
 3 (Done)- throw exception in create table if the 3 hashtables don't have exactly the same keys
     https://piazza.com/class/lel8rsvwc4e7j6/post/125 
@@ -24,6 +24,12 @@ in M1 :
 7 (done) -  delete all pages if input hashTable is empty :
              https://piazza.com/class/lel8rsvwc4e7j6/post/35
              https://piazza.com/class/lel8rsvwc4e7j6/post/55
+
+8 - Duplicate value are not handeled correctly and both are added.
+
+9 - I think we should binary search on rows when inserting value to find the location rather than using Collections.sort()
+    (because the .contains() in the Page class insertAnEntry() checks linearly & WITH REFERENCE NOT COMPARING THE PK 
+    ,thus outputting wrong results [in number 8] and allowing Dups).
 
 in M2 :
 1 - when creating an index on a colulmn,throw exception if it contains null values

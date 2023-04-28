@@ -67,7 +67,7 @@ public class DBApp {
         	x.add(null);
         	x.add(htblColNameMin.get(s));
         	x.add(htblColNameMax.get(s));
-        	intoMeta("MetaD0ata.csv", x);
+        	intoMeta("MetaData.csv", x);
         	x.clear();
         	a = "false";
 //        	i++;
@@ -77,7 +77,7 @@ public class DBApp {
     
     
     
-    public static void intoMeta(String filePath,List<String> y)
+    public static void intoMeta(String filePath,List<String> y) throws DBAppException
     {
         // first create file object for file placed at location
         // specified by filepath
@@ -113,7 +113,7 @@ public class DBApp {
             writer.writeRow(y);
             
             // closing writer connection
-            writer.close();
+            //writer.close();
         }
         catch (IOException e) {
             // TODO Auto-generated catch block
@@ -141,7 +141,7 @@ public class DBApp {
             Column c = tblToInsertInto.getColumn(strColName);
             // if this Column does not exist , throw exception
             if (/*!tblToInsertInto.getVecColumns().contains(c)*/ c == null)
-                throw new DBAppException("No such column");
+                throw new DBAppException("No such column. Check your Spelling for Typos!");
             // get the value
             Object strColValue = htblColNameValue.get(strColName);
             // check the value type
@@ -166,6 +166,7 @@ public class DBApp {
         }
         catch(Exception e)
         {
+        	e.printStackTrace();
             throw new DBAppException(e.getMessage());
         }
 
@@ -263,7 +264,7 @@ public class DBApp {
             Column c = tblToUpdate.getColumn(strColName);
             // if this Column does not exist , throw exception
             if (!tblToUpdate.getVecColumns().contains(c))
-                throw new DBAppException("No such column");
+                throw new DBAppException("No such column. Check your Spelling for typos!");
             // get the value
             Object strColValue = htblColNameValue.get(strColName);
             // check the value type
@@ -373,7 +374,7 @@ public class DBApp {
                 output.append("\n\nand Result Set Output Table: ####################\n")
                 		.append(table.toString()).append("\n######################\n");
                 
-//                System.out.println(output);
+                System.out.println(output);
                 
                 break;
             case DELETE:
@@ -397,10 +398,10 @@ public class DBApp {
 					else output2.append(";");
 				}
             }
-                output2.append("\n\nand Result Set output2 Table: ####################\n")
+                output2.append("\n\nand Result Set output Table: ####################\n")
                 		.append(table.toString()).append("\n######################\n");
                 
-//                System.out.println(output2);
+                System.out.println(output2);
                 
                 break;
 
@@ -433,7 +434,7 @@ public class DBApp {
                        		output4.append((i == cols4.length-1)?htblColNameType.getOrDefault(cols4[i], "Null")+"  Primary Key\n );\n\n"
        													: htblColNameType.getOrDefault(cols4[i], "Null")+"  Primary Key,\n");
                     }
-//                    System.out.println(output4);
+                    System.out.println(output4);
                     break;
             default: System.out.println("No enough or Wrong Info Given");
 
@@ -458,10 +459,10 @@ public class DBApp {
 				if( i < cols3.length-1) output3.append(",\n");
 				else output3.append("\nWHERE " + table.getStrClusteringKeyColumn() + " = " + clusterKey+";");
 			}
-	        output3.append("\n\nand Result Set output3 Table: ####################\n")
+	        output3.append("\n\nand Result Set output Table: ####################\n")
 	        		.append(table.toString()).append("\n######################\n");
 	        
-//	        System.out.println(output3);
+	        System.out.println(output3);
 	        
 	    }else	System.out.println("No enough or Wrong Info Given");
     }
@@ -540,6 +541,27 @@ public class DBApp {
         return obj;
     }
     
+    public void readCSVTablesIntoCreatedList() throws DBAppException {
+        BufferedReader br;
+		try {
+            br = new BufferedReader(new FileReader("MetaData.csv"));
+            String line = br.readLine();
+            line = br.readLine();
+            HashSet <String> set = new HashSet<>();
+            while (line != null) {
+                String[] values = line.split(",");
+                if(!set.contains(values[0]))    listofCreatedTables.add(values[0]);
+                set.add(values[0]);
+                line = br.readLine();
+            }
+
+            br.close();
+        } catch ( IOException e2) {
+            throw new DBAppException("Error reading csv file");    
+        }
+
+	}
+    
     // public static Iterator selectFromTable(SQLTerm[] arrSQLTerms,String[]
     // strarrOperators)throws DBAppException{
     // }
@@ -550,98 +572,122 @@ try {
 	
 	
         DBApp d = new DBApp();
-        Hashtable<String, String> htNameType = new Hashtable<>();
-        htNameType.put("Id", "java.lang.Integer");
-        htNameType.put("Name", "java.lang.String");
-        htNameType.put("Job", "java.lang.String");
-        Hashtable<String, String> htNameMin = new Hashtable<>();
-        htNameMin.put("Id", "1");
-        htNameMin.put("Name", "AAA");
-        htNameMin.put("Job", "blacksmith");
-        Hashtable<String, String> htNameMax = new Hashtable<>();
-        htNameMax.put("Id", "1000");
-        htNameMax.put("Name", "zaky");
-        htNameMax.put("Job", "zzz");
-
-        d.createTable("University", "Id", htNameType, htNameMin, htNameMax);
         
-        
-        Hashtable<String, Object> htColNameVal0 = new Hashtable<>();
-        htColNameVal0.put("Id", 23);
-        htColNameVal0.put("Name", new String("ahmed"));
-        htColNameVal0.put("Job", new String("blacksmith"));
+        d.readCSVTablesIntoCreatedList();
 
-        Hashtable<String, Object> htColNameVal1 = new Hashtable<>();
-        htColNameVal1.put("Id", 33);
-        htColNameVal1.put("Name", new String("ali"));
-        htColNameVal1.put("Job", new String("engineer"));
+		Hashtable<String, String> htNameType = new Hashtable<>();
+		htNameType.put("Id", "java.lang.Integer");
+		htNameType.put("Name", "java.lang.String");
+		htNameType.put("Job", "java.lang.String");
+		Hashtable<String, String> htNameMin = new Hashtable<>();
+		htNameMin.put("Id", "1");
+		htNameMin.put("Name", "AAA");
+		htNameMin.put("Job", "aaa");
+		Hashtable<String, String> htNameMax = new Hashtable<>();
+		htNameMax.put("Id", "1000");
+		htNameMax.put("Name", "zaky");
+		htNameMax.put("Job", "zzz");
 
-        Hashtable<String, Object> htColNameVal2 = new Hashtable<>();
-        htColNameVal2.put("Id", 11);
-        htColNameVal2.put("Name", new String("dani"));
-        htColNameVal2.put("Job", new String("doctor"));
+//		d.createTable("University", "Id", htNameType, htNameMin, htNameMax); //CALL IT TO RSESET TABLE TO INITIAL STATE
 
-        Hashtable<String, Object> htColNameVal3 = new Hashtable<>();
-        htColNameVal3.put("Id", 15);
-        htColNameVal3.put("Name", new String("basem"));
-        htColNameVal3.put("Job", new String("teacher"));
+		
+		
+		Hashtable<String, Object> htColNameVal0 = new Hashtable<>();
+		htColNameVal0.put("Id", 23);
+		htColNameVal0.put("Name", "ahmed");
+		htColNameVal0.put("Job", "blacksmith");
 
-        Hashtable<String, Object> htColNameVal4 = new Hashtable<>();
-        htColNameVal4.put("Id", 14);
-        htColNameVal4.put("Name", new String("mostafa"));
-        htColNameVal4.put("Job", new String("engineer"));
+		Hashtable<String, Object> htColNameVal1 = new Hashtable<>();
+		htColNameVal1.put("Id", 33);
+		htColNameVal1.put("Name", "ali");
+		htColNameVal1.put("Job", "engineer");
 
-        // Hashtable<String, Object> htColNameVal5 = new Hashtable<>();
-        // htColNameVal5.put("Id", 70);
-        // htColNameVal5.put("Name", new String("7amood"));
-        // htColNameVal5.put("Job", new String("m4 la2i"));
+		Hashtable<String, Object> htColNameVal2 = new Hashtable<>();
+		htColNameVal2.put("Id", 11);
+		htColNameVal2.put("Name", "dani");
+		htColNameVal2.put("Job", "doctor");
 
-        Hashtable<String, Object> htNameValdelete1 = new Hashtable<>();
-        htNameValdelete1.put("Job", new String("engineer"));
-        Hashtable<String, Object> htNameValupdate1 = new Hashtable<>();
-        htNameValupdate1.put("Name", new String("SeragMohema"));
-        htNameValupdate1.put("Job", new String("AmnDawla"));
+		Hashtable<String, Object> htColNameVal3 = new Hashtable<>();
+		htColNameVal3.put("Id", 15);
+		htColNameVal3.put("Name", "basem");
+		htColNameVal3.put("Job", "teacher");
 
+		Hashtable<String, Object> htColNameVal4 = new Hashtable<>();
+		htColNameVal4.put("Id", 14);
+		htColNameVal4.put("Name", "mostafa");
+		htColNameVal4.put("Job", "engineer");
 
+		Hashtable<String, Object> htColNameVal5 = new Hashtable<>();
+		htColNameVal5.put("Id", 70);
+		htColNameVal5.put("Name", "hamood");
+		htColNameVal5.put("Job", "bawab");
 
-        // insertion test
-        d.insertIntoTable("University", htColNameVal0);///////////////////////
+		Hashtable<String, Object> htColNameVal6 = new Hashtable<>();
+		htColNameVal6.put("Id", 19);
+		htColNameVal6.put("Name", "MoSalah");
+		htColNameVal6.put("Job", "footballer");
 
-        Table x = (Table) deserialize("src/resources/tables/University/University.ser");
-//        System.out.println(x.toString());
-        d.insertIntoTable("University", htColNameVal2);////////////////////////////////
-//x = (Table) deserialize("src/resources/tables/University/University.ser");
-//        System.out.println(x.toString());
-		d.insertIntoTable("University", htColNameVal1);///////////////////////////////
-//x = (Table) deserialize("src/resources/tables/University/University.ser");
-//        System.out.println(x.toString());
-		d.insertIntoTable("University", htColNameVal4);//////////////////////////////
-//x = (Table) deserialize("src/resources/tables/University/University.ser");
-//        System.out.println(x.toString());
-		d.insertIntoTable("University", htColNameVal3);////////////////////////////
-x = (Table) deserialize("src/resources/tables/University/University.ser");
-//        System.out.println(x.toString());
-        
-        
-        
-        // deletion test
-         d.deleteFromTable("University", htNameValdelete1);//without PK
+		//Delete ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+		Hashtable<String, Object> delete1 = new Hashtable<>();
+		delete1.put("Job", "engineer");
+
+		Hashtable<String, Object> delete2 = new Hashtable<>();
+
+		Hashtable<String, Object> delete3 = new Hashtable<>();
+		delete3.put("Id", 70);
+
+		
+		// Update^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+		Hashtable<String, Object> update1 = new Hashtable<>();
+		update1.put("Name", new String("SeragMohema"));
+		update1.put("Job", new String("AmnDawla"));
+
+		Hashtable<String, Object> update2 = new Hashtable<>();
+		update2.put("Name", new String("mido"));
+		update2.put("Job", new String("harakat"));
+
+		
+		
+		// insertion test
+//		d.insertIntoTable("University", htColNameVal0);///////////////////////
+
+//		d.insertIntoTable("University", htColNameVal2);////////////////////////////////
+
+//		d.insertIntoTable("University", htColNameVal1);///////////////////////////////
+
+//		d.insertIntoTable("University", htColNameVal4);//////////////////////////////
+
+//		d.insertIntoTable("University", htColNameVal3);////////////////////////////
+		
+		///////
+//		d.insertIntoTable("University", htColNameVal6);////////
+//		d.insertIntoTable("University", htColNameVal5);///////
+		////
+
+		
+		
+		
+			// deletion test
+//         d.deleteFromTable("University", delete1);//without PK
+//         d.deleteFromTable("University", delete2);//without conditions (delete ALL table)
+//         d.deleteFromTable("University", delete3);//with PK
+
+// 		d.insertIntoTable("University", htColNameVal5);
 //         d.deleteFromTable("University", htColNameVal4);
-//		d.deleteFromTable("University", htColNameVal1);
+//			d.deleteFromTable("University", htColNameVal1);
 //         d.deleteFromTable("University", htColNameVal0);
 //         d.deleteFromTable("University", htColNameVal3);
 //         d.deleteFromTable("University", htColNameVal2);
-		x = (Table) deserialize("src/resources/tables/University/University.ser");
-//        System.out.println(x.toString());
 
-        // Update Test
-		d.updateTable("University","11", htNameValupdate1);
-x = (Table) deserialize("src/resources/tables/University/University.ser");
-//        System.out.println(x.toString());
+		
+			// Update Test
+//			d.updateTable("University","11", update1);
 
-        System.out.println("Hello, Database World!");
-        // update test
-        // System.out.println(x.toString());
+//			Table x = (Table) deserialize("src/resources/tables/University/University.ser");
+//			System.out.println(x.toString());
+
+			System.out.println("Hello, Database World!");
+   
 
         // 0,2,1,3
         // 0,2,3,1
