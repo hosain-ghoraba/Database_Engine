@@ -96,7 +96,11 @@ public class Table implements Serializable
 
             if(value.compareTo(dMax) > 0 ||value.compareTo(dMin) < 0 )
                 throw new DBAppException("You cannot usa a value that is out of determined bounds of this column");
-
+        
+        } else if(valueToCheck instanceof NULL) {
+            if(column.isPrimary()){
+                throw new DBAppException("Primary key cannot be a null value");
+            }
         }
         else
             throw new DBAppException("This value type is not supported");

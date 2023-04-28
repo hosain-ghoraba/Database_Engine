@@ -14,7 +14,7 @@ in M1 :
 4 - important :  Meta data file should be used to learn about TYPES of columns, as well check if inserted value is between column min and max in a table with every insert/delete/update,for example, in insert, it only checks for exsistance of table name in listofCreated tables,but doesn't check columns and compare their types with input parameters !
              (Project grading schema)
 
-5 - handle null values insertion/update/ delete 
+5 (done I guess) - handle null values insertion/update/ delete 
       https://piazza.com/class/lel8rsvwc4e7j6/post/72   
       https://piazza.com/class/lel8rsvwc4e7j6/post/81 
 
@@ -25,7 +25,7 @@ in M1 :
              https://piazza.com/class/lel8rsvwc4e7j6/post/35
              https://piazza.com/class/lel8rsvwc4e7j6/post/55
 
-8 - Duplicate value are not handeled correctly and both are added.
+8 (done) - Duplicate value are not handeled correctly and both are added.
 
 9 - I think we should binary search on rows when inserting value to find the location rather than using Collections.sort()
     (because the .contains() in the Page class insertAnEntry() checks linearly & WITH REFERENCE NOT COMPARING THE PK 

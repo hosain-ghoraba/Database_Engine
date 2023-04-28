@@ -6,6 +6,7 @@ import java.text.ParseException;
 import java.util.*;
 
 public class DBApp {
+    static NULL NULL = new NULL();
     public static int MaximumRowsCountinTablePage;
     public int MaximumEntriesinOctreeNode;
     private LinkedList<String> listofCreatedTables;
@@ -627,6 +628,11 @@ try {
 		htColNameVal6.put("Name", "MoSalah");
 		htColNameVal6.put("Job", "footballer");
 
+		Hashtable<String, Object> htColNameVal7 = new Hashtable<>();
+		htColNameVal7.put("Id", 50);
+		htColNameVal7.put("Name", "youssef");
+		htColNameVal7.put("Job", NULL);
+
 		//Delete ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 		Hashtable<String, Object> delete1 = new Hashtable<>();
 		delete1.put("Job", "engineer");
@@ -636,16 +642,23 @@ try {
 		Hashtable<String, Object> delete3 = new Hashtable<>();
 		delete3.put("Id", 70);
 
+		Hashtable<String, Object> delete4 = new Hashtable<>();
+		delete4.put("Name", NULL);
+
 		
 		// Update^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 		Hashtable<String, Object> update1 = new Hashtable<>();
-		update1.put("Name", new String("SeragMohema"));
-		update1.put("Job", new String("AmnDawla"));
+		update1.put("Name", "SeragMohema");
+		update1.put("Job", "AmnDawla");
 
 		Hashtable<String, Object> update2 = new Hashtable<>();
-		update2.put("Name", new String("mido"));
-		update2.put("Job", new String("harakat"));
-
+		update2.put("Name", "mido");
+		update2.put("Job", "harakat");
+		
+		Hashtable<String, Object> update3 = new Hashtable<>();
+		update3.put("Name", "abood");
+		update3.put("Job", NULL);
+		
 		
 		
 		// insertion test
@@ -671,6 +684,7 @@ try {
 //         d.deleteFromTable("University", delete1);//without PK
 //         d.deleteFromTable("University", delete2);//without conditions (delete ALL table)
 //         d.deleteFromTable("University", delete3);//with PK
+//         d.deleteFromTable("University", delete3);// Null value testing
 
 // 		d.insertIntoTable("University", htColNameVal5);
 //         d.deleteFromTable("University", htColNameVal4);
@@ -682,6 +696,8 @@ try {
 		
 			// Update Test
 //			d.updateTable("University","11", update1);
+//			d.updateTable("University","11", update2);
+//			d.updateTable("University","11", update3);
 
 //			Table x = (Table) deserialize("src/resources/tables/University/University.ser");
 //			System.out.println(x.toString());
