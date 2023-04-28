@@ -1,4 +1,4 @@
-package M1;
+package M2;
 public class SQLTerm {
     String _strTableName;
     String _strColumnName;

@@ -5,6 +5,10 @@ import java.text.BreakIterator;
 import java.text.ParseException;
 import java.util.*;
 
+import javax.lang.model.util.ElementScanner14;
+
+import M2.SQLTerm;
+
 public class DBApp {
     static NULL NULL = new NULL();
     public static int MaximumRowsCountinTablePage;
@@ -74,54 +78,7 @@ public class DBApp {
 //        	i++;
 
         }
-    }
-    
-    
-    
-    public static void intoMeta(String filePath,List<String> y) throws DBAppException
-    {
-        // first create file object for file placed at location
-        // specified by filepath
-        File file = new File(filePath);
-        try {
-            // create FileWriter object with file as parameter
-//            FileWriter outputfile = new FileWriter(file);
-      
-            // create CSVWriter object filewriter object as parameter
-//            BufferedWriter writer = new BufferedWriter(outputfile);
-            CsvWriter writer = new CsvWriter(file);
-            
-             //adding header to csv
-            String[] header = {"Table Name", "Column Name", "Column Type", "ClusteringKey", "IndexName","IndexType", "min", "max" };
-            List<String> x = new ArrayList<>();
-            for (int i = 0; i < header.length; i++) {
-				x.add(header[i]);
-			}
-            BufferedReader br = new BufferedReader(new FileReader(filePath));
-//            String line = br.readLine();
-//    		int i =0;
-//    		while (line != null) {
-//    			String[] content = line.split(",");
-//    			System.err.println(content[i]);
-//    			i++;
-//    			if(i==8) {
-//    				i=0;
-//    				line = br.readLine();
-//    			}
-//    			
-//    		}
-            writer.writeHeaders(x);
-            writer.writeRow(y);
-            
-            // closing writer connection
-            //writer.close();
-        }
-        catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
-    
+    }   
     public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue)throws DBAppException, IOException {
         // surroud the whole method with try catch to catch any exception and re-throw it as DBAppException
         try
@@ -243,8 +200,6 @@ public class DBApp {
         // System.out.println(i);
         // test
     }
-    
-    
     public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue)throws DBAppException {
         // surroud the whole method with try catch to catch any exception and re-throw it as DBAppException
         try
@@ -349,10 +304,50 @@ public class DBApp {
         	throw new DBAppException("Columns not matching");
         
 
+    }   
+    public static void intoMeta(String filePath,List<String> y) throws DBAppException
+    {
+        // first create file object for file placed at location
+        // specified by filepath
+        File file = new File(filePath);
+        try {
+            // create FileWriter object with file as parameter
+//            FileWriter outputfile = new FileWriter(file);
+      
+            // create CSVWriter object filewriter object as parameter
+//            BufferedWriter writer = new BufferedWriter(outputfile);
+            CsvWriter writer = new CsvWriter(file);
+            
+             //adding header to csv
+            String[] header = {"Table Name", "Column Name", "Column Type", "ClusteringKey", "IndexName","IndexType", "min", "max" };
+            List<String> x = new ArrayList<>();
+            for (int i = 0; i < header.length; i++) {
+				x.add(header[i]);
+			}
+            BufferedReader br = new BufferedReader(new FileReader(filePath));
+//            String line = br.readLine();
+//    		int i =0;
+//    		while (line != null) {
+//    			String[] content = line.split(",");
+//    			System.err.println(content[i]);
+//    			i++;
+//    			if(i==8) {
+//    				i=0;
+//    				line = br.readLine();
+//    			}
+//    			
+//    		}
+            writer.writeHeaders(x);
+            writer.writeRow(y);
+            
+            // closing writer connection
+            //writer.close();
+        }
+        catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
-    
-    
-    
     public static void OperationSignatureDisplay(OpType operation, Table table, Hashtable<String,Object> htblColNameVal) {
         switch(operation) {
             case INSERT:
@@ -411,7 +406,6 @@ public class DBApp {
 
         }
     }
-    
     public static void OperationSignatureDisplay(Table table, Hashtable<String,String> htblColNameType, OpType operation){
         switch(operation){
             case CREATE:
@@ -467,8 +461,6 @@ public class DBApp {
 	        
 	    }else	System.out.println("No enough or Wrong Info Given");
     }
-    
-    
     public void readConfig() {
         /*
          * this method objective is to read the DBApp configuration file in order to
@@ -541,7 +533,6 @@ public class DBApp {
         }
         return obj;
     }
-    
     public void readCSVTablesIntoCreatedList() throws DBAppException {
         BufferedReader br;
 		try {
@@ -563,9 +554,23 @@ public class DBApp {
 
 	}
     
-    // public static Iterator selectFromTable(SQLTerm[] arrSQLTerms,String[]
-    // strarrOperators)throws DBAppException{
+    // public Iterator selectFromTable(SQLTerm[] arrSQLTerms,String[] strarrOperators)throws DBAppException{
+    //     if there is index created on some of the columns in arrSQLTerms
+    //          return selectFromTableWithIndex(arrSQLTerms,strarrOperators);
+    //     return selectFromTableWithoutIndex(arrSQLTerms,strarrOperators);     
     // }
+
+    /*
+     * public Iterator selectFromTableWithIndex(SQLTerm[] arrSQLTerms,String[]) throws DBAppException{
+     * 
+     * 
+     * 
+     * 
+     * }
+     * 
+     * 
+     * 
+     */
 
     public static void main(String[] args) throws DBAppException, InterruptedException, ParseException, IOException {
         starty();

@@ -1,4 +1,4 @@
-package octree;
+package M2;
 
 public class OctPoint {
 

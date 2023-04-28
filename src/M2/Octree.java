@@ -1,4 +1,4 @@
-package octree;
+package M2;
 
 import M1.Methods;
 import java.sql.Date;
@@ -14,9 +14,9 @@ import M1.Row;
 
 public class Octree {
 	
-	private int size; // sum of records in all leaves
+	private int size; // sum of number of records in all leaves
 	private OctPoint leftBackBottom; // this is edge number 0 in the "edge numbers" photo in github 
-	private OctPoint rightForwardUp; // the bounding box of the octree
+	private OctPoint rightForwardUp; // this is edge number 7 in the "edge numbers" photo in github
 	private OctPoint point; // this is null if the octree is a leaf
 	private Octree[] children; // this is null if the octree is a leaf
 	private HashMap<OctPoint,LinkedList<Page> > records; // this is null if the octree is NOT a leaf
@@ -37,7 +37,7 @@ public class Octree {
 	public void deletePageFromTree(Comparable x, Comparable y, Comparable z , Page page) { // deletes ONLY one instance of the page, in case multiple instances of the same page exist in the same point
 		this.deleteHelper(x, y, z , page, new LinkedList<Octree>());
 	}
-	public boolean pointExists(Comparable x, Comparable y, Comparable z){
+	public boolean pointExists(Comparable x, Comparable y, Comparable z){ // checks existence in the leaf level only
 		validatePointIsInTreeBounday(x, y, z);
 		if(this.isLeaf())
 			return records.containsKey(new OctPoint(x,y,z));
@@ -48,6 +48,16 @@ public class Octree {
 		}
 
 	}	
+	public void copyAllRecordsToList(LinkedList<Page> toFill){ // copies all pages at all leaves of the octree to the result list
+		if(this.isLeaf())
+			for(LinkedList<Page> pages : records.values())
+				toFill.addAll(pages);	
+		else
+			for(Octree child : children)
+				child.copyAllRecordsToList(toFill);
+
+	}
+	
 	public LinkedList<Page> getPagesAtPoint(Comparable x, Comparable y, Comparable z) {
 		if(!this.pointExists(x, y, z))
 			throw new IllegalArgumentException("Point " + x + " " + y + " " + z + " doesn't exist in the octree");
