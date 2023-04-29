@@ -98,6 +98,8 @@ public class DBApp {
             String strColName = strEnumeration.nextElement();
             tblToInsertInto.validateColType(colType(strColName));
             Column c = tblToInsertInto.getColumn(strColName);
+            if(!colType(strColName).equals(c.getStrColType()))
+                throw new DBAppException();
             // if this Column does not exist , throw exception
             if (/*!tblToInsertInto.getVecColumns().contains(c)*/ c == null)
                 throw new DBAppException("No such column. Check your Spelling for Typos!");
