@@ -583,9 +583,17 @@ public class DBApp {
     }
     
     // public Iterator selectFromTable(SQLTerm[] arrSQLTerms,String[] strarrOperators)throws DBAppException{
+    //     Linkedlist<Page> resultPages = new Linkedlist<Page>();
     //     if there is index created on some of the columns in arrSQLTerms
-    //          return selectFromTableWithIndex(arrSQLTerms,strarrOperators);
-    //     return selectFromTableWithoutIndex(arrSQLTerms,strarrOperators);     
+    //          resultPages = selectFromTableWithIndex(arrSQLTerms,strarrOperators);
+    //     else
+    //         resultPages = selectFromTableWithoutIndex(arrSQLTerms,strarrOperators);      
+    //     Linkedlist<Record> resultRecords = new Linkedlist<Record>();
+    //     then search in the resultPages, and fill the resultRecords with the records that satisfy the conditions
+    //     return resultRecords.iterator();
+           
+    
+    //     
     // }
 
     /*

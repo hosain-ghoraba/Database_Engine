@@ -3,6 +3,7 @@ package M2;
 import M1.Methods;
 import java.sql.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.Vector;
@@ -21,8 +22,6 @@ public class Octree {
 	private Octree[] children; // this is null if the octree is a leaf
 	private HashMap<OctPoint,LinkedList<Page> > records; // this is null if the octree is NOT a leaf
 	private int maxNodeCapacity;
-
-	//// below are the methods that will be used in the DBApp class ////
 	
 	public Octree(OctPoint leftBackBottom,OctPoint rightForwardUp,int maxNodeCapacity) { // constructor for a leaf octree, leaf octrees are converted to non-leaf octrees by the split method when their capacity is exceeded
 		size = 0;
@@ -30,34 +29,21 @@ public class Octree {
 		this.rightForwardUp = rightForwardUp;
 		this.maxNodeCapacity = maxNodeCapacity;
 		records = new HashMap<OctPoint, LinkedList<Page> >();
-	}
+	}	
+
+	// fundamental methods
 	public void insertPageIntoTree(Comparable x, Comparable y, Comparable z , Page page) {
 		this.insertHelper(x, y, z , page, new LinkedList<Octree>());
 	}
 	public void deletePageFromTree(Comparable x, Comparable y, Comparable z , Page page) { // deletes ONLY one instance of the page, in case multiple instances of the same page exist in the same point
 		this.deleteHelper(x, y, z , page, new LinkedList<Octree>());
 	}
-	public boolean pointExists(Comparable x, Comparable y, Comparable z){ // checks existence in the leaf level only
-		validatePointIsInTreeBounday(x, y, z);
-		if(this.isLeaf())
-			return records.containsKey(new OctPoint(x,y,z));
-		else
-		{
-			int position = Methods.getRelevantPosition(this.point.getX(), this.point.getY(), this.point.getZ(), x, y, z);
-			return children[position].pointExists(x, y, z);
-		}
-
+	public void updatePageAtPoint(Comparable x, Comparable y, Comparable z , Page oldPage, Page newPage) {// replaces ONLY one instance of the page, in case multiple instances of the same page exist in the same point
+		if(!this.pointExists(x, y, z))
+			throw new IllegalArgumentException("Point " + x + " " + y + " " + z + " doesn't exist in the octree");
+		deletePageFromTree(x, y, z, oldPage);
+		insertPageIntoTree(x, y, z, newPage);
 	}	
-	public void copyAllRecordsToList(LinkedList<Page> toFill){ // copies all pages at all leaves of the octree to the result list
-		if(this.isLeaf())
-			for(LinkedList<Page> pages : records.values())
-				toFill.addAll(pages);	
-		else
-			for(Octree child : children)
-				child.copyAllRecordsToList(toFill);
-
-	}
-	
 	public LinkedList<Page> getPagesAtPoint(Comparable x, Comparable y, Comparable z) {
 		if(!this.pointExists(x, y, z))
 			throw new IllegalArgumentException("Point " + x + " " + y + " " + z + " doesn't exist in the octree");
@@ -69,11 +55,17 @@ public class Octree {
 			return children[position].getPagesAtPoint(x, y, z);
 		}
 	} 
-	public void replacePageAtPoint(Comparable x, Comparable y, Comparable z , Page oldPage, Page newPage) {// replaces ONLY one instance of the page, in case multiple instances of the same page exist in the same point
-		if(!this.pointExists(x, y, z))
-			throw new IllegalArgumentException("Point " + x + " " + y + " " + z + " doesn't exist in the octree");
-		deletePageFromTree(x, y, z, oldPage);
-		insertPageIntoTree(x, y, z, newPage);
+
+	public boolean pointExists(Comparable x, Comparable y, Comparable z){ // checks existence in the leaf level only
+		validatePointIsInTreeBounday(x, y, z);
+		if(this.isLeaf())
+			return records.containsKey(new OctPoint(x,y,z));
+		else
+		{
+			int position = Methods.getRelevantPosition(this.point.getX(), this.point.getY(), this.point.getZ(), x, y, z);
+			return children[position].pointExists(x, y, z);
+		}
+
 	}	
 	public int getSize() {
 		return size;
@@ -81,8 +73,8 @@ public class Octree {
 	public void printTree() {
 		printTreeHelper(0);
 	}
-	
-	//// below are helper private methods ////
+
+//// below are helper private methods ////
 	private void insertHelper(Comparable x, Comparable y, Comparable z , Page page , LinkedList<Octree> traversedSoFar) {
 
 		validatePointIsInTreeBounday(x, y, z);		
@@ -205,9 +197,6 @@ public class Octree {
 		}
 		records = null; // after all the records are transferred to the children, the records are no longer needed in the parent
 
-	}
-	private boolean isLeaf() {
-		return (children == null);
 	}	
 	private void  validatePointIsInTreeBounday(Comparable x, Comparable y, Comparable z) {
 		boolean xIsInBoundary = (x.compareTo(this.leftBackBottom.getX()) >= 0) && (x.compareTo(this.rightForwardUp.getX()) <= 0);
@@ -247,7 +236,28 @@ public class Octree {
 		return sb.toString();
 
 	}
-    public static void main(String[] args) throws DBAppException {
+
+	// getters
+	public OctPoint getLeftBackBottom() {
+		return leftBackBottom;
+	}
+	public OctPoint getRightForwardUp() {
+		return rightForwardUp;
+	}
+	public OctPoint gePoint() {
+		return point;
+	}
+	public HashMap<OctPoint,LinkedList<Page> > getRecords() {
+		return records;
+	}
+	public Octree[] getChildren() {
+		return children;
+	}
+	public boolean isLeaf() {
+				return (children == null);
+			}
+	
+			public static void main(String[] args) throws DBAppException {
 		DBApp d = new DBApp();
 		Hashtable<String, String> htNameType = new Hashtable<>();
 		htNameType.put("Id", "java.lang.Integer");
