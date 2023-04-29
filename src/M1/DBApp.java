@@ -45,11 +45,6 @@ public class DBApp {
         // serialization
         serialize(strTablePath + "/" + strTableName + ".ser", tblCreated);
         OperationSignatureDisplay(tblCreated, htblColNameType,OpType.CREATE);
-        }
-        catch(Exception e)
-        {
-            throw new DBAppException(e.getMessage());
-        }
         List<String> x = new ArrayList<>();
         String a =  "false";
         Enumeration<String> strkey = htblColNameType.keys();
@@ -57,8 +52,7 @@ public class DBApp {
 //        Enumeration<String> strmin = htblColNameMin.elements();
 //        Enumeration<String> strmax = htblColNameMax.elements();
 
-//        int i = 0;
-        
+//        int i = 0;      
         while(strkey.hasMoreElements()) {
 //        	System.out.println(strkey.nextElement());
         	String s = strkey.nextElement();
@@ -77,9 +71,15 @@ public class DBApp {
         	a = "false";
 //        	i++;
 
+           }
         }
+        catch(Exception e)
+        {
+            throw new DBAppException(e.getMessage());
+        }
+        
     }   
-    public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue)throws DBAppException, IOException {
+    public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue)throws DBAppException {
         // surroud the whole method with try catch to catch any exception and re-throw it as DBAppException
         try
         {
@@ -132,9 +132,10 @@ public class DBApp {
         }
 
     }
-    public void updateTable(String strTableName, String strClusteringKeyValue,Hashtable<String, Object> htblColNameValue) throws DBAppException , IOException {
+    public void updateTable(String strTableName, String strClusteringKeyValue,Hashtable<String, Object> htblColNameValue) throws DBAppException {
         // surround the whole method with try catch to catch any exception and re-throw it as DBAppException
-       
+        try
+        {
         if (!listofCreatedTables.contains(strTableName))
             throw new DBAppException("You cannot update a table that has not been created yet");
         Methods.check_strings_are_Alphabitical(htblColNameValue); // check if all string records inside the hashtable are alphabitical
@@ -203,6 +204,13 @@ public class DBApp {
         // System.out.println(candidateIdx);
         // System.out.println(i);
         // test
+
+        }
+        catch(Exception e)
+        {
+            throw new DBAppException(e.getMessage());
+        }
+
     }
     public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue)throws DBAppException {
         // surroud the whole method with try catch to catch any exception and re-throw it as DBAppException
@@ -592,7 +600,7 @@ public class DBApp {
      * 
      */
 
-    public static void main(String[] args) throws DBAppException, InterruptedException, ParseException, IOException {
+    public static void main(String[] args) throws DBAppException, IOException {
         starty();
 try {
 	
