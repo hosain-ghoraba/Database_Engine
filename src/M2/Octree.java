@@ -311,9 +311,9 @@ public class Octree {
 		Page page10 = new Page("University", 10);
 
 		page1.insertAnEntry(new Row(new Vector<Object>(htColNameVal0.values())));
-		page1.insertAnEntry(new Row(new Vector<Object>(htColNameVal0.values())));
-		page1.insertAnEntry(new Row(new Vector<Object>(htColNameVal0.values())));
-		page2.insertAnEntry(new Row(new Vector<Object>(htColNameVal1.values())));
+		//page1.insertAnEntry(new Row(new Vector<Object>(htColNameVal0.values())));
+	//	page1.insertAnEntry(new Row(new Vector<Object>(htColNameVal0.values())));
+	//	page2.insertAnEntry(new Row(new Vector<Object>(htColNameVal1.values())));
 		page2.insertAnEntry(new Row(new Vector<Object>(htColNameVal1.values())));
 		page3.insertAnEntry(new Row(new Vector<Object>(htColNameVal2.values())));
 		page4.insertAnEntry(new Row(new Vector<Object>(htColNameVal3.values())));
