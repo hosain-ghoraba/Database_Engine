@@ -5,7 +5,7 @@ import java.text.BreakIterator;
 import java.text.ParseException;
 import java.util.*;
 
-import javax.lang.model.util.ElementScanner14;
+//import javax.lang.model.util.ElementScanner14;
 
 import M2.SQLTerm;
 
@@ -96,6 +96,7 @@ public class DBApp {
         Enumeration<String> strEnumeration = htblColNameValue.keys();
         while (strEnumeration.hasMoreElements()) {
             String strColName = strEnumeration.nextElement();
+            tblToInsertInto.validateColType(colType(strColName));
             Column c = tblToInsertInto.getColumn(strColName);
             // if this Column does not exist , throw exception
             if (/*!tblToInsertInto.getVecColumns().contains(c)*/ c == null)
@@ -129,8 +130,8 @@ public class DBApp {
         }
 
     }
-    public void updateTable(String strTableName, String strClusteringKeyValue,Hashtable<String, Object> htblColNameValue) throws DBAppException {
-        // surroud the whole method with try catch to catch any exception and re-throw it as DBAppException
+    public void updateTable(String strTableName, String strClusteringKeyValue,Hashtable<String, Object> htblColNameValue) throws DBAppException , IOException {
+        // surround the whole method with try catch to catch any exception and re-throw it as DBAppException
        
         if (!listofCreatedTables.contains(strTableName))
             throw new DBAppException("You cannot update a table that has not been created yet");
@@ -145,6 +146,7 @@ public class DBApp {
 
         // 2- Insert hashTable elements into vector
         for (String columnName : htblColNameValue.keySet()) {
+            tblToUpdate.validateColType(colType(columnName));
             Object newValue = htblColNameValue.get(columnName);
 
             // if it is the value of the clustering key, insert into the first cell
@@ -217,6 +219,7 @@ public class DBApp {
         Enumeration<String> strEnumeration = htblColNameValue.keys();
         while (strEnumeration.hasMoreElements()) {
             String strColName = strEnumeration.nextElement();
+            tblToUpdate.validateColType(colType(strColName));
             Column c = tblToUpdate.getColumn(strColName);
             // if this Column does not exist , throw exception
             if (!tblToUpdate.getVecColumns().contains(c))
@@ -304,7 +307,8 @@ public class DBApp {
         	throw new DBAppException("Columns not matching");
         
 
-    }   
+    }
+
     public static void intoMeta(String filePath,List<String> y) throws DBAppException
     {
         // first create file object for file placed at location
@@ -537,7 +541,7 @@ public class DBApp {
         BufferedReader br;
 		try {
             br = new BufferedReader(new FileReader("MetaData.csv"));
-            String line = br.readLine();
+            String line ;
             line = br.readLine();
             HashSet <String> set = new HashSet<>();
             while (line != null) {
@@ -553,6 +557,20 @@ public class DBApp {
         }
 
 	}
+    public static String colType(String colName) throws IOException{
+        String s = null;
+        BufferedReader br = new BufferedReader(new FileReader("MetaData.csv"));
+        String line = br.readLine();
+        while (line != null) {
+            String[] content = line.split(",");
+            if (content[1].compareTo(colName)==0) {
+                s = content[2];
+            }
+            line = br.readLine();
+        }
+        br.close();
+        return s;
+    }
     
     // public Iterator selectFromTable(SQLTerm[] arrSQLTerms,String[] strarrOperators)throws DBAppException{
     //     if there is index created on some of the columns in arrSQLTerms
@@ -594,7 +612,7 @@ try {
 		htNameMax.put("Name", "zaky");
 		htNameMax.put("Job", "zzz");
 
-//		d.createTable("University", "Id", htNameType, htNameMin, htNameMax); //CALL IT TO RSESET TABLE TO INITIAL STATE
+	    d.createTable("University", "Id", htNameType, htNameMin, htNameMax); //CALL IT TO RSESET TABLE TO INITIAL STATE
 
 		
 		
@@ -663,24 +681,25 @@ try {
 		Hashtable<String, Object> update3 = new Hashtable<>();
 		update3.put("Name", "abood");
 		update3.put("Job", NULL);
+
+    System.out.println(colType("Name"));
 		
 		
+		 //insertion test
+		d.insertIntoTable("University", htColNameVal0);///////////////////////
+
+		d.insertIntoTable("University", htColNameVal2);////////////////////////////////
+
+		d.insertIntoTable("University", htColNameVal1);///////////////////////////////
+
+		d.insertIntoTable("University", htColNameVal4);//////////////////////////////
+
+		d.insertIntoTable("University", htColNameVal3);////////////////////////////
 		
-		// insertion test
-//		d.insertIntoTable("University", htColNameVal0);///////////////////////
-
-//		d.insertIntoTable("University", htColNameVal2);////////////////////////////////
-
-//		d.insertIntoTable("University", htColNameVal1);///////////////////////////////
-
-//		d.insertIntoTable("University", htColNameVal4);//////////////////////////////
-
-//		d.insertIntoTable("University", htColNameVal3);////////////////////////////
-		
-		///////
-//		d.insertIntoTable("University", htColNameVal6);////////
-//		d.insertIntoTable("University", htColNameVal5);///////
-		////
+		/////
+		d.insertIntoTable("University", htColNameVal6);////////
+		d.insertIntoTable("University", htColNameVal5);///////
+		//
 
 		
 		
@@ -699,13 +718,13 @@ try {
 //         d.deleteFromTable("University", htColNameVal2);
 
 		
-			// Update Test
-//			d.updateTable("University","11", update1);
-//			d.updateTable("University","11", update2);
-//			d.updateTable("University","11", update3);
 
-//			Table x = (Table) deserialize("src/resources/tables/University/University.ser");
-//			System.out.println(x.toString());
+			d.updateTable("University","11", update1);
+			//d.updateTable("University","11", update2);
+			//d.updateTable("University","11", update3);
+
+			Table x = (Table) deserialize("src/resources/tables/University/University.ser");
+			System.out.println(x.toString());
 
 			System.out.println("Hello, Database World!");
    
@@ -784,7 +803,6 @@ try {
      * trying to loop
      * 
      */
-
 
 
 }

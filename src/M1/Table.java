@@ -106,6 +106,12 @@ public class Table implements Serializable
             throw new DBAppException("This value type is not supported");
 
     }
+    public void validateColType(String colType) throws DBAppException{
+        if (!(colType.equals("java.lang.Integer") || colType.equals("java.lang.String") ||
+                colType.equals("java.lang.Double") || colType.equals("java.util.Date")))
+            throw new DBAppException("The type " + colType + " is not supported");
+
+    }
 
     public Object getValueBasedOnType(String valueObj, Column column) throws DBAppException {
 //        validateValueType(column, valueObj);
@@ -277,7 +283,7 @@ ______
                 ///// first iteration was lo = mid = 0, hi =1
                 ///// second iteration was lo = 1 = hi = mid
                 ///// 3rd loop iteration was lo = 1, hi = '0'
-                ////////so we check that condidtion
+                ////////so we check that condition
 
 		}
 
