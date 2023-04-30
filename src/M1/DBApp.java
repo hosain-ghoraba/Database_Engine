@@ -79,6 +79,10 @@ public class DBApp {
         // surroud the whole method with try catch to catch any exception and re-throw it as DBAppException
         try
         {
+        if(strTableName == null || strClusteringKeyColumn == null || htblColNameType == null || htblColNameMin == null || htblColNameMax == null)
+            throw new DBAppException("One of the parameters is null!");
+        if(strTableName.equals("") || strClusteringKeyColumn.equals("") || htblColNameType.isEmpty() || htblColNameMin.isEmpty() || htblColNameMax.isEmpty())
+            throw new DBAppException("One of the parameters is empty!");
         //check if table already exists
         if(listofCreatedTables.contains(strTableName))
             throw new DBAppException("Table already exists! If you want to\n reset or Create it again," +
@@ -139,6 +143,8 @@ public class DBApp {
         // surroud the whole method with try catch to catch any exception and re-throw it as DBAppException
         try
         {
+        if(strTableName == null || htblColNameValue == null)
+            throw new DBAppException("One of the parameters is null!");
         if (!listofCreatedTables.contains(strTableName))
             throw new DBAppException("You cannot insert into a table that has not been created yet");
         Methods.check_strings_are_Alphabitical(htblColNameValue);
@@ -206,6 +212,8 @@ public class DBApp {
         {
         if(strClusteringKeyValue==null)
            	throw new DBAppException("Clustering key can not be null");
+        if(strTableName == null || htblColNameValue == null)
+            throw new DBAppException("One of the parameters is null!");
         if (!listofCreatedTables.contains(strTableName))
             throw new DBAppException("You cannot update a table that has not been created yet");
         Methods.check_strings_are_Alphabitical(htblColNameValue); // check if all string records inside the hashtable are alphabitical
@@ -286,6 +294,8 @@ public class DBApp {
         // surroud the whole method with try catch to catch any exception and re-throw it as DBAppException
         try
         {
+        if(strTableName == null || htblColNameValue == null)
+            throw new DBAppException("One of the parameters is null!");
         if (!listofCreatedTables.contains(strTableName))
             throw new DBAppException("You cannot update a table that has not been created yet");
         Methods.convert_strings_To_Lower_Case(htblColNameValue); // convert all string records in hashtable to lower case
