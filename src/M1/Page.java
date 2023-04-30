@@ -22,7 +22,7 @@ public class Page implements Serializable {
         tblBelongTo = strTableName;
         this.pid =pid;
         noOfCurrentRows =0;
-        data = new Vector<>();
+        data = new Vector<>(DBApp.MaximumRowsCountinTablePage);
         path = "src/resources/tables/" + strTableName + "/pages/page" + pid +".ser";
         DBApp.serialize(path,data);
 

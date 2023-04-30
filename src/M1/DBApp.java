@@ -22,7 +22,11 @@ public class DBApp {
     }
 
     public void init() {
-        this.readConfig();
+        try {
+			this.readConfig();
+		} catch (DBAppException e) {
+			e.printStackTrace();
+		}
     };
     
     public void DELETETableDependencies(String strTableName) throws DBAppException {
@@ -282,7 +286,7 @@ public class DBApp {
             tblToUpdate.validateColType(colType(strColName));
             Column c = tblToUpdate.getColumn(strColName);
             // if this Column does not exist , throw exception
-            if (!tblToUpdate.getVecColumns().contains(c))
+            if (/*!tblToUpdate.getVecColumns().contains(c)*/ c!=null)
                 throw new DBAppException("No such column. Check your Spelling for typos!");
             // get the value
             Object strColValue = htblColNameValue.get(strColName);
@@ -408,8 +412,7 @@ public class DBApp {
             //writer.close();
         }
         catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throw new DBAppException(e.getMessage());
         }
     }
     public static void OperationSignatureDisplay(OpType operation, Table table, Hashtable<String,Object> htblColNameVal) {
@@ -525,7 +528,7 @@ public class DBApp {
 	        
 	    }else	System.out.println("No enough or Wrong Info Given");
     }
-    public void readConfig() {
+    public void readConfig() throws DBAppException {
         /*
          * this method objective is to read the DBApp configuration file in order to
          * extract data needed
@@ -557,10 +560,9 @@ public class DBApp {
 
             br.close();
         } catch (FileNotFoundException fnfe) {
-            fnfe.printStackTrace();
-            System.out.println("Configuration file cannot be found");
+            throw new DBAppException("Configuration file cannot be found");
         } catch (IOException ioe) {
-            ioe.printStackTrace();
+            throw new DBAppException(ioe.getMessage());
         }
     }
     public static void starty() {
@@ -580,7 +582,7 @@ public class DBApp {
             oos.close();
             fileOutStr.close();
         } catch (IOException i) {
-            i.printStackTrace();
+            try{throw new DBAppException(i.getMessage());}catch(DBAppException e){e.printStackTrace();}
         }
     }
     public static Object deserialize(String path) throws DBAppException {
@@ -592,7 +594,6 @@ public class DBApp {
             ois.close();
             fileInStr.close();
         } catch (IOException | ClassNotFoundException i) {
-            i.printStackTrace();
             throw new DBAppException(path + " not found");
         }
         return obj;
@@ -741,7 +742,7 @@ try {
 		delete3.put("Id", 70);
 
 		Hashtable<String, Object> delete4 = new Hashtable<>();
-		delete4.put("Name", NULL);
+		delete4.put("Job", NULL);
 
 		
 		// Update^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -774,6 +775,7 @@ try {
 		/////
 //		d.insertIntoTable("University", htColNameVal6);////////
 //		d.insertIntoTable("University", htColNameVal5);///////
+//		d.insertIntoTable("University", htColNameVal7);/////// NULL value
 		//
 
 		
@@ -783,7 +785,7 @@ try {
 //         d.deleteFromTable("University", delete1);//without PK
 //         d.deleteFromTable("University", delete2);//without conditions (delete ALL table)
 //         d.deleteFromTable("University", delete3);//with PK
-//         d.deleteFromTable("University", delete3);// Null value testing
+//         d.deleteFromTable("University", delete4);// Null value testing
 
 // 		d.insertIntoTable("University", htColNameVal5);
 //         d.deleteFromTable("University", htColNameVal4);

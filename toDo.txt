@@ -2,7 +2,7 @@ in M1 :
 1 (Done) -  when running program, catch any exception and re-throw it as DB exception
         https://piazza.com/class/lel8rsvwc4e7j6/post/60
 
-2 -  I think that the vector<row> in page should be initialized with max no.rows allowed in one page as input to its constructor, to increase performance
+2 (Done) -  I think that the vector<row> in page should be initialized with max no.rows allowed in one page as input to its constructor, to increase performance
     https://piazza.com/class/lel8rsvwc4e7j6/post/45
 
 3 (Done) - important : should write table info in metaData when creating table!
