@@ -116,7 +116,7 @@ public class Page implements Serializable {
 		return data.isEmpty();
 	}
 
-    public void updateRow(Table table ,int entryIdx, Hashtable<String, Object> htblColNameData) {
+    public void updateRow(Table table ,int entryIdx, Hashtable<String, Object> htblColNameData) throws DBAppException {
         if(entryIdx < 0 || entryIdx >= data.size()) { //index out of bounds
             System.out.println("You cannot update a non existent row");
             return;
@@ -130,6 +130,7 @@ public class Page implements Serializable {
         while (strEnumeration.hasMoreElements()) {
             String strColName = strEnumeration.nextElement();
             Object objColValue = htblColNameData.get(strColName);
+            table.validateValueType(table.getColumn(strColName), objColValue, DBApp.colType(strColName, table.getStrTableName()));
             row.getData().set(table.getColumnEquivalentIndex(strColName), objColValue);
         }
         DBApp.serialize(path, data);    

@@ -59,30 +59,32 @@ public class Table implements Serializable
     	int index = getColumnEquivalentIndex(colName); //O(1)
     	return (index == -1)? null : getVecColumns().get(index);
     }
-    public void validateValueType(Column column ,Object valueToCheck) throws DBAppException{
-        if(valueToCheck instanceof  String){
-                  if(!column.getStrColType().equals("java.lang.String"))
+    public void validateValueType(Column column ,Object valueToCheck, String colType) throws DBAppException{
+        if(colType==null)
+        	throw new DBAppException("Error reading CSV file");
+    	if(valueToCheck instanceof  String){
+                  if(!colType.equals("java.lang.String"))
                       throw new DBAppException("The value and its corresponding column must be of the same type");
                   String value =(String) valueToCheck;
                   if(value.compareTo(column.getStrMaxVal()) > 0 ||value.compareTo(column.getStrMinVal()) < 0 )
                       throw new DBAppException("You cannot use a value that is out of the bounds of this column");
         }
         else if(valueToCheck instanceof  Integer){
-            if(!column.getStrColType().equals("java.lang.Integer"))
+            if(!colType.equals("java.lang.Integer"))
                 throw new DBAppException("The value and its corresponding column must be of the same type");
             Integer value =(Integer) valueToCheck;
             if(value.compareTo(Integer.valueOf(column.getStrMaxVal())) > 0 ||value.compareTo(Integer.valueOf(column.getStrMinVal())) < 0 )
                 throw new DBAppException("You cannot use a value that is out of the bounds of this column");
         }
         else if(valueToCheck instanceof  Double){
-            if(!column.getStrColType().equals("java.lang.Double"))
+            if(!colType.equals("java.lang.Double"))
                 throw new DBAppException("The value and its corresponding column must be of the same type");
             Double value =(Double) valueToCheck;
             if(value.compareTo(Double.valueOf(column.getStrMaxVal())) > 0 ||value.compareTo(Double.valueOf(column.getStrMinVal())) < 0 )
                 throw new DBAppException("You cannot use a value that is out of the bounds of this column");
         }
         else if (valueToCheck instanceof Date){
-            if(!column.getStrColType().equals("java.lang.Date"))
+            if(!colType.equals("java.lang.Date"))
                 throw new DBAppException("The value and its corresponding column must be of the same type");
             Date value =(Date) valueToCheck;
 

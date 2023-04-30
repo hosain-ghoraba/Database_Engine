@@ -147,12 +147,14 @@ public class DBApp {
 
         // 2- insert a record into it
         Vector<Object> vecValues = new Vector<>();
+        if(htblColNameValue.get(tblToInsertInto.getStrClusteringKeyColumn())==null)
+        	throw new DBAppException("Primary key can not be null");
         Enumeration<String> strEnumeration = htblColNameValue.keys();
         while (strEnumeration.hasMoreElements()) {
             String strColName = strEnumeration.nextElement();
-            tblToInsertInto.validateColType(colType(strColName));
+//            tblToInsertInto.validateColType(colType(strColName));
             Column c = tblToInsertInto.getColumn(strColName);
-            if(!colType(strColName).equals(c.getStrColType()))
+            if(!colType(strColName,strTableName).equals(c.getStrColType()))
                 throw new DBAppException();
             // if this Column does not exist , throw exception
             if (/*!tblToInsertInto.getVecColumns().contains(c)*/ c == null)
@@ -161,7 +163,7 @@ public class DBApp {
             Object strColValue = htblColNameValue.get(strColName);
             // check the value type
             try {
-                tblToInsertInto.validateValueType(c, strColValue);
+                tblToInsertInto.validateValueType(c, strColValue, colType(strColName, strTableName));
 
                 // if it is the value of the clustering key, insert into the first cell
                 if (strColName.equals(tblToInsertInto.getStrClusteringKeyColumn())) // if(c.isPrimary())
@@ -181,7 +183,7 @@ public class DBApp {
         }
         catch(Exception e)
         {
-        	//e.printStackTrace();
+        	e.printStackTrace();
             throw new DBAppException(e.getMessage());
         }
 
@@ -190,6 +192,8 @@ public class DBApp {
         // surround the whole method with try catch to catch any exception and re-throw it as DBAppException
         try
         {
+        if(strClusteringKeyValue==null)
+           	throw new DBAppException("Clustering key can not be null");
         if (!listofCreatedTables.contains(strTableName))
             throw new DBAppException("You cannot update a table that has not been created yet");
         Methods.check_strings_are_Alphabitical(htblColNameValue); // check if all string records inside the hashtable are alphabitical
@@ -203,7 +207,7 @@ public class DBApp {
 
         // 2- Insert hashTable elements into vector
         for (String columnName : htblColNameValue.keySet()) {
-            tblToUpdate.validateColType(colType(columnName));
+//            tblToUpdate.validateColType(colType(columnName,strTableName));
             Object newValue = htblColNameValue.get(columnName);
 
             // if it is the value of the clustering key, insert into the first cell
@@ -283,7 +287,7 @@ public class DBApp {
         Enumeration<String> strEnumeration = htblColNameValue.keys();
         while (strEnumeration.hasMoreElements()) {
             String strColName = strEnumeration.nextElement();
-            tblToUpdate.validateColType(colType(strColName));
+//            tblToUpdate.validateColType(colType(strColName));
             Column c = tblToUpdate.getColumn(strColName);
             // if this Column does not exist , throw exception
             if (/*!tblToUpdate.getVecColumns().contains(c)*/ c!=null)
@@ -291,7 +295,7 @@ public class DBApp {
             // get the value
             Object strColValue = htblColNameValue.get(strColName);
             // check the value type
-            tblToUpdate.validateValueType(c, strColValue);
+            tblToUpdate.validateValueType(c, strColValue, colType(strColName, strTableName));
 
             // if it is the value of the clustering key, insert into the first cell
             if (strColName.equals(tblToUpdate.getStrClusteringKeyColumn())) {
@@ -619,14 +623,14 @@ public class DBApp {
         }
 
 	}
-    public static String colType(String colName) throws DBAppException {
+    public static String colType(String colName, String tableName) throws DBAppException {
         String s = null;
         try {
         BufferedReader br = new BufferedReader(new FileReader("MetaData.csv"));
         String line = br.readLine();
         while (line != null) {
             String[] content = line.split(",");
-            if (content[1].compareTo(colName)==0) {
+            if (tableName.equals(content[0]) && content[1].compareTo(colName)==0) {
                 s = content[2];
             }
             line = br.readLine();
@@ -758,7 +762,7 @@ try {
 		update3.put("Name", "abood");
 		update3.put("Job", NULL);
 
-    System.out.println(colType("Name"));
+//    System.out.println(colType("Name","University"));
 		
 		
 		 //insertion test
