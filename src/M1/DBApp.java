@@ -16,8 +16,10 @@ public class DBApp {
     private LinkedList<String> listofCreatedTables;
     private static long start, end;// for execution time calculation
 
-    public DBApp() {
+    public DBApp() throws DBAppException {
         listofCreatedTables = new LinkedList<>();
+        
+        readCSVTablesIntoCreatedList();
         init();
     }
 
@@ -65,7 +67,7 @@ public class DBApp {
 			printWriter.flush();
 			printWriter.close();
         } catch (IOException e) {
-			throw new DBAppException(e.getMessage() + e.getStackTrace().toString());
+			throw new DBAppException(e.getMessage());
 		}
 
         // third, delete the table from the list of created tables
@@ -99,7 +101,7 @@ public class DBApp {
         // serialization
         serialize(strTablePath + "/" + strTableName + ".ser", tblCreated);
         OperationSignatureDisplay(tblCreated, htblColNameType,OpType.CREATE);
-        List<String> x = new ArrayList<>();
+        List<String> dataline = new ArrayList<>();
         String a =  "false";
         Enumeration<String> strkey = htblColNameType.keys();
 //        Enumeration<String> strelem = htblColNameType.elements();
@@ -112,16 +114,16 @@ public class DBApp {
         	String s = strkey.nextElement();
         	if(s.compareTo(strClusteringKeyColumn)==0)
         		a = "true";
-        	x.add(strTableName);
-        	x.add(s);
-        	x.add(htblColNameType.get(s));
-        	x.add(a);
-        	x.add(null);
-        	x.add(null);
-        	x.add(htblColNameMin.get(s));
-        	x.add(htblColNameMax.get(s));
-        	intoMeta("MetaData.csv", x);
-        	x.clear();
+        	dataline.add(strTableName);
+        	dataline.add(s);
+        	dataline.add(htblColNameType.get(s));
+        	dataline.add(a);
+        	dataline.add(null);
+        	dataline.add(null);
+        	dataline.add(htblColNameMin.get(s));
+        	dataline.add(htblColNameMax.get(s));
+        	intoMeta("MetaData.csv", dataline);
+        	dataline.clear();
         	a = "false";
 //        	i++;
 
@@ -175,6 +177,16 @@ public class DBApp {
                 throw new DBAppException(dbe.getMessage());
             }
         }
+        
+        // insert the non given column values with NULL (other than the clustering key, if any)
+        if(vecValues.size() < tblToInsertInto.getVecColumns().size()) { //not all columns are inserted
+            for (Column c : tblToInsertInto.getVecColumns()) {
+                String colName = c.getStrColName();
+                if (!htblColNameValue.containsKey(colName))
+                    vecValues.add(tblToInsertInto.getColumnEquivalentIndex(colName), NULL); // insert null in the correct index of the column
+            }
+        }
+
         Row entry = new Row(vecValues);
         tblToInsertInto.insertAnEntry(entry);
         // 3-return table back to disk with the the new inserted value
@@ -183,7 +195,7 @@ public class DBApp {
         }
         catch(Exception e)
         {
-        	e.printStackTrace();
+//        	e.printStackTrace();
             throw new DBAppException(e.getMessage());
         }
 
@@ -377,7 +389,7 @@ public class DBApp {
 
     }
 
-    public static void intoMeta(String filePath,List<String> y) throws DBAppException
+    public static void intoMeta(String filePath,List<String> dataline) throws DBAppException
     {
         // first create file object for file placed at location
         // specified by filepath
@@ -391,12 +403,15 @@ public class DBApp {
             CsvWriter writer = new CsvWriter(file);
             
              //adding header to csv
-            String[] header = {"Table Name", "Column Name", "Column Type", "ClusteringKey", "IndexName","IndexType", "min", "max" };
-            List<String> x = new ArrayList<>();
-            for (int i = 0; i < header.length; i++) {
-				x.add(header[i]);
-			}
-            BufferedReader br = new BufferedReader(new FileReader(filePath));
+            if( !CsvWriter.isHeadersWriten()) {
+	            String[] header = {"Table Name", "Column Name", "Column Type", "ClusteringKey", "IndexName","IndexType", "min", "max" };
+	            List<String> hTokens = new ArrayList<>();
+	            for (int i = 0; i < header.length; i++) {
+	            	hTokens.add(header[i]);
+				}
+	            writer.writeHeaders(hTokens);
+            }
+//            BufferedReader br = new BufferedReader(new FileReader(filePath));
 //            String line = br.readLine();
 //    		int i =0;
 //    		while (line != null) {
@@ -409,13 +424,12 @@ public class DBApp {
 //    			}
 //    			
 //    		}
-            writer.writeHeaders(x);
-            writer.writeRow(y);
+            writer.writeRow(dataline);
             
             // closing writer connection
             //writer.close();
         }
-        catch (IOException e) {
+        catch (Exception e) {
             throw new DBAppException(e.getMessage());
         }
     }
@@ -676,7 +690,6 @@ try {
 	
         DBApp d = new DBApp();
         
-        d.readCSVTablesIntoCreatedList();
 
 		Hashtable<String, String> htNameType = new Hashtable<>();
 		htNameType.put("Id", "java.lang.Integer");
@@ -693,7 +706,7 @@ try {
 
 		
 //		d.DELETETableDependencies("University");
-//	    d.createTable("University", "Id", htNameType, htNameMin, htNameMax); //CALL IT TO RESET TABLE TO INITIAL STATE
+	    d.createTable("University2", "Id", htNameType, htNameMin, htNameMax); //CALL IT TO RESET TABLE TO INITIAL STATE
 
 		
 		Hashtable<String, Object> htColNameVal0 = new Hashtable<>();
@@ -713,7 +726,7 @@ try {
 
 		Hashtable<String, Object> htColNameVal3 = new Hashtable<>();
 		htColNameVal3.put("Id", 15);
-		htColNameVal3.put("Name", "basem");
+//		htColNameVal3.put("Name", "basem"); // commented to replace with null if not exists
 		htColNameVal3.put("Job", "teacher");
 
 		Hashtable<String, Object> htColNameVal4 = new Hashtable<>();

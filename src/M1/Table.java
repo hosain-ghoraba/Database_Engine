@@ -60,6 +60,7 @@ public class Table implements Serializable
     	return (index == -1)? null : getVecColumns().get(index);
     }
     public void validateValueType(Column column ,Object valueToCheck, String colType) throws DBAppException{
+    	// colType is gotten from the CSV file
         if(colType==null)
         	throw new DBAppException("Error reading CSV file");
     	if(valueToCheck instanceof  String){

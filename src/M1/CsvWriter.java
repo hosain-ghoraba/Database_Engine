@@ -20,18 +20,20 @@ public class CsvWriter {
 		this.writer = writer;
 	}
 
-	private static boolean headersWritten;
+	private static boolean headersWritten = false;
 
     public CsvWriter(File file) throws DBAppException {
-    	BufferedReader br;
-		try {
-            br = new BufferedReader(new FileReader("MetaData.csv"));
-            String line = br.readLine();
-            headersWritten = (line != null);
-            br.close();
-        } catch ( IOException e) {
-            throw new DBAppException("Error reading csv file");    
-        }
+		if(!headersWritten) {
+			BufferedReader br;
+			try {
+				br = new BufferedReader(new FileReader("MetaData.csv"));
+				String line = br.readLine();
+				headersWritten = (line != null);
+				br.close();
+			} catch ( IOException e) {
+				throw new DBAppException("Error reading csv file");    
+			}
+		}
     }
 
     public void writeHeaders(List<String> headers) throws DBAppException {
@@ -79,7 +81,7 @@ public class CsvWriter {
 			printWriter.flush();
 			printWriter.close();
         } catch (IOException e) {
-			throw new DBAppException(e.getMessage() + e.getStackTrace().toString());
+			throw new DBAppException(e.getMessage());
 		}
     }
     
@@ -103,7 +105,10 @@ public class CsvWriter {
     }
     
     
-    
+
+	public static boolean isHeadersWriten() {
+		return headersWritten;
+	}
 
     public void close() throws IOException {
         writer.close();
