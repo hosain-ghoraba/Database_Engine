@@ -89,19 +89,31 @@ public class DBApp {
              " please call .DELETETableDependencies(TableName) method first then call createTable() method");
         
         validation(htblColNameType, htblColNameMin, htblColNameMax); // validation method checks if the type of table's columns is one of the 4 types specified in the description,validation also checks if any column does not have maxVal or minVal , hence throws exception
+        
+        
         for(String colName : htblColNameMin.keySet()) // converts all min and max column values to lowercase (hosain)
             htblColNameMin.put(colName, htblColNameMin.get(colName).toLowerCase());
         for(String colName : htblColNameMax.keySet())
             htblColNameMax.put(colName, htblColNameMax.get(colName).toLowerCase());
+
         readConfig();
+
+        
+        if(!htblColNameType.containsKey(strClusteringKeyColumn))
+            throw new DBAppException("Clustering key column does not exist in the table!");
+
+        // create the table
         Table tblCreated = new Table(strTableName, strClusteringKeyColumn, htblColNameType, htblColNameMin,
                 htblColNameMax, MaximumRowsCountinTablePage);
         listofCreatedTables.add(strTableName);
+
         String strTablePath = "src/resources/tables/" + strTableName;
+
         File newFile = new File(strTablePath);
         newFile.mkdir();
         newFile = new File(strTablePath + "/pages");
         newFile.mkdir();
+
         // serialization
         serialize(strTablePath + "/" + strTableName + ".ser", tblCreated);
         OperationSignatureDisplay(tblCreated, htblColNameType,OpType.CREATE);
