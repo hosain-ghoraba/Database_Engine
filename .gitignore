@@ -35,6 +35,7 @@ bin/
 .settings/
 .vscode/
 src/resources/tables/
+target/
 
 
 

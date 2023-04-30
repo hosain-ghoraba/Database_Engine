@@ -24,10 +24,60 @@ public class DBApp {
     public void init() {
         this.readConfig();
     };
+    
+    public void DELETETableDependencies(String strTableName) throws DBAppException {
+    	// delete its references in the csv files and listofCreatedTables
+
+        // first, read all data and extract all tables other than the given table
+        List<String> data = new ArrayList<>();
+        BufferedReader br;
+		try {
+            br = new BufferedReader(new FileReader("MetaData.csv"));
+            String line = br.readLine();
+
+            while (line != null) {
+                String[] attributes = line.split(",");
+                if(!attributes[0].equals(strTableName))
+                    data.add(line);
+                line = br.readLine();
+            }
+            br.close();
+        } catch ( IOException e) {
+            throw new DBAppException("Error reading csv file");    
+        }
+
+        // second, write the new data to the csv file
+        try {
+			File file = new File("MetaData.csv");
+			new FileWriter(file, false).close();;
+            FileWriter fr = new FileWriter(file, true);
+			PrintWriter printWriter = new PrintWriter(fr);
+			StringBuilder stringBuilder = new StringBuilder();
+			for (String line : data) {
+				stringBuilder.append(line);
+				stringBuilder.append('\n');
+			}
+			printWriter.write(stringBuilder.toString());
+			printWriter.flush();
+			printWriter.close();
+        } catch (IOException e) {
+			throw new DBAppException(e.getMessage() + e.getStackTrace().toString());
+		}
+
+        // third, delete the table from the list of created tables
+        listofCreatedTables.remove(strTableName);
+    }
+
+
     public void createTable(String strTableName, String strClusteringKeyColumn, Hashtable<String, String> htblColNameType,Hashtable<String, String> htblColNameMin, Hashtable<String, String> htblColNameMax) throws DBAppException {
         // surroud the whole method with try catch to catch any exception and re-throw it as DBAppException
         try
         {
+        //check if table already exists
+        if(listofCreatedTables.contains(strTableName))
+            throw new DBAppException("Table already exists! If you want to\n reset or Create it again," +
+             " please call .DELETETableDependencies(TableName) method first then call createTable() method");
+        
         validation(htblColNameType, htblColNameMin, htblColNameMax); // validation method checks if the type of table's columns is one of the 4 types specified in the description,validation also checks if any column does not have maxVal or minVal , hence throws exception
         for(String colName : htblColNameMin.keySet()) // converts all min and max column values to lowercase (hosain)
             htblColNameMin.put(colName, htblColNameMin.get(colName).toLowerCase());
@@ -127,7 +177,7 @@ public class DBApp {
         }
         catch(Exception e)
         {
-        	e.printStackTrace();
+        	//e.printStackTrace();
             throw new DBAppException(e.getMessage());
         }
 
@@ -552,6 +602,7 @@ public class DBApp {
 		try {
             br = new BufferedReader(new FileReader("MetaData.csv"));
             String line ;
+            br.readLine();
             line = br.readLine();
             HashSet <String> set = new HashSet<>();
             while (line != null) {
@@ -567,8 +618,9 @@ public class DBApp {
         }
 
 	}
-    public static String colType(String colName) throws IOException{
+    public static String colType(String colName) throws DBAppException {
         String s = null;
+        try {
         BufferedReader br = new BufferedReader(new FileReader("MetaData.csv"));
         String line = br.readLine();
         while (line != null) {
@@ -579,6 +631,10 @@ public class DBApp {
             line = br.readLine();
         }
         br.close();
+        } catch (IOException e) {
+        	throw new DBAppException(e.getMessage());
+		} 
+			
         return s;
     }
     
@@ -630,9 +686,10 @@ try {
 		htNameMax.put("Name", "zaky");
 		htNameMax.put("Job", "zzz");
 
-	    d.createTable("University", "Id", htNameType, htNameMin, htNameMax); //CALL IT TO RSESET TABLE TO INITIAL STATE
-
 		
+//		d.DELETETableDependencies("University");
+//	    d.createTable("University", "Id", htNameType, htNameMin, htNameMax); //CALL IT TO RESET TABLE TO INITIAL STATE
+
 		
 		Hashtable<String, Object> htColNameVal0 = new Hashtable<>();
 		htColNameVal0.put("Id", 23);
@@ -704,19 +761,19 @@ try {
 		
 		
 		 //insertion test
-		d.insertIntoTable("University", htColNameVal0);///////////////////////
+//		d.insertIntoTable("University", htColNameVal0);///////////////////////
 
-		d.insertIntoTable("University", htColNameVal2);////////////////////////////////
+//		d.insertIntoTable("University", htColNameVal2);////////////////////////////////
 
-		d.insertIntoTable("University", htColNameVal1);///////////////////////////////
+//		d.insertIntoTable("University", htColNameVal1);///////////////////////////////
 
-		d.insertIntoTable("University", htColNameVal4);//////////////////////////////
+//		d.insertIntoTable("University", htColNameVal4);//////////////////////////////
 
-		d.insertIntoTable("University", htColNameVal3);////////////////////////////
+//		d.insertIntoTable("University", htColNameVal3);////////////////////////////
 		
 		/////
-		d.insertIntoTable("University", htColNameVal6);////////
-		d.insertIntoTable("University", htColNameVal5);///////
+//		d.insertIntoTable("University", htColNameVal6);////////
+//		d.insertIntoTable("University", htColNameVal5);///////
 		//
 
 		
@@ -737,13 +794,13 @@ try {
 
 		
 
-			d.updateTable("University","11", update1);
+//			d.updateTable("University","11", update1);
 			//d.updateTable("University","11", update2);
 			//d.updateTable("University","11", update3);
 
-			Table x = (Table) deserialize("src/resources/tables/University/University.ser");
-			System.out.println(x.toString());
-
+//			Table x = (Table) deserialize("src/resources/tables/University/University.ser");
+//			System.out.println(x.toString());
+    		
 			System.out.println("Hello, Database World!");
    
 
