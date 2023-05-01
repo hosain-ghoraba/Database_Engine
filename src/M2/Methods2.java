@@ -6,25 +6,132 @@ import M1.Page;
 
 public class Methods2 {
 
-    public static void fillSetWithPages_satisfyingCondition_forInputValue(Octree octree, HashSet<Page> toFill, String condition, Comparable value, String axis ){ // fills the set with all whose (point) (operator) (value) == true
+    public static void fillSetWithPages_satisfyingCondition_forInputValue(Octree octree, HashSet<Page> toFill, String x_condition, String y_condition, String z_condition, Comparable x_value, Comparable y_value, Comparable z_value ){ // fills the set with all points where (point) (operator) (value) == true
 		
-		boolean search_is_worthy = Tree_is_candidate_forSearch(octree, condition, value, axis);
-		if(search_is_worthy) // if yes, then records may be found in this tree
+		boolean search_is_worthy = Tree_is_candidate_forSearch(octree, x_condition, y_condition, z_condition, x_value, y_value, z_value);
+		if(search_is_worthy) 
 		{
 			if(octree.isLeaf())
 			{
 				for(OctPoint point : octree.getRecords().keySet())				
-					if(conditionHolds(point , condition, value, axis)) // if the condition holds for the current point
+					if(conditionsHold(point, x_condition, y_condition, z_condition, x_value, y_value, z_value)) 
 						toFill.addAll(octree.getRecords().get(point));
 			}					
 			else
 				for(Octree child : octree.getChildren())
-					fillSetWithPages_satisfyingCondition_forInputValue(child, toFill, condition, value, axis);
+					fillSetWithPages_satisfyingCondition_forInputValue(child, toFill, x_condition, y_condition, z_condition, x_value, y_value, z_value);
 
 		}
 
+	}   
+    public static boolean Tree_is_candidate_forSearch(Octree octree, String x_operator, String y_operator, String z_operator, Comparable x_value, Comparable y_value, Comparable z_value){ // checks if the octree is a candidate for the search (if it's not, then we don't search it)
+		
+		boolean x_dimention_is_candidate;
+		boolean y_dimention_is_candidate;
+		boolean z_dimention_is_candidate;
+
+		if(x_operator == null)
+			x_dimention_is_candidate = true;
+		else
+		{
+			switch(x_operator)
+				{
+					case ">" : x_dimention_is_candidate = octree.getRightForwardUp().getX().compareTo(x_value) > 0; break;
+					case ">=" : x_dimention_is_candidate = octree.getRightForwardUp().getX().compareTo(x_value) >= 0; break;
+					case "<" : x_dimention_is_candidate = octree.getLeftBackBottom().getX().compareTo(x_value) < 0; break;
+					case "<=" : x_dimention_is_candidate = octree.getLeftBackBottom().getX().compareTo(x_value) <= 0; break;
+					case "=" : x_dimention_is_candidate = octree.getLeftBackBottom().getX().compareTo(x_value) <= 0 && octree.getRightForwardUp().getX().compareTo(x_value) >= 0; break;
+					case "!=" : x_dimention_is_candidate = true; break;
+				}
+
+		}
+		if(y_operator == null)
+			y_dimention_is_candidate = true;
+		else
+		{
+			switch(y_operator)
+				{
+					case ">" : y_dimention_is_candidate = octree.getRightForwardUp().getY().compareTo(y_value) > 0; break;
+					case ">=" : y_dimention_is_candidate = octree.getRightForwardUp().getY().compareTo(y_value) >= 0; break;
+					case "<" : y_dimention_is_candidate = octree.getLeftBackBottom().getY().compareTo(y_value) < 0; break;
+					case "<=" : y_dimention_is_candidate = octree.getLeftBackBottom().getY().compareTo(y_value) <= 0; break;
+					case "=" : y_dimention_is_candidate = octree.getLeftBackBottom().getY().compareTo(y_value) <= 0 && octree.getRightForwardUp().getY().compareTo(y_value) >= 0; break;
+					case "!=" : y_dimention_is_candidate = true; break;
+				}
+			
+		}
+		if(z_operator == null)
+			z_dimention_is_candidate = true;
+		else
+		{
+			switch(z_operator)
+				{
+					case ">" : z_dimention_is_candidate = octree.getRightForwardUp().getZ().compareTo(z_value) > 0; break;
+					case ">=" : z_dimention_is_candidate = octree.getRightForwardUp().getZ().compareTo(z_value) >= 0; break;
+					case "<" : z_dimention_is_candidate = octree.getLeftBackBottom().getZ().compareTo(z_value) < 0; break;
+					case "<=" : z_dimention_is_candidate = octree.getLeftBackBottom().getZ().compareTo(z_value) <= 0; break;
+					case "=" : z_dimention_is_candidate = octree.getLeftBackBottom().getZ().compareTo(z_value) <= 0 && octree.getRightForwardUp().getZ().compareTo(z_value) >= 0; break;
+					case "!=" : z_dimention_is_candidate = true; break;
+				}
+			
+		}
+		return x_dimention_is_candidate && y_dimention_is_candidate && z_dimention_is_candidate;
+	}	
+	public static boolean conditionsHold(OctPoint recordPoint , String x_operator, String y_operator, String z_operator , Comparable x_value, Comparable y_value, Comparable z_value) // checks if the condition holds for the recordPoint
+	{
+		boolean x_condition_holds;
+		boolean y_condition_holds;
+		boolean z_condition_holds;
+
+		if(x_operator == null)
+			x_condition_holds = true;
+		else
+		{
+			switch(x_operator)
+				{
+					case ">" : x_condition_holds = recordPoint.getX().compareTo(x_value) > 0; break;
+					case ">=" : x_condition_holds = recordPoint.getX().compareTo(x_value) >= 0; break;
+					case "<" : x_condition_holds = recordPoint.getX().compareTo(x_value) < 0; break;
+					case "<=" : x_condition_holds = recordPoint.getX().compareTo(x_value) <= 0; break;
+					case "=" : x_condition_holds = recordPoint.getX().compareTo(x_value) == 0; break;
+					case "!=" : x_condition_holds = recordPoint.getX().compareTo(x_value) != 0; break;
+				}
+
+		}	
+		if(y_operator == null)
+			y_condition_holds = true;
+		else
+		{
+			switch(y_operator)
+				{
+					case ">" : y_condition_holds = recordPoint.getY().compareTo(y_value) > 0; break;
+					case ">=" : y_condition_holds = recordPoint.getY().compareTo(y_value) >= 0; break;
+					case "<" : y_condition_holds = recordPoint.getY().compareTo(y_value) < 0; break;
+					case "<=" : y_condition_holds = recordPoint.getY().compareTo(y_value) <= 0; break;
+					case "=" : y_condition_holds = recordPoint.getY().compareTo(y_value) == 0; break;
+					case "!=" : y_condition_holds = recordPoint.getY().compareTo(y_value) != 0; break;
+				}
+			
+		}
+		if(z_operator == null)
+			z_condition_holds = true;
+		else
+		{
+			switch(z_operator)
+				{
+					case ">" : z_condition_holds = recordPoint.getZ().compareTo(z_value) > 0; break;
+					case ">=" : z_condition_holds = recordPoint.getZ().compareTo(z_value) >= 0; break;
+					case "<" : z_condition_holds = recordPoint.getZ().compareTo(z_value) < 0; break;
+					case "<=" : z_condition_holds = recordPoint.getZ().compareTo(z_value) <= 0; break;
+					case "=" : z_condition_holds = recordPoint.getZ().compareTo(z_value) == 0; break;
+					case "!=" : z_condition_holds = recordPoint.getZ().compareTo(z_value) != 0; break;
+				}
+			
+		}
+		
+		return x_condition_holds && y_condition_holds && z_condition_holds;	
 	}
-    public static void copyAllRecordsToList(Octree octree, LinkedList<Page> toFill){ // copies all pages at all leaves of the octree to the result list
+	public static void copyAllRecordsToList(Octree octree, LinkedList<Page> toFill){ // copies all pages at all leaves of the octree to the result list
 		if(octree.isLeaf())
 			for(LinkedList<Page> pages : octree.getRecords().values())
 				toFill.addAll(pages);	
@@ -33,96 +140,15 @@ public class Methods2 {
 				copyAllRecordsToList(child, toFill);
 
 	}	
-    public static boolean Tree_is_candidate_forSearch(Octree octree, String condition, Comparable value, String axis){
-		if(axis.toLowerCase().equals("x"))
-		{
-			switch(condition)
-			{
-				case ">" : return octree.getRightForwardUp().getX().compareTo(value) > 0;
-				case ">=" : return octree.getRightForwardUp().getX().compareTo(value) >= 0;
-				case "<" : return octree.getLeftBackBottom().getX().compareTo(value) < 0;
-				case "<=" : return octree.getLeftBackBottom().getX().compareTo(value) <= 0;
-				case "=" : return octree.getLeftBackBottom().getX().compareTo(value) <= 0 && octree.getRightForwardUp().getX().compareTo(value) >= 0;
-				case "!=" : return true;
-			}
-
-		}
-		else if(axis.toLowerCase().equals("y"))
-		{
-			switch(condition)
-			{
-				case ">" : return octree.getRightForwardUp().getY().compareTo(value) > 0;
-				case ">=" : return octree.getRightForwardUp().getY().compareTo(value) >= 0;
-				case "<" : return octree.getLeftBackBottom().getY().compareTo(value) < 0;
-				case "<=" : return octree.getLeftBackBottom().getY().compareTo(value) <= 0;
-				case "=" : return octree.getLeftBackBottom().getY().compareTo(value) <= 0 && octree.getRightForwardUp().getY().compareTo(value) >= 0;
-				case "!=" : return true;
-			}
-
-		}
-		else if(axis.toLowerCase().equals("z"))
-		{
-			switch(condition)
-			{
-				case ">" : return octree.getRightForwardUp().getZ().compareTo(value) > 0;
-				case ">=" : return octree.getRightForwardUp().getZ().compareTo(value) >= 0;
-				case "<" : return octree.getLeftBackBottom().getZ().compareTo(value) < 0;
-				case "<=" : return octree.getLeftBackBottom().getZ().compareTo(value) <= 0;
-				case "=" : return octree.getLeftBackBottom().getZ().compareTo(value) <= 0 && octree.getRightForwardUp().getZ().compareTo(value) >= 0;
-				case "!=" : return true;
-			}
-
-		}
-		throw new IllegalArgumentException("Axis " + axis + " is not valid");
-	}
-	public static boolean conditionHolds(OctPoint recordPoint , String condition, Comparable value, String axis )
-	{
-		if(axis.toLowerCase().equals("x"))
-		{
-			switch(condition)
-			{
-				case ">" : return recordPoint.getX().compareTo(value) > 0;
-				case ">=" : return recordPoint.getX().compareTo(value) >= 0;
-				case "<" : return recordPoint.getX().compareTo(value) < 0;
-				case "<=" : return recordPoint.getX().compareTo(value) <= 0;
-				case "=" : return recordPoint.getX().compareTo(value) == 0;
-				case "!=" : return recordPoint.getX().compareTo(value) != 0;
-			}
-
-		}
-		else if(axis.toLowerCase().equals("y"))
-		{
-			switch(condition)
-			{
-				case ">" : return recordPoint.getY().compareTo(value) > 0;
-				case ">=" : return recordPoint.getY().compareTo(value) >= 0;
-				case "<" : return recordPoint.getY().compareTo(value) < 0;
-				case "<=" : return recordPoint.getY().compareTo(value) <= 0;
-				case "=" : return recordPoint.getY().compareTo(value) == 0;
-				case "!=" : return recordPoint.getY().compareTo(value) != 0;
-			}
-
-		}
-		else if(axis.toLowerCase().equals("z"))
-		{
-			switch(condition)
-			{
-				case ">" : return recordPoint.getZ().compareTo(value) > 0;
-				case ">=" : return recordPoint.getZ().compareTo(value) >= 0;
-				case "<" : return recordPoint.getZ().compareTo(value) < 0;
-				case "<=" : return recordPoint.getZ().compareTo(value) <= 0;
-				case "=" : return recordPoint.getZ().compareTo(value) == 0;
-				case "!=" : return recordPoint.getZ().compareTo(value) != 0;
-			}
-
-
-		}
-		throw new IllegalArgumentException("Axis " + axis + " is not valid");
-
-	}
-
     public static void main(String[] args) {
-        System.out.println(Integer.valueOf(2).compareTo(Integer.valueOf(1)));
+        String s = null;
+		switch(s)
+		{
+			case "a" : System.out.println("a");
+			case "b" : System.out.println("b");
+			case "c" : System.out.println("c");
+			default : System.out.println("default");
+		}
     }
 
     
