@@ -26,9 +26,9 @@ public class Methods2 {
 	}   
     public static boolean Tree_is_candidate_forSearch(Octree octree, String x_operator, String y_operator, String z_operator, Comparable x_value, Comparable y_value, Comparable z_value){ // checks if the octree is a candidate for the search (if it's not, then we don't search it)
 		
-		boolean x_dimention_is_candidate;
-		boolean y_dimention_is_candidate;
-		boolean z_dimention_is_candidate;
+		boolean x_dimention_is_candidate = false;
+		boolean y_dimention_is_candidate = false;
+		boolean z_dimention_is_candidate = false;
 
 		if(x_operator == null)
 			x_dimention_is_candidate = true;
@@ -79,9 +79,9 @@ public class Methods2 {
 	}	
 	public static boolean conditionsHold(OctPoint recordPoint , String x_operator, String y_operator, String z_operator , Comparable x_value, Comparable y_value, Comparable z_value) // checks if the condition holds for the recordPoint
 	{
-		boolean x_condition_holds;
-		boolean y_condition_holds;
-		boolean z_condition_holds;
+		boolean x_condition_holds = false;
+		boolean y_condition_holds = false;
+		boolean z_condition_holds = false;
 
 		if(x_operator == null)
 			x_condition_holds = true;
@@ -141,14 +141,7 @@ public class Methods2 {
 
 	}	
     public static void main(String[] args) {
-        String s = null;
-		switch(s)
-		{
-			case "a" : System.out.println("a");
-			case "b" : System.out.println("b");
-			case "c" : System.out.println("c");
-			default : System.out.println("default");
-		}
+
     }
 
     
