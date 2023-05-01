@@ -679,6 +679,7 @@ public class DBApp {
         return s;
     }
     
+    
     // public Iterator selectFromTable(SQLTerm[] arrSQLTerms,String[] strarrOperators)throws DBAppException{
     //     Linkedlist<Page> resultPages = new Linkedlist<Page>();
     //     if there is index created on some of the columns in arrSQLTerms
@@ -692,233 +693,133 @@ public class DBApp {
     
     //     
     // }
+    public void createIndex(String strTableName,String[] strarrColName) throws DBAppException
+    {
+        try
+        {
+        validateTableExists(strTableName);
+        for(String colName : strarrColName)
+            validateColumnExistsInTable(strTableName, colName);
+        String indexName = strTableName + "__";
+        for(String colName : strarrColName)           
+            indexName += colName + "_";
+        validateIndexDoesNotExists(indexName);
+        updateMetadata(strTableName, strarrColName, indexName);// replace "null" with the index name
+        // next, create the index file
 
-    /*
-     * public Iterator selectFromTableWithIndex(SQLTerm[] arrSQLTerms,String[]) throws DBAppException{
-     * 
-     * 
-     * 
-     * 
-     * }
-     * 
-     * 
-     * 
-     */
 
-    public static void main(String[] args) throws DBAppException, IOException {
-        starty();
-try {
-	
-	
-        DBApp d = new DBApp();
         
 
-		Hashtable<String, String> htNameType = new Hashtable<>();
-		htNameType.put("Id", "java.lang.Integer");
-		htNameType.put("Name", "java.lang.String");
-		htNameType.put("Job", "java.lang.String");
-		Hashtable<String, String> htNameMin = new Hashtable<>();
-		htNameMin.put("Id", "1");
-		htNameMin.put("Name", "AAA");
-		htNameMin.put("Job", "aaa");
-		Hashtable<String, String> htNameMax = new Hashtable<>();
-		htNameMax.put("Id", "1000");
-		htNameMax.put("Name", "zaky");
-		htNameMax.put("Job", "zzz");
+        }
+        catch(Exception e)
+        {
+            throw new DBAppException(e.getMessage());
+        }
 
-		
-//		d.DELETETableDependencies("University");
-	    d.createTable("University2", "Id", htNameType, htNameMin, htNameMax); //CALL IT TO RESET TABLE TO INITIAL STATE
-
-		
-		Hashtable<String, Object> htColNameVal0 = new Hashtable<>();
-		htColNameVal0.put("Id", 23);
-		htColNameVal0.put("Name", "ahmed");
-		htColNameVal0.put("Job", "blacksmith");
-
-		Hashtable<String, Object> htColNameVal1 = new Hashtable<>();
-		htColNameVal1.put("Id", 33);
-		htColNameVal1.put("Name", "ali");
-		htColNameVal1.put("Job", "engineer");
-
-		Hashtable<String, Object> htColNameVal2 = new Hashtable<>();
-		htColNameVal2.put("Id", 11);
-		htColNameVal2.put("Name", "dani");
-		htColNameVal2.put("Job", "doctor");
-
-		Hashtable<String, Object> htColNameVal3 = new Hashtable<>();
-		htColNameVal3.put("Id", 15);
-//		htColNameVal3.put("Name", "basem"); // commented to replace with null if not exists
-		htColNameVal3.put("Job", "teacher");
-
-		Hashtable<String, Object> htColNameVal4 = new Hashtable<>();
-		htColNameVal4.put("Id", 14);
-		htColNameVal4.put("Name", "mostafa");
-		htColNameVal4.put("Job", "engineer");
-
-		Hashtable<String, Object> htColNameVal5 = new Hashtable<>();
-		htColNameVal5.put("Id", 70);
-		htColNameVal5.put("Name", "hamood");
-		htColNameVal5.put("Job", "bawab");
-
-		Hashtable<String, Object> htColNameVal6 = new Hashtable<>();
-		htColNameVal6.put("Id", 19);
-		htColNameVal6.put("Name", "MoSalah");
-		htColNameVal6.put("Job", "footballer");
-
-		Hashtable<String, Object> htColNameVal7 = new Hashtable<>();
-		htColNameVal7.put("Id", 50);
-		htColNameVal7.put("Name", "youssef");
-		htColNameVal7.put("Job", NULL);
-
-		//Delete ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-		Hashtable<String, Object> delete1 = new Hashtable<>();
-		delete1.put("Job", "engineer");
-
-		Hashtable<String, Object> delete2 = new Hashtable<>();
-
-		Hashtable<String, Object> delete3 = new Hashtable<>();
-		delete3.put("Id", 70);
-
-		Hashtable<String, Object> delete4 = new Hashtable<>();
-		delete4.put("Job", NULL);
-
-		
-		// Update^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-		Hashtable<String, Object> update1 = new Hashtable<>();
-		update1.put("Name", "SeragMohema");
-		update1.put("Job", "AmnDawla");
-
-		Hashtable<String, Object> update2 = new Hashtable<>();
-		update2.put("Name", "mido");
-		update2.put("Job", "harakat");
-		
-		Hashtable<String, Object> update3 = new Hashtable<>();
-		update3.put("Name", "abood");
-		update3.put("Job", NULL);
-
-//    System.out.println(colType("Name","University"));
-		
-		
-		 //insertion test
-//		d.insertIntoTable("University", htColNameVal0);///////////////////////
-
-//		d.insertIntoTable("University", htColNameVal2);////////////////////////////////
-
-//		d.insertIntoTable("University", htColNameVal1);///////////////////////////////
-
-//		d.insertIntoTable("University", htColNameVal4);//////////////////////////////
-
-//		d.insertIntoTable("University", htColNameVal3);////////////////////////////
-		
-		/////
-//		d.insertIntoTable("University", htColNameVal6);////////
-//		d.insertIntoTable("University", htColNameVal5);///////
-//		d.insertIntoTable("University", htColNameVal7);/////// NULL value
-		//
-
-		
-		
-		
-			// deletion test
-//         d.deleteFromTable("University", delete1);//without PK
-//         d.deleteFromTable("University", delete2);//without conditions (delete ALL table)
-//         d.deleteFromTable("University", delete3);//with PK
-//         d.deleteFromTable("University", delete4);// Null value testing
-
-// 		d.insertIntoTable("University", htColNameVal5);
-//         d.deleteFromTable("University", htColNameVal4);
-//			d.deleteFromTable("University", htColNameVal1);
-//         d.deleteFromTable("University", htColNameVal0);
-//         d.deleteFromTable("University", htColNameVal3);
-//         d.deleteFromTable("University", htColNameVal2);
-
-		
-
-//			d.updateTable("University","11", update1);
-			//d.updateTable("University","11", update2);
-			//d.updateTable("University","11", update3);
-
-//			Table x = (Table) deserialize("src/resources/tables/University/University.ser");
-//			System.out.println(x.toString());
-    		
-			System.out.println("Hello, Database World!");
-   
-
-        // 0,2,1,3
-        // 0,2,3,1
-        // 0,3,2,1
-        // 0,3,1,2
-        // 0,1,2,3
-        // 0,1,3,2
-
-        /*
-         * Hashtable<String, String> htNameType = new Hashtable<>();
-         * htNameType.put("ahmed", "java.lang.String");
-         * Hashtable<String, String> htNameMin = new Hashtable<>();
-         * Hashtable<String, String> htNameMax = new Hashtable<>();
-         * htNameMin.put("ahmed", "2");
-         * htNameMax.put("ahmed", "7");
-         * 
-         * 
-         * 
-         * try {
-         * validation(htNameType, htNameMin, htNameMax);
-         * System.out.println("right");
-         * }
-         * catch (DBAppException e){
-         * System.out.println(e.getMessage());
-         * }
-         * 
-         */
-        
-        
-}catch (DBAppException e) {
-	e.printStackTrace();
-	System.out.println("\n\nExit status code = 1");
-}        
-        endy();
     }
 
-    // Iterator class
-    // Make a collection
-    /*
-     * ArrayList<String> cars = new ArrayList<String>();
-     * cars.add("Volvo");
-     * cars.add("BMW");
-     * cars.add("Ford");
-     * cars.add("Mazda");
-     * 
-     * // Get the iterator
-     * Iterator<String> it = cars.iterator();
-     * 
-     * // Print the first item
-     * while(it.hasNext())
-     * System.out.println(it.next());
-     * 
-     */
+    public void validateTableExists(String strTableName) throws DBAppException, IOException {
+        // search for table name from the metadata file
+        // if not found throw exception
+        boolean found = false;
+        BufferedReader br = new BufferedReader(new FileReader("MetaData.csv"));
+        String line = br.readLine();
+        while (line != null) 
+        {
+            String[] content = line.split(",");
+            if (strTableName.equals(content[0])) 
+            {
+                found = true;
+                break;
+            }
+            line = br.readLine();
+        }
+        br.close();
 
-    /*
-     * ArrayList<Integer> numbers = new ArrayList<Integer>();
-     * numbers.add(12);
-     * numbers.add(8);
-     * numbers.add(2);
-     * numbers.add(23);
-     * Iterator<Integer> it = numbers.iterator();
-     * while(it.hasNext()) {
-     * Integer i = it.next();
-     * if(i < 10) {
-     * it.remove();
-     * }
-     * }
-     * System.out.println(numbers);
-     * }
-     * Trying to remove items using a for loop or a for-each loop would not work
-     * correctly
-     * because the collection is changing size at the same time that the code is
-     * trying to loop
-     * 
-     */
+        if (!found)
+            throw new DBAppException("Table " + strTableName + " does not exist !");
 
 
+    }
+    public void validateColumnExistsInTable(String strTableName, String strColName) throws DBAppException, IOException {
+        validateTableExists(strTableName);
+        boolean found = false;
+        BufferedReader br = new BufferedReader(new FileReader("MetaData.csv"));
+        String line = br.readLine();
+        while (line != null) 
+        {
+            String[] content = line.split(",");
+            if (strTableName.equals(content[0]) && strColName.equals(content[1])) 
+            {
+                found = true;
+                break;
+            }
+            line = br.readLine();
+        }
+        br.close();
+
+        if (!found)
+            throw new DBAppException("Column " + strColName + " does not exist in table " + strTableName + " !");
+    }
+    public void validateIndexDoesNotExists(String indexName) throws IOException, DBAppException{
+        // search for index name from the metadata file
+        // if found throw exception
+        boolean found = false;
+        BufferedReader br = new BufferedReader(new FileReader("MetaData.csv"));
+        String line = br.readLine();
+        while (line != null) 
+        {
+            String[] content = line.split(",");
+            if (indexName.equals(content[4])) 
+            {
+                found = true;
+                break;
+            }
+            line = br.readLine();
+        }
+        br.close();
+
+        if (found)
+            throw new DBAppException("Index " + indexName + " already exists !");
+
+    }
+    public static void updateMetadata(String tableName, String[] columnNames, String indexName) throws IOException {// puts the index name in the metadata file instead of null in each column in columnNames
+
+        BufferedReader reader = new BufferedReader(new FileReader("metadata.csv"));
+        BufferedWriter writer = new BufferedWriter(new FileWriter("temp.csv"));
+
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] row = line.split(",");
+            if (row[0].equals(tableName)) {
+                for (int i = 0; i < columnNames.length; i++) {
+                    if (row[1].equals(columnNames[i])) {
+                        row[4] = indexName;
+                        break;
+                    }
+                }
+            }
+            writer.write(String.join(",", row));
+            writer.newLine();
+        }
+
+        reader.close();
+        writer.close();
+
+        // Replace the original metadata file with the updated version
+        new File("metadata.csv").delete();
+        new File("temp.csv").renameTo(new File("metadata.csv"));
+    }
+    public static void main(String[] args) throws IOException {
+        
+        String strTableName = "University";
+        String[] strarrColNames = {"Name", "Id" };
+        String indexName = "new index name";
+
+            updateMetadata(strTableName, strarrColNames, indexName);
+    
+
+          
+
+}
 }
