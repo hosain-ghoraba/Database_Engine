@@ -272,7 +272,7 @@ public class Octree {
 		htNameMax.put("Name", "zaky");
 		htNameMax.put("Job", "zzz");
 
-		d.createTable("University", "Id", htNameType, htNameMin, htNameMax);
+	//	d.createTable("University", "Id", htNameType, htNameMin, htNameMax);
 		Hashtable<String, Object> htColNameVal0 = new Hashtable<>();
 		htColNameVal0.put("Id", 23);
 		htColNameVal0.put("Name", new String("ahmed"));

@@ -795,6 +795,7 @@ public class DBApp {
                 for (int i = 0; i < columnNames.length; i++) {
                     if (row[1].equals(columnNames[i])) {
                         row[4] = indexName;
+                        row[5] = "Octree";
                         break;
                     }
                 }
