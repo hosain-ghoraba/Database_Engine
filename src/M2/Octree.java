@@ -20,7 +20,7 @@ public class Octree {
 	private OctPoint rightForwardUp; // this is edge number 7 in the "edge numbers" photo in github
 	private OctPoint point; // this is null if the octree is a leaf
 	private Octree[] children; // this is null if the octree is a leaf
-	private HashMap<OctPoint,LinkedList<Page> > records; // this is null if the octree is NOT a leaf
+	private HashMap<OctPoint,LinkedList<Integer> > records; // this is null if the octree is NOT a leaf
 	private int maxNodeCapacity;
 	
 	public Octree(OctPoint leftBackBottom,OctPoint rightForwardUp,int maxNodeCapacity) { // constructor for a leaf octree, leaf octrees are converted to non-leaf octrees by the split method when their capacity is exceeded
@@ -28,23 +28,25 @@ public class Octree {
 		this.leftBackBottom = leftBackBottom;
 		this.rightForwardUp = rightForwardUp;
 		this.maxNodeCapacity = maxNodeCapacity;
-		records = new HashMap<OctPoint, LinkedList<Page> >();
+		records = new HashMap<OctPoint, LinkedList<Integer> >();
 	}	
 
 	// fundamental methods
-	public void insertPageIntoTree(Comparable x, Comparable y, Comparable z , Page page) {
+	public void insertPageIntoTree(Comparable x, Comparable y, Comparable z , Integer page) {
 		this.insertHelper(x, y, z , page, new LinkedList<Octree>());
 	}
-	public void deletePageFromTree(Comparable x, Comparable y, Comparable z , Page page) { // deletes ONLY one instance of the page, in case multiple instances of the same page exist in the same point
+	public void deletePageFromTree(Comparable x, Comparable y, Comparable z , Integer page) { // deletes ONLY one instance of the page, in case multiple instances of the same page exist in the same point
 		this.deleteHelper(x, y, z , page, new LinkedList<Octree>());
 	}
-	public void updatePageAtPoint(Comparable x, Comparable y, Comparable z , Page oldPage, Page newPage) {// replaces ONLY one instance of the page, in case multiple instances of the same page exist in the same point
+	public void updatePageAtPoint(Comparable x, Comparable y, Comparable z , Integer oldPage, Integer newPage) {// replaces ONLY one instance of the page, in case multiple instances of the same page exist in the same point
+		validateNotNull(x, y, z);
 		if(!this.pointExists(x, y, z))
 			throw new IllegalArgumentException("Point " + x + " " + y + " " + z + " doesn't exist in the octree");
 		deletePageFromTree(x, y, z, oldPage);
 		insertPageIntoTree(x, y, z, newPage);
 	}	
-	public LinkedList<Page> getPagesAtPoint(Comparable x, Comparable y, Comparable z) {
+	public LinkedList<Integer> getPagesAtPoint(Comparable x, Comparable y, Comparable z) {
+		validateNotNull(x, y, z);
 		if(!this.pointExists(x, y, z))
 			throw new IllegalArgumentException("Point " + x + " " + y + " " + z + " doesn't exist in the octree");
 		if(this.isLeaf())
@@ -75,8 +77,8 @@ public class Octree {
 	}
 
 //// below are helper private methods ////
-	private void insertHelper(Comparable x, Comparable y, Comparable z , Page page , LinkedList<Octree> traversedSoFar) {
-
+	private void insertHelper(Comparable x, Comparable y, Comparable z , Integer page , LinkedList<Octree> traversedSoFar) {
+		validateNotNull(x, y, z);
 		validatePointIsInTreeBounday(x, y, z);		
 		traversedSoFar.add(this);
 		if(! this.isLeaf())
@@ -89,7 +91,7 @@ public class Octree {
 			OctPoint PointToInsert = new OctPoint(x,y,z);
 			if(!records.containsKey(PointToInsert))
 			{
-				LinkedList<Page> pages = new LinkedList<Page>();
+				LinkedList<Integer> pages = new LinkedList<Integer>();
 				pages.add(page);
 				records.put(PointToInsert, pages);
 				for(Octree octree : traversedSoFar)
@@ -106,8 +108,8 @@ public class Octree {
 			
 		}
 	}
-	private void deleteHelper(Comparable x, Comparable y, Comparable z , Page page, LinkedList<Octree> traversedSoFar) {
-
+	private void deleteHelper(Comparable x, Comparable y, Comparable z , Integer page, LinkedList<Octree> traversedSoFar) {
+		validateNotNull(x, y, z);
 		if(!this.pointExists(x, y, z))
 			throw new IllegalArgumentException("PointToDelete " + x + " " + y + " " + z + " doesn't exist in the octree");
 		traversedSoFar.addLast(this);
@@ -119,7 +121,7 @@ public class Octree {
 		else
 		{
 			OctPoint PointToDelete = new OctPoint(x,y,z);
-			LinkedList<Page> pages = records.get(PointToDelete);
+			LinkedList<Integer> pages = records.get(PointToDelete);
 			boolean succefullyDeleted = pages.remove(page); // remove page from list of pages
 			if(!succefullyDeleted)
 				throw new IllegalArgumentException("the input page " + page + "  was not found in the list of pages of Point " + x + " " + y + " " + z + "");	
@@ -145,13 +147,13 @@ public class Octree {
 	private void devourChildren() {
 		if(this.isLeaf())
 			return;
-		this.records = new HashMap<OctPoint, LinkedList<Page> >(); // preparing a non-leaf octree to be a leaf octree	
+		this.records = new HashMap<OctPoint, LinkedList<Integer> >(); // preparing a non-leaf octree to be a leaf octree	
 		for(Octree child : this.children)
 		{
 			child.devourChildren();
 			for(OctPoint key : child.records.keySet())
 			{
-				LinkedList<Page> value = child.records.get(key);
+				LinkedList<Integer> value = child.records.get(key);
 				this.records.put(key, value);
 			}
 		}
@@ -187,9 +189,9 @@ public class Octree {
 
 		for(OctPoint recordPoint : records.keySet()) // transfer the records to the children
 		{
-			LinkedList<Page> recordPages = records.get(recordPoint);
+			LinkedList<Integer> recordPages = records.get(recordPoint);
 			int childPositionToInsertInto = Methods.getRelevantPosition(this.point.getX(), this.point.getY(), this.point.getZ(), recordPoint.getX(), recordPoint.getY(), recordPoint.getZ());
-			for(Page page : recordPages)
+			for(Integer page : recordPages)
 			{				
 				LinkedList<Octree> traversedSoFar = new LinkedList<Octree>();
 				children[childPositionToInsertInto].insertHelper(recordPoint.getX(), recordPoint.getY(), recordPoint.getZ(), page, traversedSoFar);
@@ -198,6 +200,16 @@ public class Octree {
 		records = null; // after all the records are transferred to the children, the records are no longer needed in the parent
 
 	}	
+	private void validateNotNull(Comparable x, Comparable y, Comparable z) {
+		if(x == null)
+			throw new IllegalArgumentException("x axis value can't be null");
+		if(y == null)
+			throw new IllegalArgumentException("y axis value can't be null");
+		if(z == null)
+			throw new IllegalArgumentException("z axis value can't be null");
+
+
+	}
 	private void  validatePointIsInTreeBounday(Comparable x, Comparable y, Comparable z) {
 		boolean xIsInBoundary = (x.compareTo(this.leftBackBottom.getX()) >= 0) && (x.compareTo(this.rightForwardUp.getX()) <= 0);
 		boolean yIsInBoundary = (y.compareTo(this.leftBackBottom.getY()) >= 0) && (y.compareTo(this.rightForwardUp.getY()) <= 0);
@@ -247,7 +259,7 @@ public class Octree {
 	public OctPoint gePoint() {
 		return point;
 	}
-	public HashMap<OctPoint,LinkedList<Page> > getRecords() {
+	public HashMap<OctPoint,LinkedList<Integer> > getRecords() {
 		return records;
 	}
 	public Octree[] getChildren() {
@@ -324,36 +336,36 @@ public class Octree {
 
 		Octree octree = new Octree(new OctPoint(0,0,0), new OctPoint(100,100,100),2);
 
-		octree.insertPageIntoTree(10, 10, 10, page1);
-		octree.insertPageIntoTree(15, 15, 15, page1);
-		octree.insertPageIntoTree(20, 20, 20, page2);
-		octree.insertPageIntoTree(25, 25, 25, page3);
-		octree.insertPageIntoTree(30, 30, 30, page4);
-		octree.insertPageIntoTree(35, 35, 35, page5);
-		octree.insertPageIntoTree(40, 40, 40, page6);
-		octree.insertPageIntoTree(45, 45, 45, page7);
-		octree.insertPageIntoTree(50, 50, 50, page8);
-		octree.insertPageIntoTree(55, 55, 55, page9);
-		octree.insertPageIntoTree(60, 60, 60, page10);
-		octree.insertPageIntoTree(65, 65, 65, page1);
-		octree.insertPageIntoTree(70, 70, 70, page2);
-		octree.insertPageIntoTree(75, 75, 75, page3);
-		octree.insertPageIntoTree(80, 80, 80, page4);
-		octree.insertPageIntoTree(85, 85, 85, page5);
-		octree.insertPageIntoTree(90, 90, 90, page6);
-		octree.insertPageIntoTree(95, 95, 95, page7);
-		octree.insertPageIntoTree(100, 100, 100, page8);
+		octree.insertPageIntoTree(10, 10, 10, page1.getPid());
+		octree.insertPageIntoTree(15, 15, 15, page1.getPid());
+		octree.insertPageIntoTree(20, 20, 20, page2.getPid());
+		octree.insertPageIntoTree(25, 25, 25, page3.getPid());
+		octree.insertPageIntoTree(30, 30, 30, page4.getPid());
+		octree.insertPageIntoTree(35, 35, 35, page5.getPid());
+		octree.insertPageIntoTree(40, 40, 40, page6.getPid());
+		octree.insertPageIntoTree(45, 45, 45, page7.getPid());
+		octree.insertPageIntoTree(50, 50, 50, page8.getPid());
+		octree.insertPageIntoTree(55, 55, 55, page9.getPid());
+		octree.insertPageIntoTree(60, 60, 60, page10.getPid());
+		octree.insertPageIntoTree(65, 65, 65, page1.getPid());
+		octree.insertPageIntoTree(70, 70, 70, page2.getPid());
+		octree.insertPageIntoTree(75, 75, 75, page3.getPid());
+		octree.insertPageIntoTree(80, 80, 80, page4.getPid());
+		octree.insertPageIntoTree(85, 85, 85, page5.getPid());
+		octree.insertPageIntoTree(90, 90, 90, page6.getPid());
+		octree.insertPageIntoTree(95, 95, 95, page7.getPid());
+		octree.insertPageIntoTree(100, 100, 100, page8.getPid());
 
 		
-		octree.deletePageFromTree(15, 15, 15, page1);
-		octree.deletePageFromTree(20, 20, 20, page2);
-		octree.deletePageFromTree(25, 25, 25, page3);
-		octree.deletePageFromTree(30, 30, 30, page4);
-		octree.deletePageFromTree(35, 35, 35, page5);
-		octree.deletePageFromTree(40, 40, 40, page6);
-		octree.deletePageFromTree(45, 45, 45, page7);
-		octree.deletePageFromTree(50, 50, 50, page8);
-		octree.deletePageFromTree(55, 55, 55, page9);
+		octree.deletePageFromTree(15, 15, 15, page1.getPid());
+		octree.deletePageFromTree(20, 20, 20, page2.getPid());
+		octree.deletePageFromTree(25, 25, 25, page3.getPid());
+		octree.deletePageFromTree(30, 30, 30, page4.getPid());
+		octree.deletePageFromTree(35, 35, 35, page5.getPid());
+		octree.deletePageFromTree(40, 40, 40, page6.getPid());
+		octree.deletePageFromTree(45, 45, 45, page7.getPid());
+		octree.deletePageFromTree(50, 50, 50, page8.getPid());
+		octree.deletePageFromTree(55, 55, 55, page9.getPid());
 		// octree.deletePageFromTree(60, 60, 60, page10);
 		// octree.deletePageFromTree(65, 65, 65, page1);
 		// octree.deletePageFromTree(70, 70, 70, page2);
