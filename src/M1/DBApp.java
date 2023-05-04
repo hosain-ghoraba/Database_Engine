@@ -721,6 +721,8 @@ public class DBApp {
         return s;
     }
 
+    ///////////////////////////////////////////// below are for M2
+
     // select helpers
     private HashSet<Integer> selectPages_UsingIndex(SQLTerm[] arrSQLTerms, String[] strarrOperators, HashSet<String> possibleIndicies) {
         return null;
@@ -739,8 +741,8 @@ public class DBApp {
         return pages_ids;   
         
     }
-    private HashSet<Row> selectMatchingRows(SQLTerm[] arrSQLTerms, String[] strarrOperators, HashSet<Integer> candidatePages) throws DBAppException, IOException {
-    HashSet<Row>[] separated_SQLTermsResults = new HashSet[arrSQLTerms.length];
+    private LinkedList<Row> selectMatchingRows(SQLTerm[] arrSQLTerms, String[] strarrOperators, HashSet<Integer> candidatePages) throws DBAppException, IOException {
+    LinkedList<Row>[] separated_SQLTermsResults = new LinkedList[arrSQLTerms.length];
     for (Integer page_id : candidatePages) 
     {
         String pagePath = "src/resources/tables/" + arrSQLTerms[0]._strTableName + "/pages/page" + page_id + ".ser";
@@ -843,8 +845,8 @@ public class DBApp {
         }
         return result;
     }
-    private HashSet<Row> applyOperators(HashSet<Row>[] separated_SQLTermsResults, String[] strarrOperators) { // to do
-        Stack<HashSet<Row>> dataStack = new Stack<HashSet<Row>>();
+    private LinkedList<Row> applyOperators(LinkedList<Row>[] separated_SQLTermsResults, String[] strarrOperators) { // to do
+        Stack<LinkedList<Row>> dataStack = new Stack<LinkedList<Row>>();
         Stack<String> operatorsStack = new Stack<String>();
         for(int i = 0; i < separated_SQLTermsResults.length; i++)
             dataStack.push(separated_SQLTermsResults[i]);
@@ -854,28 +856,30 @@ public class DBApp {
             dataStack.push(applySingleOperator(dataStack.pop(), dataStack.pop(), operatorsStack.pop()));
         return dataStack.pop();        
     }
-    private HashSet<Row> applySingleOperator(HashSet<Row> list1, HashSet<Row> list2, String operand) {
-        HashSet<Row> result = new HashSet<Row>();
+    private LinkedList<Row> applySingleOperator(LinkedList<Row> list1, LinkedList<Row> list2, String operand) { 
+        LinkedList<Row> result = new LinkedList<Row>();
+        HashSet<Row> set1 = new HashSet<Row>(list1); // convert to hashset to increase performance of contains() from O(n) to O(1)
+        HashSet<Row> set2 = new HashSet<Row>(list2); // convert to hashset to increase performance of contains() from O(n) to O(1)
         if(operand.equals("AND"))
         {
-            for(Row row : list1)
-                if(list2.contains(row))
+            for(Row row : set1)
+                if(set2.contains(row))
                     result.add(row);
         }
         else if(operand.equals("OR"))
         {
-            for(Row row : list1)
+            for(Row row : set1)
                 result.add(row);
-            for(Row row : list2)
+            for(Row row : set2)
                 result.add(row);
         }
         else if(operand.equals("XOR"))
         {
-            for(Row row : list1)
-                if(!list2.contains(row))
+            for(Row row : set1)
+                if(!set2.contains(row))
                     result.add(row);
-            for(Row row : list2)
-                if(!list1.contains(row))
+            for(Row row : set2)
+                if(!set1.contains(row))
                     result.add(row);
         }
  
