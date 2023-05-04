@@ -348,8 +348,9 @@ public class DBApp {
             validateSQLTerms(arrSQLTerms);
             validateOperators(arrSQLTerms, strarrOperators);
             HashSet<Integer> candidatePages = new HashSet<Integer>();
-            if(SearchForIndex(arrSQLTerms) != null)
-                candidatePages = selectPages_UsingIndex(arrSQLTerms, strarrOperators);
+            HashSet<String> possibleIndicies = SearchForIndicies(arrSQLTerms);
+            if(possibleIndicies.size() > 0)
+                candidatePages = selectPages_UsingIndex(arrSQLTerms, strarrOperators, possibleIndicies);
             else
                 candidatePages = selectPages_WithoutIndex(arrSQLTerms, strarrOperators);
             HashSet<Row> matchingRows = selectMatchingRows(arrSQLTerms, strarrOperators, candidatePages);
@@ -720,17 +721,168 @@ public class DBApp {
         return s;
     }
 
-    // M2 helpers
-    private HashSet<Integer> selectPages_UsingIndex(SQLTerm[] arrSQLTerms, String[] strarrOperators) {
+    // select helpers
+    private HashSet<Integer> selectPages_UsingIndex(SQLTerm[] arrSQLTerms, String[] strarrOperators, HashSet<String> possibleIndicies) {
         return null;
     }
     private HashSet<Integer> selectPages_WithoutIndex(SQLTerm[] arrSQLTerms, String[] strarrOperators) {
-        return null;
+        String tableName = arrSQLTerms[0]._strTableName;
+        File directory = new File("src/resources/tables/" + tableName + "/pages");
+        File[] files = directory.listFiles();
+        HashSet<Integer> pages_ids = new HashSet<Integer>();
+        for (File file : files) 
+        {
+            String fileName = file.getName(); // page10.ser for example
+            pages_ids.add(Integer.parseInt(fileName.substring(4, fileName.length()-4))); // to get the 10 only from page10.ser
+
+        }
+        return pages_ids;   
+        
     }
-    private HashSet<Row> selectMatchingRows(SQLTerm[] arrSQLTerms, String[] strarrOperators, HashSet<Integer> candidatePages) {
-        return null;
+    private HashSet<Row> selectMatchingRows(SQLTerm[] arrSQLTerms, String[] strarrOperators, HashSet<Integer> candidatePages) throws DBAppException, IOException {
+    HashSet<Row>[] separated_SQLTermsResults = new HashSet[arrSQLTerms.length];
+    for (Integer page_id : candidatePages) 
+    {
+        String pagePath = "src/resources/tables/" + arrSQLTerms[0]._strTableName + "/pages/page" + page_id + ".ser";
+        Page page = (Page) deserialize(pagePath);
+        for(int i = 0 ; i < separated_SQLTermsResults.length ; i++)
+            separated_SQLTermsResults[i].addAll(singleSQLTermResult(arrSQLTerms[i], page));
+        serialize(pagePath, page);
+    }
+    // now we have all the rows that match each SQLTerm in separated_SQLTermsResults
+    // we need to apply the operators on them
+    return applyOperators(separated_SQLTermsResults, strarrOperators);
     }
 
+    // select with index helpers
+    public HashSet<String> getAllTableIndicies(String tableName) throws IOException {    
+        HashSet<String> indicies = new HashSet<String>();
+        BufferedReader br = new BufferedReader(new FileReader("MetaData.csv"));
+        String line = br.readLine();
+        while (line != null) 
+        {
+            String[] content = line.split(",");
+            if (tableName.equals(content[0]) && !content[4].equals("null"))     
+                indicies.add(content[4]);
+            line = br.readLine();
+        }
+        br.close();
+        return indicies;
+    }
+    public HashSet<String> SearchForIndicies(SQLTerm[] arrSQLTerms) throws IOException, DBAppException {
+        String tableName = arrSQLTerms[0]._strTableName;
+        String[] SQLTermsColumns = new String[arrSQLTerms.length];
+        for(int i = 0; i < arrSQLTerms.length; i++)
+            SQLTermsColumns[i] = arrSQLTerms[i]._strColumnName;
+        HashSet<String> possibleIndicies = getAllTableIndicies(tableName);
+        HashSet<String> matchingIndicies = new HashSet<String>();
+        for(String indexName : possibleIndicies)
+        {
+            boolean SQLTermsContainsIndex = true;
+            for(String indexColumn : indexName.split("__")[1].split("_"))
+            {
+                if(!Arrays.asList(SQLTermsColumns).contains(indexColumn))
+                {
+                    SQLTermsContainsIndex = false;
+                    break;
+                }
+
+            }
+            if(SQLTermsContainsIndex)
+                matchingIndicies.add(indexName);
+            
+        }
+        return matchingIndicies;
+        
+    }
+    public static void writeIndexInMetadata(String tableName, String[] columnNames, String indexName) throws IOException {// puts the index name in the metadata file instead of null in each column in columnNames
+    
+            BufferedReader reader = new BufferedReader(new FileReader("metadata.csv"));
+            BufferedWriter writer = new BufferedWriter(new FileWriter("temp.csv"));
+    
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] row = line.split(",");
+                if (row[0].equals(tableName)) {
+                    for (int i = 0; i < columnNames.length; i++) {
+                        if (row[1].equals(columnNames[i])) {
+                            row[4] = indexName;
+                            row[5] = "Octree";
+                            break;
+                        }
+                    }
+                }
+                writer.write(String.join(",", row));
+                writer.newLine();
+            }
+    
+            reader.close();
+            writer.close();
+    
+            // Replace the original metadata file with the updated version
+            new File("metadata.csv").delete();
+            new File("temp.csv").renameTo(new File("metadata.csv"));
+        }
+    
+    // selectMatchingRows helpers
+    private LinkedList<Row> singleSQLTermResult(SQLTerm sqlTerm, Page page) throws IOException { 
+        LinkedList<Row> result = new LinkedList<Row>();
+        Comparable sqlTermValue = (Comparable) sqlTerm._objValue;
+        for(Row row : page.getData())
+        {
+            Comparable cellValue = (Comparable) row.getColumnValue(sqlTerm._strColumnName, sqlTerm._strTableName);
+            switch(sqlTerm._strOperator)
+            {
+                case "=" : if(cellValue.compareTo(sqlTermValue) == 0) result.add(row); break;
+                case "!=" : if(cellValue.compareTo(sqlTermValue) != 0) result.add(row); break;
+                case ">" : if(cellValue.compareTo(sqlTermValue) > 0) result.add(row); break;
+                case ">=" : if(cellValue.compareTo(sqlTermValue) >= 0) result.add(row); break;
+                case "<" : if(cellValue.compareTo(sqlTermValue) < 0) result.add(row); break;
+                case "<=" : if(cellValue.compareTo(sqlTermValue) <= 0) result.add(row); break;                              
+            }
+        }
+        return result;
+    }
+    private HashSet<Row> applyOperators(HashSet<Row>[] separated_SQLTermsResults, String[] strarrOperators) { // to do
+        Stack<HashSet<Row>> dataStack = new Stack<HashSet<Row>>();
+        Stack<String> operatorsStack = new Stack<String>();
+        for(int i = 0; i < separated_SQLTermsResults.length; i++)
+            dataStack.push(separated_SQLTermsResults[i]);
+        for(int i = 0; i < strarrOperators.length; i++)
+            operatorsStack.push(strarrOperators[i]);
+        while(!operatorsStack.isEmpty())
+            dataStack.push(applySingleOperator(dataStack.pop(), dataStack.pop(), operatorsStack.pop()));
+        return dataStack.pop();        
+    }
+    private HashSet<Row> applySingleOperator(HashSet<Row> list1, HashSet<Row> list2, String operand) {
+        HashSet<Row> result = new HashSet<Row>();
+        if(operand.equals("AND"))
+        {
+            for(Row row : list1)
+                if(list2.contains(row))
+                    result.add(row);
+        }
+        else if(operand.equals("OR"))
+        {
+            for(Row row : list1)
+                result.add(row);
+            for(Row row : list2)
+                result.add(row);
+        }
+        else if(operand.equals("XOR"))
+        {
+            for(Row row : list1)
+                if(!list2.contains(row))
+                    result.add(row);
+            for(Row row : list2)
+                if(!list1.contains(row))
+                    result.add(row);
+        }
+ 
+        return result;
+    }
+    
+    // misc validations
     private void validateTableExists(String strTableName) throws DBAppException, IOException {
         // search for table name from the metadata file
         // if not found throw exception
@@ -827,82 +979,31 @@ public class DBApp {
             
     }
 
-    public HashSet<String> getAllTableIndicies(String tableName) throws IOException {    
-        HashSet<String> indicies = new HashSet<String>();
-        BufferedReader br = new BufferedReader(new FileReader("MetaData.csv"));
-        String line = br.readLine();
-        while (line != null) 
-        {
-            String[] content = line.split(",");
-            if (tableName.equals(content[0]) && !content[4].equals("null"))     
-                indicies.add(content[4]);
-            line = br.readLine();
-        }
-        br.close();
-        return indicies;
-    }
-    public String SearchForIndex(SQLTerm[] arrSQLTerms) throws IOException, DBAppException {
-        String tableName = arrSQLTerms[0]._strTableName;
-        String[] SQLTermsColumns = new String[arrSQLTerms.length];
-        for(int i = 0; i < arrSQLTerms.length; i++)
-            SQLTermsColumns[i] = arrSQLTerms[i]._strColumnName;
-        HashSet<String> possibleIndicies = getAllTableIndicies(tableName);
-        
-        for(String indexName : possibleIndicies)
-        {
-            boolean SQLTermsContainsIndex = true;
-            for(String indexColumn : indexName.split("__")[1].split("_"))
-            {
-                if(!Arrays.asList(SQLTermsColumns).contains(indexColumn))
-                {
-                    SQLTermsContainsIndex = false;
-                    break;
-                }
 
-            }
-            if(SQLTermsContainsIndex)
-                return indexName;
-            
-        }
-        return null;
-        
-    }
-    public static void writeIndexInMetadata(String tableName, String[] columnNames, String indexName) throws IOException {// puts the index name in the metadata file instead of null in each column in columnNames
 
-        BufferedReader reader = new BufferedReader(new FileReader("metadata.csv"));
-        BufferedWriter writer = new BufferedWriter(new FileWriter("temp.csv"));
-
-        String line;
-        while ((line = reader.readLine()) != null) {
-            String[] row = line.split(",");
-            if (row[0].equals(tableName)) {
-                for (int i = 0; i < columnNames.length; i++) {
-                    if (row[1].equals(columnNames[i])) {
-                        row[4] = indexName;
-                        row[5] = "Octree";
-                        break;
-                    }
-                }
-            }
-            writer.write(String.join(",", row));
-            writer.newLine();
-        }
-
-        reader.close();
-        writer.close();
-
-        // Replace the original metadata file with the updated version
-        new File("metadata.csv").delete();
-        new File("temp.csv").renameTo(new File("metadata.csv"));
-    }
-    
     public static void main(String[] args) throws IOException, DBAppException {
         
+        // File directory = new File("src/resources/tables/" + "University" + "/pages");
+        // File[] files = directory.listFiles();
+        // for (File file : files)
+        //     System.out.println(Integer.parseInt(file.getName().substring(4, file.getName().length()-4)));
         DBApp d = new DBApp();
+        Hashtable<String, Object> htColNameVal0 = new Hashtable<>();
+		htColNameVal0.put("Id", 23);
+		htColNameVal0.put("Name", new String("ahmed"));
+		htColNameVal0.put("Job", new String("blacksmith"));
+        Page page = new Page("University", 0);
+        Row row = new Row(new Vector<Object>(htColNameVal0.values()));
+        page.insertAnEntry(row);
+        String pagePath = "src/resources/tables/" + "University" + "/pages/" + "page20.ser";
+        serialize(pagePath, page);
+        Page page2 = (Page)deserialize(pagePath);
+        Row row2 = page2.getData().get(0);
+        serialize(pagePath, page2);
+        System.out.println(row2.getData());
+        
 
-        String x = "sd";
-        String[] y = {"sd"};
-        System.out.println(Arrays.asList(y).contains(x));
+      
         
     
 

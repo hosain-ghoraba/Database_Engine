@@ -1,7 +1,10 @@
 package M1;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Vector;
+
+import M2.Methods2;
 
 public class Row implements Serializable,Comparable<Row> {
     private Vector<Object> rowData ;
@@ -42,5 +45,11 @@ public class Row implements Serializable,Comparable<Row> {
             rowOutput += iterateOverData.next() + "\t \t"  ;
 
         return rowOutput;
+    }
+    // added in M2
+    public Object getColumnValue(String columnName,String fatherTableName) throws IOException {
+          
+        int colIndexInTable = Methods2.getColumnIndexInTable(columnName,fatherTableName);
+    	return rowData.get(colIndexInTable);
     }
 }

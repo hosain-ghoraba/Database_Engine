@@ -2,3 +2,6 @@ Table Name,Column Name,Column Type,ClusteringKey,IndexName,IndexType,min,max
 University,Name,java.lang.String,false,new index name,Octree,aaa,zaky
 University,Id,java.lang.Integer,true,new index name,Octree,1,1000
 University,Job,java.lang.String,false,null,null,aaa,zzz
+students,gpa,java.lang.double,false,null,null,java.lang.double,java.lang.double
+students,name,java.lang.string,false,null,null,java.lang.string,java.lang.string
+students,id,java.lang.integer,true,null,null,java.lang.integer,java.lang.integer
