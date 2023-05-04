@@ -1,0 +1,6 @@
+
+1 - When searching using the index should all 3 columns that are indexed be queried or if the existence of 1 or 2 columns should be handled as well?
+2 - consider the precedance between AND, OR ,XOR ?
+3 - can a table have more than 1 index? 
+4 - can a column be common between more than 1 index?
+5 - when quering using the index, will index columns come directly one after the other in arrSQLTerms or can there be other columns in between?
