@@ -1,6 +1,8 @@
 package M2;
 
 import M1.Methods;
+
+import java.io.Serializable;
 import java.sql.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,7 +15,7 @@ import M1.DBAppException;
 import M1.Page;
 import M1.Row;
 
-public class Octree {
+public class Octree implements Serializable {
 	
 	private int size; // sum of number of records in all leaves
 	private OctPoint leftBackBottom; // this is edge number 0 in the "edge numbers" photo in github 

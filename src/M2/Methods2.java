@@ -6,7 +6,7 @@ import M1.Page;
 
 public class Methods2 {
 
-    public static void fillSetWithPages_satisfyingCondition_forInputValue(Octree octree, HashSet<Page> toFill, String x_condition, String y_condition, String z_condition, Comparable x_value, Comparable y_value, Comparable z_value ){ // fills the set with all points where (point) (operator) (value) == true
+    public static void fillSetWithPages_satisfyingCondition_forInputValue(Octree octree, HashSet<Integer> toFill, String x_condition, String y_condition, String z_condition, Comparable x_value, Comparable y_value, Comparable z_value ){ // fills the set with all points where (point) (operator) (value) == true
 		
 		boolean search_is_worthy = Tree_is_candidate_forSearch(octree, x_condition, y_condition, z_condition, x_value, y_value, z_value);
 		if(search_is_worthy) 
@@ -131,9 +131,9 @@ public class Methods2 {
 		
 		return x_condition_holds && y_condition_holds && z_condition_holds;	
 	}
-	public static void copyAllRecordsToList(Octree octree, LinkedList<Page> toFill){ // copies all pages at all leaves of the octree to the result list
+	public static void copyAllRecordsToList(Octree octree, LinkedList<Integer> toFill){ // copies all pages at all leaves of the octree to the result list
 		if(octree.isLeaf())
-			for(LinkedList<Page> pages : octree.getRecords().values())
+			for(LinkedList<Integer> pages : octree.getRecords().values())
 				toFill.addAll(pages);	
 		else
 			for(Octree child : octree.getChildren())
@@ -141,6 +141,9 @@ public class Methods2 {
 
 	}	
     public static void main(String[] args) {
+
+		Object o = Integer.valueOf(0);
+		System.out.println(o.getClass().getName());
 
     }
 

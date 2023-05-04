@@ -1,11 +1,12 @@
 package M2;
 public class SQLTerm {
-    String _strTableName;
-    String _strColumnName;
-    String _strOperator;
-    Object _objValue;
+    public String _strTableName;
+    public String _strColumnName;
+    public String _strOperator;
+    public Object _objValue;
     public SQLTerm(){
 
     }
+
 
 }

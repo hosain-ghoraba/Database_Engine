@@ -30,50 +30,6 @@ public class DBApp {
 			e.printStackTrace();
 		}
     };
-    
-    public void DELETETableDependencies(String strTableName) throws DBAppException {
-    	// delete its references in the csv files and listofCreatedTables
-
-        // first, read all data and extract all tables other than the given table
-        List<String> data = new ArrayList<>();
-        BufferedReader br;
-		try {
-            br = new BufferedReader(new FileReader("MetaData.csv"));
-            String line = br.readLine();
-
-            while (line != null) {
-                String[] attributes = line.split(",");
-                if(!attributes[0].equals(strTableName))
-                    data.add(line);
-                line = br.readLine();
-            }
-            br.close();
-        } catch ( IOException e) {
-            throw new DBAppException("Error reading csv file");    
-        }
-
-        // second, write the new data to the csv file
-        try {
-			File file = new File("MetaData.csv");
-			new FileWriter(file, false).close();;
-            FileWriter fr = new FileWriter(file, true);
-			PrintWriter printWriter = new PrintWriter(fr);
-			StringBuilder stringBuilder = new StringBuilder();
-			for (String line : data) {
-				stringBuilder.append(line);
-				stringBuilder.append('\n');
-			}
-			printWriter.write(stringBuilder.toString());
-			printWriter.flush();
-			printWriter.close();
-        } catch (IOException e) {
-			throw new DBAppException(e.getMessage());
-		}
-
-        // third, delete the table from the list of created tables
-        listofCreatedTables.remove(strTableName);
-    }
-
 
     public void createTable(String strTableName, String strClusteringKeyColumn, Hashtable<String, String> htblColNameType,Hashtable<String, String> htblColNameMin, Hashtable<String, String> htblColNameMax) throws DBAppException {
         // surroud the whole method with try catch to catch any exception and re-throw it as DBAppException
@@ -386,7 +342,93 @@ public class DBApp {
         }
         
     }
+    public Iterator selectFromTable(SQLTerm[] arrSQLTerms,String[] strarrOperators)throws DBAppException{
+        try
+        {
+            validateSQLTerms(arrSQLTerms);
+            validateOperators(arrSQLTerms, strarrOperators);
+            HashSet<Integer> candidatePages = new HashSet<Integer>();
+            if(SearchForIndex(arrSQLTerms) != null)
+                candidatePages = selectPages_UsingIndex(arrSQLTerms, strarrOperators);
+            else
+                candidatePages = selectPages_WithoutIndex(arrSQLTerms, strarrOperators);
+            HashSet<Row> matchingRows = selectMatchingRows(arrSQLTerms, strarrOperators, candidatePages);
+            return matchingRows.iterator();
+        }
+        catch(Exception e)
+        {
+            throw new DBAppException(e.getMessage()); 
+        }
+    }
+    public void createIndex(String strTableName,String[] strarrColName) throws DBAppException
+    {
+        try
+        {
+        validateTableExists(strTableName);
+        for(String colName : strarrColName)
+            validateColumnExistsInTable(strTableName, colName);
+        String indexName = strTableName + "__";
+        for(String colName : strarrColName)           
+            indexName += colName + "_";
+        indexName = indexName.substring(0, indexName.length() - 1); // to remove the last "_"    
+        validateIndexDoesNotExists(indexName);
+        writeIndexInMetadata(strTableName, strarrColName, indexName);// replace "null" with the index name
+        // next, create the index file
 
+
+        
+
+        }
+        catch(Exception e)
+        {
+            throw new DBAppException(e.getMessage());
+        }
+
+    }
+
+    // M1 helpers
+    public void DELETETableDependencies(String strTableName) throws DBAppException {
+    	// delete its references in the csv files and listofCreatedTables
+
+        // first, read all data and extract all tables other than the given table
+        List<String> data = new ArrayList<>();
+        BufferedReader br;
+		try {
+            br = new BufferedReader(new FileReader("MetaData.csv"));
+            String line = br.readLine();
+
+            while (line != null) {
+                String[] attributes = line.split(",");
+                if(!attributes[0].equals(strTableName))
+                    data.add(line);
+                line = br.readLine();
+            }
+            br.close();
+        } catch ( IOException e) {
+            throw new DBAppException("Error reading csv file");    
+        }
+
+        // second, write the new data to the csv file
+        try {
+			File file = new File("MetaData.csv");
+			new FileWriter(file, false).close();;
+            FileWriter fr = new FileWriter(file, true);
+			PrintWriter printWriter = new PrintWriter(fr);
+			StringBuilder stringBuilder = new StringBuilder();
+			for (String line : data) {
+				stringBuilder.append(line);
+				stringBuilder.append('\n');
+			}
+			printWriter.write(stringBuilder.toString());
+			printWriter.flush();
+			printWriter.close();
+        } catch (IOException e) {
+			throw new DBAppException(e.getMessage());
+		}
+
+        // third, delete the table from the list of created tables
+        listofCreatedTables.remove(strTableName);
+    }
     private static void validation(Hashtable<String, String> htblColNameType, Hashtable<String, String> htblColNameMin,
             Hashtable<String, String> htblColNameMax) throws DBAppException {
 
@@ -410,7 +452,6 @@ public class DBApp {
         
 
     }
-
     public static void intoMeta(String filePath,List<String> dataline) throws DBAppException
     {
         // first create file object for file placed at location
@@ -678,47 +719,19 @@ public class DBApp {
 			
         return s;
     }
-    
-    
-    // public Iterator selectFromTable(SQLTerm[] arrSQLTerms,String[] strarrOperators)throws DBAppException{
-    //     Linkedlist<Page> resultPages = new Linkedlist<Page>();
-    //     if there is index created on some of the columns in arrSQLTerms
-    //          resultPages = selectFromTableWithIndex(arrSQLTerms,strarrOperators);
-    //     else
-    //         resultPages = selectFromTableWithoutIndex(arrSQLTerms,strarrOperators);      
-    //     Linkedlist<Record> resultRecords = new Linkedlist<Record>();
-    //     then search in the resultPages, and fill the resultRecords with the records that satisfy the conditions
-    //     return resultRecords.iterator();
-           
-    
-    //     
-    // }
-    public void createIndex(String strTableName,String[] strarrColName) throws DBAppException
-    {
-        try
-        {
-        validateTableExists(strTableName);
-        for(String colName : strarrColName)
-            validateColumnExistsInTable(strTableName, colName);
-        String indexName = strTableName + "__";
-        for(String colName : strarrColName)           
-            indexName += colName + "_";
-        validateIndexDoesNotExists(indexName);
-        updateMetadata(strTableName, strarrColName, indexName);// replace "null" with the index name
-        // next, create the index file
 
-
-        
-
-        }
-        catch(Exception e)
-        {
-            throw new DBAppException(e.getMessage());
-        }
-
+    // M2 helpers
+    private HashSet<Integer> selectPages_UsingIndex(SQLTerm[] arrSQLTerms, String[] strarrOperators) {
+        return null;
+    }
+    private HashSet<Integer> selectPages_WithoutIndex(SQLTerm[] arrSQLTerms, String[] strarrOperators) {
+        return null;
+    }
+    private HashSet<Row> selectMatchingRows(SQLTerm[] arrSQLTerms, String[] strarrOperators, HashSet<Integer> candidatePages) {
+        return null;
     }
 
-    public void validateTableExists(String strTableName) throws DBAppException, IOException {
+    private void validateTableExists(String strTableName) throws DBAppException, IOException {
         // search for table name from the metadata file
         // if not found throw exception
         boolean found = false;
@@ -741,7 +754,7 @@ public class DBApp {
 
 
     }
-    public void validateColumnExistsInTable(String strTableName, String strColName) throws DBAppException, IOException {
+    private void validateColumnExistsInTable(String strTableName, String strColName) throws DBAppException, IOException {
         validateTableExists(strTableName);
         boolean found = false;
         BufferedReader br = new BufferedReader(new FileReader("MetaData.csv"));
@@ -761,7 +774,7 @@ public class DBApp {
         if (!found)
             throw new DBAppException("Column " + strColName + " does not exist in table " + strTableName + " !");
     }
-    public void validateIndexDoesNotExists(String indexName) throws IOException, DBAppException{
+    private void validateIndexDoesNotExists(String indexName) throws IOException, DBAppException{
         // search for index name from the metadata file
         // if found throw exception
         boolean found = false;
@@ -783,7 +796,78 @@ public class DBApp {
             throw new DBAppException("Index " + indexName + " already exists !");
 
     }
-    public static void updateMetadata(String tableName, String[] columnNames, String indexName) throws IOException {// puts the index name in the metadata file instead of null in each column in columnNames
+    private void validateSQLTerms(SQLTerm[] arrSQLTerms) throws DBAppException, IOException {
+        String tableName = arrSQLTerms[0]._strTableName;
+        validateTableExists(tableName);
+        for(SQLTerm term : arrSQLTerms)
+        {
+            String currentTable = term._strTableName;
+            if(!currentTable.equals(tableName))
+                throw new DBAppException("All SQL terms must be on the same table !");
+            String colName = term._strColumnName;    
+            validateColumnExistsInTable(colName, currentTable);
+            String operator = term._strOperator;
+            boolean operatorIsSupported = operator.equals("=") || operator.equals("!=" ) || operator.equals(">") || operator.equals("<") || operator.equals(">=") || operator.equals("<=");
+            if(!operatorIsSupported)
+                throw new DBAppException("Operator " + operator + " is not supported !");
+            String colType = colType(colName, currentTable);
+            if(colType == null)
+                throw new DBAppException("Column " + colName + " does not exist in table " + currentTable + " !");
+            if(! term._objValue.getClass().getName().equals(colType))    
+                throw new DBAppException("Value " + term._objValue + " is not of type " + colType + " !");
+       }
+    }
+    private void validateOperators(SQLTerm[] arrSQLTerms, String[] strarrOperators) throws DBAppException {
+        if(strarrOperators.length != arrSQLTerms.length - 1)
+            throw new DBAppException("Number of operators does not match number of terms !");
+        for(String operator : strarrOperators)
+            if(!(operator.equals("AND") || operator.equals("OR") || operator.equals("XOR")))
+                throw new DBAppException("Operator " + operator + " is not supported !");
+        
+            
+    }
+
+    public HashSet<String> getAllTableIndicies(String tableName) throws IOException {    
+        HashSet<String> indicies = new HashSet<String>();
+        BufferedReader br = new BufferedReader(new FileReader("MetaData.csv"));
+        String line = br.readLine();
+        while (line != null) 
+        {
+            String[] content = line.split(",");
+            if (tableName.equals(content[0]) && !content[4].equals("null"))     
+                indicies.add(content[4]);
+            line = br.readLine();
+        }
+        br.close();
+        return indicies;
+    }
+    public String SearchForIndex(SQLTerm[] arrSQLTerms) throws IOException, DBAppException {
+        String tableName = arrSQLTerms[0]._strTableName;
+        String[] SQLTermsColumns = new String[arrSQLTerms.length];
+        for(int i = 0; i < arrSQLTerms.length; i++)
+            SQLTermsColumns[i] = arrSQLTerms[i]._strColumnName;
+        HashSet<String> possibleIndicies = getAllTableIndicies(tableName);
+        
+        for(String indexName : possibleIndicies)
+        {
+            boolean SQLTermsContainsIndex = true;
+            for(String indexColumn : indexName.split("__")[1].split("_"))
+            {
+                if(!Arrays.asList(SQLTermsColumns).contains(indexColumn))
+                {
+                    SQLTermsContainsIndex = false;
+                    break;
+                }
+
+            }
+            if(SQLTermsContainsIndex)
+                return indexName;
+            
+        }
+        return null;
+        
+    }
+    public static void writeIndexInMetadata(String tableName, String[] columnNames, String indexName) throws IOException {// puts the index name in the metadata file instead of null in each column in columnNames
 
         BufferedReader reader = new BufferedReader(new FileReader("metadata.csv"));
         BufferedWriter writer = new BufferedWriter(new FileWriter("temp.csv"));
@@ -811,13 +895,15 @@ public class DBApp {
         new File("metadata.csv").delete();
         new File("temp.csv").renameTo(new File("metadata.csv"));
     }
-    public static void main(String[] args) throws IOException {
+    
+    public static void main(String[] args) throws IOException, DBAppException {
         
-        String strTableName = "University";
-        String[] strarrColNames = {"Name", "Id" };
-        String indexName = "new index name";
+        DBApp d = new DBApp();
 
-            updateMetadata(strTableName, strarrColNames, indexName);
+        String x = "sd";
+        String[] y = {"sd"};
+        System.out.println(Arrays.asList(y).contains(x));
+        
     
 
           
