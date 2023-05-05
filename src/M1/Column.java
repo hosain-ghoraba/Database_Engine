@@ -1,5 +1,7 @@
 package M1;
 import java.io.Serializable;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 public class Column  implements Serializable {
     private String strColName;
@@ -48,5 +50,28 @@ public class Column  implements Serializable {
 
     public String toString(){
         return strColName;
+    }
+    // added in M2
+    public Comparable getMinValue() throws ParseException, DBAppException {
+        
+        switch(strColType)
+        {
+            case "java.lang.Integer" : return Integer.parseInt(strMinVal);
+            case "java.lang.Double" : return Double.parseDouble(strMinVal);
+            case "java.lang.String" : return strMinVal;
+            case "java.util.Date" : return new SimpleDateFormat("yyyy-MM-dd").parse(strMinVal);
+            default : throw new DBAppException("column type not supported!");
+        }       
+    }
+    public Comparable getMaxValue() throws ParseException, DBAppException {
+        
+        switch(strColType)
+        {
+            case "java.lang.Integer" : return Integer.parseInt(strMaxVal);
+            case "java.lang.Double" : return Double.parseDouble(strMaxVal);
+            case "java.lang.String" : return strMaxVal;
+            case "java.util.Date" : return new SimpleDateFormat("yyyy-MM-dd").parse(strMaxVal);
+            default : throw new DBAppException("column type not supported!");
+        }       
     }
 }

@@ -1,6 +1,8 @@
 package M2;
 
-public class OctPoint {
+import java.io.Serializable;
+
+public class OctPoint implements Serializable {
 
     private Comparable x;
     private Comparable y;

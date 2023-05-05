@@ -6,6 +6,8 @@ import java.text.ParseException;
 import java.util.*;
 
 import M2.Methods2;
+import M2.OctPoint;
+import M2.Octree;
 
 //import javax.lang.model.util.ElementScanner14;
 
@@ -72,6 +74,9 @@ public class DBApp {
         newFile = new File(strTablePath + "/pages");
         newFile.mkdir();
 
+        // making the Indicies folder (hosain)
+        new File(strTablePath + "/Indicies").mkdir();
+
         // serialization
         serialize(strTablePath + "/" + strTableName + ".ser", tblCreated);
         OperationSignatureDisplay(tblCreated, htblColNameType,OpType.CREATE);
@@ -105,6 +110,7 @@ public class DBApp {
         }
         catch(Exception e)
         {
+            e.printStackTrace();
             throw new DBAppException(e.getMessage());
         }
         
@@ -369,8 +375,9 @@ public class DBApp {
         try
         {
         validateTableExists(strTableName);
+        validateColNames(strTableName,strarrColName);
         for(String colName : strarrColName)
-            validateColumnExistsInTable(strTableName, colName);
+            validateColumnExistsInTable(colName, strTableName);
         String indexName = strTableName + "__";
         for(String colName : strarrColName)           
             indexName += colName + "_";
@@ -378,18 +385,30 @@ public class DBApp {
         validateIndexDoesNotExists(indexName);
         writeIndexInMetadata(strTableName, strarrColName, indexName);// replace "null" with the index name
         // next, create the index file
-
-
-        
-
+        String tablePath = "src/resources/tables/" + strTableName + "/" + strTableName + ".ser";
+        Table table = (Table) deserialize(tablePath);
+        Column x_dimention_column = table.getColumn(strarrColName[0]);
+        Column y_dimention_column = table.getColumn(strarrColName[1]);
+        Column z_dimention_column = table.getColumn(strarrColName[2]);
+        Comparable min_x = x_dimention_column.getMinValue();
+        Comparable min_y = y_dimention_column.getMinValue();
+        Comparable min_z = z_dimention_column.getMinValue();
+        Comparable max_x = x_dimention_column.getMaxValue();
+        Comparable max_y = y_dimention_column.getMaxValue();
+        Comparable max_z = z_dimention_column.getMaxValue();
+        Octree tree = new Octree(new OctPoint(min_x, min_y, min_z), new OctPoint(max_x, max_y, max_z),this.MaximumEntriesinOctreeNode);
+        fillTreeFromTable(tree, table, strarrColName);
+        String treePath = "src/resources/tables/" + strTableName + "/Indicies/" + indexName + ".ser";
+        serialize(treePath, tree);
+        serialize(tablePath, table);
+        System.out.println("index  " + indexName + "  created successfully!");
         }
         catch(Exception e)
         {
+            e.printStackTrace();
             throw new DBAppException(e.getMessage());
         }
-
-    }
-
+}
     // M1 helpers
     public void DELETETableDependencies(String strTableName) throws DBAppException {
     	// delete its references in the csv files and listofCreatedTables
@@ -667,7 +686,8 @@ public class DBApp {
             oos.close();
             fileOutStr.close();
         } catch (IOException i) {
-            try{throw new DBAppException(i.getMessage());}catch(DBAppException e){e.printStackTrace();}
+            i.printStackTrace();
+            
         }
     }
     public static Object deserialize(String path) throws DBAppException {
@@ -725,6 +745,27 @@ public class DBApp {
     }
 
     ///////////////////////////////////////////// below are for M2
+
+    // createIndex helpers
+    private void fillTreeFromTable(Octree tree, Table table, String[] strarrColName) throws DBAppException, IOException {
+        for (String strPageID : table.getVecPages()) 
+        {            
+            String pagePath = "src/resources/tables/" + table.getStrTableName() + "/pages/" + strPageID + ".ser";                                                                   // page10.ser
+            Page page = (Page) deserialize(pagePath);
+            for (Row row : page.getData()) 
+            {
+                Comparable row_x_value = (Comparable) row.getColumnValue(strarrColName[0],table.getStrTableName());
+                Comparable row_y_value = (Comparable) row.getColumnValue(strarrColName[1],table.getStrTableName());
+                Comparable row_z_value = (Comparable) row.getColumnValue(strarrColName[2],table.getStrTableName());
+                int pageID = Integer.parseInt(strPageID.substring(4));
+                tree.insertPageIntoTree(row_x_value, row_y_value, row_z_value,pageID);
+            }
+            serialize(pagePath, page);
+
+        }
+
+
+    }
 
     // select helpers
     private HashSet<Integer> selectPages_UsingIndex(SQLTerm[] arrSQLTerms, String[] strarrOperators, HashSet<String> possibleIndicies) {
@@ -988,72 +1029,79 @@ public class DBApp {
         
             
     }
+    private void validateColNames(String strTableName, String[] strarrColName) throws DBAppException, IOException {
+        if(strarrColName.length != 3)
+            throw new DBAppException("you must specify exactly 3 column names to be used in the index!");
+        for(String colName : strarrColName)
+            validateColumnExistsInTable(colName, strTableName); 
 
+        
+            
+    }
 
 
     public static void main(String[] args) throws IOException, DBAppException {
         
-        // // Page page56 = new Page("University", 56);
-        // String pagePath = "src/resources/tables/" + "University" + "/pages/page" + "0" + ".ser";
-        // // serialize(pagePath, page56);
-        // Object fetched = deserialize(pagePath);
-        // System.out.println(fetched.getClass().getName());
         DBApp db = new DBApp();
-        db.DELETETableDependencies("University");
-		Hashtable<String, String> htNameType = new Hashtable<>();
-		htNameType.put("Id", "java.lang.Integer");
-		htNameType.put("Name", "java.lang.String");
-		htNameType.put("Job", "java.lang.String");
-		Hashtable<String, String> htNameMin = new Hashtable<>();
-		htNameMin.put("Id", "1");
-		htNameMin.put("Name", "AAA");
-		htNameMin.put("Job", "aaa");
-		Hashtable<String, String> htNameMax = new Hashtable<>();
-		htNameMax.put("Id", "1000");
-		htNameMax.put("Name", "zz");
-		htNameMax.put("Job", "zzz");
+        //db.createIndex("University", new String[]{"Id", "Name", "Job"});
 
-		db.createTable("University", "Id", htNameType, htNameMin, htNameMax);
-        // generating 20 records
-        Hashtable<String,Object>[] records = new Hashtable[20];
-        for(int i = 0; i < records.length; i++)      
-            records[i] = new Hashtable<String, Object>();
-        String[] names = {"ahmad", "mohamed", "ali", "omar", "zaky", "khaled", "hassan", "hussain", "youssef", "yassin",
-                           "akrm", "bebo", "loai", "hashem", "mona", "khadija", "bola", "hamdi", "wael", "sharkawy" };   
-        String[] jobs = {"doctor", "engineer", "lawyer", "teacher", "policeman", "firefighter", "dentist", "nurse", "farmer", "pilot",
-                           "blacksmith", "carpenter", "plumber", "electrician", "mechanic", "architect", "designer", "artist", "chef", "waiter" };                    
-        for(int i = 0; i < records.length; i++)      
-        {
-            Hashtable<String, Object> hashtable = records[i];
-            hashtable.put("Id", i+2);
-            hashtable.put("Name", names[i]);
-            hashtable.put("Job", jobs[i]);
-            db.insertIntoTable("University", hashtable);
+        // db.DELETETableDependencies("University");
+  
+		// Hashtable<String, String> htNameType = new Hashtable<>();
+		// htNameType.put("Id", "java.lang.Integer");
+		// htNameType.put("Name", "java.lang.String");
+		// htNameType.put("Job", "java.lang.String");
+		// Hashtable<String, String> htNameMin = new Hashtable<>();
+		// htNameMin.put("Id", "1");
+		// htNameMin.put("Name", "AAA");
+		// htNameMin.put("Job", "aaa");
+		// Hashtable<String, String> htNameMax = new Hashtable<>();
+		// htNameMax.put("Id", "1000");
+		// htNameMax.put("Name", "zz");
+		// htNameMax.put("Job", "zzz");
+		// db.createTable("University", "Id", htNameType, htNameMin, htNameMax);
 
-        }      
+
+        // // generating 20 records
+        // Hashtable<String,Object>[] records = new Hashtable[20];
+        // for(int i = 0; i < records.length; i++)      
+        //     records[i] = new Hashtable<String, Object>();
+        // String[] names = {"ahmad", "mohamed", "ali", "omar", "zaky", "khaled", "hassan", "hussain", "youssef", "yassin",
+        //                    "akrm", "bebo", "loai", "hashem", "mona", "khadija", "bola", "hamdi", "wael", "sharkawy" };   
+        // String[] jobs = {"doctor", "engineer", "lawyer", "teacher", "policeman", "firefighter", "dentist", "nurse", "farmer", "pilot",
+        //                    "blacksmith", "carpenter", "plumber", "electrician", "mechanic", "architect", "designer", "artist", "chef", "waiter" };                    
+        // for(int i = 0; i < records.length; i++)      
+        // {
+        //     Hashtable<String, Object> hashtable = records[i];
+        //     hashtable.put("Id", i+2);
+        //     hashtable.put("Name", names[i]);
+        //     hashtable.put("Job", jobs[i]);
+        //     db.insertIntoTable("University", hashtable);
+
+        // }      
             
      
 
 
           
-		SQLTerm[] arrSQLTerms;
-        arrSQLTerms = new SQLTerm[2];
-        arrSQLTerms[0] = new SQLTerm();
-        arrSQLTerms[0]._strTableName = "University";
-        arrSQLTerms[0]._strColumnName = "Id";
-        arrSQLTerms[0]._strOperator = ">";
-        arrSQLTerms[0]._objValue = 10;
-        arrSQLTerms[1] = new SQLTerm();
-        arrSQLTerms[1]._strTableName = "University";
-        arrSQLTerms[1]._strColumnName = "Name";
-        arrSQLTerms[1]._strOperator = "=";
-        arrSQLTerms[1]._objValue = "ahmad";
-        String[] strarrOperators = new String[1];
-        strarrOperators[0] = "OR";
-        Iterator<Row> iterator = db.selectFromTable(arrSQLTerms, strarrOperators);
-        while(iterator.hasNext()){
-            System.out.println(iterator.next());
-        }
+		// SQLTerm[] arrSQLTerms;
+        // arrSQLTerms = new SQLTerm[2];
+        // arrSQLTerms[0] = new SQLTerm();
+        // arrSQLTerms[0]._strTableName = "University";
+        // arrSQLTerms[0]._strColumnName = "Id";
+        // arrSQLTerms[0]._strOperator = ">";
+        // arrSQLTerms[0]._objValue = 10;
+        // arrSQLTerms[1] = new SQLTerm();
+        // arrSQLTerms[1]._strTableName = "University";
+        // arrSQLTerms[1]._strColumnName = "Name";
+        // arrSQLTerms[1]._strOperator = "=";
+        // arrSQLTerms[1]._objValue = "ahmad";
+        // String[] strarrOperators = new String[1];
+        // strarrOperators[0] = "OR";
+        // Iterator<Row> iterator = db.selectFromTable(arrSQLTerms, strarrOperators);
+        // while(iterator.hasNext()){
+        //     System.out.println(iterator.next());
+        // }
         
 
 

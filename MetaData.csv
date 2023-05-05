@@ -1,7 +1,4 @@
 Table Name,Column Name,Column Type,ClusteringKey,IndexName,IndexType,min,max
-students,gpa,java.lang.double,false,null,null,java.lang.double,java.lang.double
-students,name,java.lang.string,false,null,null,java.lang.string,java.lang.string
-students,id,java.lang.integer,true,null,null,java.lang.integer,java.lang.integer
-University,Name,java.lang.String,false,null,null,aaa,zz
-University,Id,java.lang.Integer,true,null,null,1,1000
-University,Job,java.lang.String,false,null,null,aaa,zzz
+University,Name,java.lang.String,false,University__Id_Name_Job,Octree,aaa,zz
+University,Id,java.lang.Integer,true,University__Id_Name_Job,Octree,1,1000
+University,Job,java.lang.String,false,University__Id_Name_Job,Octree,aaa,zzz
