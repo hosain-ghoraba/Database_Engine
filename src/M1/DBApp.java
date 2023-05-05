@@ -848,9 +848,9 @@ public class DBApp {
     private LinkedList<Row> applyOperators(LinkedList<Row>[] separated_SQLTermsResults, String[] strarrOperators) { // to do
         Stack<LinkedList<Row>> dataStack = new Stack<LinkedList<Row>>();
         Stack<String> operatorsStack = new Stack<String>();
-        for(int i = 0; i < separated_SQLTermsResults.length; i++)
+        for(int i = separated_SQLTermsResults.length - 1; i >= 0; i--)
             dataStack.push(separated_SQLTermsResults[i]);
-        for(int i = 0; i < strarrOperators.length; i++)
+        for(int i = strarrOperators.length - 1; i >= 0; i--)
             operatorsStack.push(strarrOperators[i]);
         while(!operatorsStack.isEmpty())
             dataStack.push(applySingleOperator(dataStack.pop(), dataStack.pop(), operatorsStack.pop()));
