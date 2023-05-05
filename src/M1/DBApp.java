@@ -758,7 +758,7 @@ public class DBApp {
     }
     // now we have all the rows that match each SQLTerm in separated_SQLTermsResults
     // we need to apply the operators on them
-    return applyOperators(separated_SQLTermsResults, strarrOperators);
+    return applyOperatorsFromLeftToRight(separated_SQLTermsResults, strarrOperators);
     }
 
     // select with index helpers
@@ -850,7 +850,7 @@ public class DBApp {
         }
         return result;
     }
-    private LinkedList<Row> applyOperators(LinkedList<Row>[] separated_SQLTermsResults, String[] strarrOperators) { // to do
+    private LinkedList<Row> applyOperatorsFromLeftToRight(LinkedList<Row>[] separated_SQLTermsResults, String[] strarrOperators) { // to do
         Stack<LinkedList<Row>> dataStack = new Stack<LinkedList<Row>>();
         Stack<String> operatorsStack = new Stack<String>();
         for(int i = separated_SQLTermsResults.length - 1; i >= 0; i--)

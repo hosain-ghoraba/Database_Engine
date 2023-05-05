@@ -1,4 +1,12 @@
 
-1 - When searching using the index should all 3 columns that are indexed be queried or the existence of 1 or 2 columns should be handled as well?
-2 - should we consider the precedance between AND, OR ,XOR in selectFromTable() ?
-3 - when quering using the index, will index columns come directly one after the other in arrSQLTerms or can there be other columns in between?
+ TA questions : 
+
+ 1 - use index with 1 or 2 columns?
+ 2 - precedance between AND, OR ,XOR ? if no , then : 
+    (we only search for "AND chains")
+    a - there is no term between the 3 index columns than is not anded with them
+    b - the first index column must be ANDed with the term directly before it(which will be the result of all the previous SqlTerms)
+    am I right ?
+        
+
+*/
