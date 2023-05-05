@@ -5,11 +5,13 @@ import java.text.BreakIterator;
 import java.text.ParseException;
 import java.util.*;
 
+import M2.Methods2;
+
 //import javax.lang.model.util.ElementScanner14;
 
 import M2.SQLTerm;
 
-public class DBApp {
+public class DBApp { 
     static NULL NULL = new NULL();
     public static int MaximumRowsCountinTablePage;
     public int MaximumEntriesinOctreeNode;
@@ -353,11 +355,12 @@ public class DBApp {
                 candidatePages = selectPages_UsingIndex(arrSQLTerms, strarrOperators, possibleIndicies);
             else
                 candidatePages = selectPages_WithoutIndex(arrSQLTerms, strarrOperators);
-            HashSet<Row> matchingRows = selectMatchingRows(arrSQLTerms, strarrOperators, candidatePages);
+            LinkedList<Row> matchingRows = selectMatchingRows(arrSQLTerms, strarrOperators, candidatePages);
             return matchingRows.iterator();
         }
         catch(Exception e)
         {
+            e.printStackTrace();
             throw new DBAppException(e.getMessage()); 
         }
     }
@@ -743,6 +746,8 @@ public class DBApp {
     }
     private LinkedList<Row> selectMatchingRows(SQLTerm[] arrSQLTerms, String[] strarrOperators, HashSet<Integer> candidatePages) throws DBAppException, IOException {
     LinkedList<Row>[] separated_SQLTermsResults = new LinkedList[arrSQLTerms.length];
+    for(int i = 0 ; i < separated_SQLTermsResults.length ; i++)
+        separated_SQLTermsResults[i] = new LinkedList<Row>();
     for (Integer page_id : candidatePages) 
     {
         String pagePath = "src/resources/tables/" + arrSQLTerms[0]._strTableName + "/pages/page" + page_id + ".ser";
@@ -827,7 +832,7 @@ public class DBApp {
         }
     
     // selectMatchingRows helpers
-    private LinkedList<Row> singleSQLTermResult(SQLTerm sqlTerm, Page page) throws IOException { 
+    private LinkedList<Row> singleSQLTermResult(SQLTerm sqlTerm, Page page) throws IOException, DBAppException { 
         LinkedList<Row> result = new LinkedList<Row>();
         Comparable sqlTermValue = (Comparable) sqlTerm._objValue;
         for(Row row : page.getData())
@@ -871,7 +876,8 @@ public class DBApp {
             for(Row row : set1)
                 result.add(row);
             for(Row row : set2)
-                result.add(row);
+                if(!set1.contains(row))
+                    result.add(row);
         }
         else if(operand.equals("XOR"))
         {
@@ -910,7 +916,7 @@ public class DBApp {
 
 
     }
-    private void validateColumnExistsInTable(String strTableName, String strColName) throws DBAppException, IOException {
+    private void validateColumnExistsInTable(String strColName, String strTableName) throws DBAppException, IOException {
         validateTableExists(strTableName);
         boolean found = false;
         BufferedReader br = new BufferedReader(new FileReader("MetaData.csv"));
@@ -987,25 +993,69 @@ public class DBApp {
 
     public static void main(String[] args) throws IOException, DBAppException {
         
-        // File directory = new File("src/resources/tables/" + "University" + "/pages");
-        // File[] files = directory.listFiles();
-        // for (File file : files)
-        //     System.out.println(Integer.parseInt(file.getName().substring(4, file.getName().length()-4)));
-        DBApp d = new DBApp();
-        Hashtable<String, Object> htColNameVal0 = new Hashtable<>();
-		htColNameVal0.put("Id", 23);
-		htColNameVal0.put("Name", new String("ahmed"));
-		htColNameVal0.put("Job", new String("blacksmith"));
-        Page page = new Page("University", 0);
-        Row row = new Row(new Vector<Object>(htColNameVal0.values()));
-        page.insertAnEntry(row);
-        String pagePath = "src/resources/tables/" + "University" + "/pages/" + "page20.ser";
-        serialize(pagePath, page);
-        Page page2 = (Page)deserialize(pagePath);
-        Row row2 = page2.getData().get(0);
-        serialize(pagePath, page2);
-        System.out.println(row2.getData());
+        // // Page page56 = new Page("University", 56);
+        // String pagePath = "src/resources/tables/" + "University" + "/pages/page" + "0" + ".ser";
+        // // serialize(pagePath, page56);
+        // Object fetched = deserialize(pagePath);
+        // System.out.println(fetched.getClass().getName());
+        DBApp db = new DBApp();
+        db.DELETETableDependencies("University");
+		Hashtable<String, String> htNameType = new Hashtable<>();
+		htNameType.put("Id", "java.lang.Integer");
+		htNameType.put("Name", "java.lang.String");
+		htNameType.put("Job", "java.lang.String");
+		Hashtable<String, String> htNameMin = new Hashtable<>();
+		htNameMin.put("Id", "1");
+		htNameMin.put("Name", "AAA");
+		htNameMin.put("Job", "aaa");
+		Hashtable<String, String> htNameMax = new Hashtable<>();
+		htNameMax.put("Id", "1000");
+		htNameMax.put("Name", "zz");
+		htNameMax.put("Job", "zzz");
+
+		db.createTable("University", "Id", htNameType, htNameMin, htNameMax);
+        // generating 20 records
+        Hashtable<String,Object>[] records = new Hashtable[20];
+        for(int i = 0; i < records.length; i++)      
+            records[i] = new Hashtable<String, Object>();
+        String[] names = {"ahmad", "mohamed", "ali", "omar", "zaky", "khaled", "hassan", "hussain", "youssef", "yassin",
+                           "akrm", "bebo", "loai", "hashem", "mona", "khadija", "bola", "hamdi", "wael", "sharkawy" };   
+        String[] jobs = {"doctor", "engineer", "lawyer", "teacher", "policeman", "firefighter", "dentist", "nurse", "farmer", "pilot",
+                           "blacksmith", "carpenter", "plumber", "electrician", "mechanic", "architect", "designer", "artist", "chef", "waiter" };                    
+        for(int i = 0; i < records.length; i++)      
+        {
+            Hashtable<String, Object> hashtable = records[i];
+            hashtable.put("Id", i+2);
+            hashtable.put("Name", names[i]);
+            hashtable.put("Job", jobs[i]);
+            db.insertIntoTable("University", hashtable);
+
+        }      
+            
+     
+
+
+          
+		SQLTerm[] arrSQLTerms;
+        arrSQLTerms = new SQLTerm[2];
+        arrSQLTerms[0] = new SQLTerm();
+        arrSQLTerms[0]._strTableName = "University";
+        arrSQLTerms[0]._strColumnName = "Id";
+        arrSQLTerms[0]._strOperator = ">";
+        arrSQLTerms[0]._objValue = 10;
+        arrSQLTerms[1] = new SQLTerm();
+        arrSQLTerms[1]._strTableName = "University";
+        arrSQLTerms[1]._strColumnName = "Name";
+        arrSQLTerms[1]._strOperator = "=";
+        arrSQLTerms[1]._objValue = "ahmad";
+        String[] strarrOperators = new String[1];
+        strarrOperators[0] = "OR";
+        Iterator<Row> iterator = db.selectFromTable(arrSQLTerms, strarrOperators);
+        while(iterator.hasNext()){
+            System.out.println(iterator.next());
+        }
         
+
 
       
         

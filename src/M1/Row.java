@@ -47,9 +47,10 @@ public class Row implements Serializable,Comparable<Row> {
         return rowOutput;
     }
     // added in M2
-    public Object getColumnValue(String columnName,String fatherTableName) throws IOException {
+    public Object getColumnValue(String columnName,String fatherTableName) throws IOException, DBAppException {
           
-        int colIndexInTable = Methods2.getColumnIndexInTable(columnName,fatherTableName);
+        Table table = (Table) DBApp.deserialize("src/resources/tables/"+fatherTableName+  "/" + fatherTableName + ".ser");
+        int colIndexInTable = table.getColumnEquivalentIndex(columnName);
     	return rowData.get(colIndexInTable);
     }
 }

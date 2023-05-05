@@ -145,20 +145,6 @@ public class Methods2 {
 
 	}	
     
-	public static int getColumnIndexInTable(String columnName, String tableName) throws IOException  
-	{
-		BufferedReader br = new BufferedReader(new FileReader("MetaData.csv"));
-		ArrayList<String> lines = new ArrayList<String>();
-        while(br.ready())	
-			lines.add(br.readLine());
-		for(int i= 0 ; i < lines.size() ; i++)		
-			if(lines.get(i).split(",")[0].equals(tableName))		
-				for(int j = i ; j < lines.size() ; j++)			
-					if(lines.get(j).split(",")[1].equals(columnName))				
-						return j-i;						
-        br.close();
-		return -1;
-	}
 	public static void main(String[] args) {
 
 		Object o = Integer.valueOf(0);
