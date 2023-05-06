@@ -803,7 +803,7 @@ public class DBApp {
     }
 
     // select with index helpers
-    public HashSet<String> getAllTableIndicies(String tableName) throws IOException {    
+    public HashSet<String> getAllTableIndicies(String tableName) throws IOException {// wrong, to be fixed    
         HashSet<String> indicies = new HashSet<String>();
         BufferedReader br = new BufferedReader(new FileReader("MetaData.csv"));
         String line = br.readLine();
