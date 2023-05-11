@@ -3,9 +3,13 @@ package M2;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
+
+import M1.DBAppException;
 import M1.Page;
 
 public class Methods2 {
@@ -143,8 +147,24 @@ public class Methods2 {
 			for(Octree child : octree.getChildren())
 				copyAllRecordsToList(child, toFill);
 
-	}	
-    
+	}
+	public static Comparable parseType(String val, String dataType) throws DBAppException {
+		try {
+			if (dataType.equals("java.lang.Integer")) {
+				return Integer.parseInt(val);
+			}
+			if (dataType.equals("java.lang.Double")) {
+				return Double.parseDouble(val);
+			}
+			if (dataType.equals("java.util.Date")) {
+				return new SimpleDateFormat("yyyy-MM-dd").parse(val);
+			}
+			return val;
+		} catch (ParseException i) {
+			throw new DBAppException("Cannot parse value to passed type");
+		}
+	}
+
 	public static void main(String[] args) {
 
 		Object o = Integer.valueOf(0);
