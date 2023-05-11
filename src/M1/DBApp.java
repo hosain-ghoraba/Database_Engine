@@ -5,6 +5,8 @@ import java.text.BreakIterator;
 import java.text.ParseException;
 import java.util.*;
 
+import javax.management.ObjectName;
+
 import M2.Methods2;
 import M2.OctPoint;
 import M2.Octree;
@@ -356,9 +358,8 @@ public class DBApp {
             validateSQLTerms(arrSQLTerms);
             validateOperators(arrSQLTerms, strarrOperators);
             HashSet<Integer> candidatePages = new HashSet<Integer>();
-            HashSet<String> possibleIndicies = SearchForIndicies(arrSQLTerms);
-            if(possibleIndicies.size() > 0)
-                candidatePages = selectPages_UsingIndex(arrSQLTerms, strarrOperators, possibleIndicies);
+            if(indexCanHelp(arrSQLTerms,strarrOperators))
+                candidatePages = selectPages_UsingIndex(arrSQLTerms, strarrOperators);
             else
                 candidatePages = selectPages_WithoutIndex(arrSQLTerms, strarrOperators);
             LinkedList<Row> matchingRows = selectMatchingRows(arrSQLTerms, strarrOperators, candidatePages);
@@ -377,13 +378,15 @@ public class DBApp {
         validateTableExists(strTableName);
         validateColNames(strTableName,strarrColName);
         for(String colName : strarrColName)
+        {
             validateColumnExistsInTable(colName, strTableName);
-        String indexName = strTableName + "__";
+            validateColumnNotIndexed(colName, strTableName);
+        }
+        String indexName = "";
         for(String colName : strarrColName)           
-            indexName += colName + "_";
-        indexName = indexName.substring(0, indexName.length() - 1); // to remove the last "_"    
-        validateIndexDoesNotExists(indexName);
-        writeIndexInMetadata(strTableName, strarrColName, indexName);// replace "null" with the index name
+            indexName += colName;
+        indexName += "Index";      
+            writeIndexInMetadata(strTableName, strarrColName, indexName);// replace "null" with the index name
         // next, create the index file
         String tablePath = "src/resources/tables/" + strTableName + "/" + strTableName + ".ser";
         Table table = (Table) deserialize(tablePath);
@@ -747,6 +750,34 @@ public class DBApp {
     ///////////////////////////////////////////// below are for M2
 
     // createIndex helpers
+    private static void writeIndexInMetadata(String tableName, String[] columnNames, String indexName) throws IOException {// puts the index name in the metadata file instead of null in each column in columnNames
+    
+        BufferedReader reader = new BufferedReader(new FileReader("metadata.csv"));
+        BufferedWriter writer = new BufferedWriter(new FileWriter("temp.csv"));
+
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] row = line.split(",");
+            if (row[0].equals(tableName)) {
+                for (int i = 0; i < columnNames.length; i++) {
+                    if (row[1].equals(columnNames[i])) {
+                        row[4] = indexName;
+                        row[5] = "Octree";
+                        break;
+                    }
+                }
+            }
+            writer.write(String.join(",", row));
+            writer.newLine();
+        }
+
+        reader.close();
+        writer.close();
+
+        // Replace the original metadata file with the updated version
+        new File("metadata.csv").delete();
+        new File("temp.csv").renameTo(new File("metadata.csv"));
+    }
     private void fillTreeFromTable(Octree tree, Table table, String[] strarrColName) throws DBAppException, IOException {
         for (String strPageID : table.getVecPages()) 
         {            
@@ -768,8 +799,41 @@ public class DBApp {
     }
 
     // select helpers
-    private HashSet<Integer> selectPages_UsingIndex(SQLTerm[] arrSQLTerms, String[] strarrOperators, HashSet<String> possibleIndicies) {
-        return null;
+    public boolean indexCanHelp(SQLTerm[] arrSQLTerms, String[] strarrOperators) throws IOException, DBAppException {
+        List<int[]> ANDChains = getAndedTermsBoundries(Arrays.asList(strarrOperators));
+        for(int[] chainBoundry : ANDChains)
+        {
+            if(chainBoundry[1] - chainBoundry[0] >= 2)
+            {
+                List<Object> chain = new LinkedList<>();
+                for(int i = chainBoundry[0] ; i < chainBoundry[1] ; i++)
+                    chain.add(arrSQLTerms[i]);
+                List<List<Object>> allTriples = Methods2.getSubsetsOfSizeK(chain,3);
+                for(List<Object> triple : allTriples)
+                    if(termsFormIndex((SQLTerm) triple.get(0), (SQLTerm) triple.get(1), (SQLTerm) triple.get(2), arrSQLTerms[0]._strTableName))
+                        return true;         
+            }
+            
+        }
+        return false;
+        
+    }
+    private HashSet<Integer> selectPages_UsingIndex(SQLTerm[] arrSQLTerms, String[] strarrOperators) {
+        List<Object> comparessedParamerters = compact(arrSQLTerms, strarrOperators);
+        List param1 = (List)comparessedParamerters.get(0);
+        List param2 = (List)comparessedParamerters.get(1);
+        LinkedList<Object>[] pages = new LinkedList[param1.size()];
+        String[] operators = new String[param2.size()];
+        for (int i = 0; i < param1.size(); i++) 
+            pages[i] = (LinkedList<Object>) param1.get(i);
+        for (int i = 0; i < param2.size(); i++) 
+            operators[i] = (String) param2.get(i);
+        LinkedList<Object> obj_pagesID = applyOperatorsFromLeftToRight(pages, strarrOperators);
+        HashSet<Integer> pagesID = new HashSet<Integer>();
+        for (Object page : obj_pagesID)        
+            pagesID.add((Integer) page);      
+        return pagesID;
+        
     }
     private HashSet<Integer> selectPages_WithoutIndex(SQLTerm[] arrSQLTerms, String[] strarrOperators) {
         String tableName = arrSQLTerms[0]._strTableName;
@@ -786,9 +850,9 @@ public class DBApp {
         
     }
     private LinkedList<Row> selectMatchingRows(SQLTerm[] arrSQLTerms, String[] strarrOperators, HashSet<Integer> candidatePages) throws DBAppException, IOException {
-    LinkedList<Row>[] separated_SQLTermsResults = new LinkedList[arrSQLTerms.length];
+    LinkedList<Object>[] separated_SQLTermsResults = new LinkedList[arrSQLTerms.length];
     for(int i = 0 ; i < separated_SQLTermsResults.length ; i++)
-        separated_SQLTermsResults[i] = new LinkedList<Row>();
+        separated_SQLTermsResults[i] = new LinkedList<Object>();
     for (Integer page_id : candidatePages) 
     {
         String pagePath = "src/resources/tables/" + arrSQLTerms[0]._strTableName + "/pages/page" + page_id + ".ser";
@@ -799,12 +863,17 @@ public class DBApp {
     }
     // now we have all the rows that match each SQLTerm in separated_SQLTermsResults
     // we need to apply the operators on them
-    return applyOperatorsFromLeftToRight(separated_SQLTermsResults, strarrOperators);
+    
+    LinkedList<Object> resultObjects =  applyOperatorsFromLeftToRight(separated_SQLTermsResults, strarrOperators);
+    LinkedList<Row> resultRows = new LinkedList<Row>();
+    for(Object obj : resultObjects)
+        resultRows.add((Row) obj);
+    return resultRows;
     }
 
-    // select with index helpers
-    public HashSet<String> getAllTableIndicies(String tableName) throws IOException {// wrong, to be fixed    
-        HashSet<String> indicies = new HashSet<String>();
+    // indexCanHelp helpers
+    public Set<String> getAllTableIndicies(String tableName) throws IOException { 
+        Set<String> indicies = new HashSet<>();
         BufferedReader br = new BufferedReader(new FileReader("MetaData.csv"));
         String line = br.readLine();
         while (line != null) 
@@ -817,61 +886,57 @@ public class DBApp {
         br.close();
         return indicies;
     }
-    public HashSet<String> SearchForIndicies(SQLTerm[] arrSQLTerms) throws IOException, DBAppException {
-        String tableName = arrSQLTerms[0]._strTableName;
-        String[] SQLTermsColumns = new String[arrSQLTerms.length];
-        for(int i = 0; i < arrSQLTerms.length; i++)
-            SQLTermsColumns[i] = arrSQLTerms[i]._strColumnName;
-        HashSet<String> possibleIndicies = getAllTableIndicies(tableName);
-        HashSet<String> matchingIndicies = new HashSet<String>();
-        for(String indexName : possibleIndicies)
-        {
-            boolean SQLTermsContainsIndex = true;
-            for(String indexColumn : indexName.split("__")[1].split("_"))
-            {
-                if(!Arrays.asList(SQLTermsColumns).contains(indexColumn))
-                {
-                    SQLTermsContainsIndex = false;
-                    break;
-                }
+    public static List<int[]> getAndedTermsBoundries(List<String> operators){
+		List<int[]> result = new LinkedList<>();
+		for(int i = 0; i < operators.size(); i++)
+			if(operators.get(i).equals("AND"))	
+			{
+				int j;
+				for(j = i+1; j < operators.size(); j++)
+				{
+					if(operators.get(j).equals("AND"))
+						continue;
+					else
+						break;
+				}
+				result.add(new int[]{i, j});// i is the index of the sql operator before the first AND, j is the index of the sql operator after the last AND		
+				i = j;
+		
+			}
+		return result;
 
-            }
-            if(SQLTermsContainsIndex)
-                matchingIndicies.add(indexName);
-            
-        }
-        return matchingIndicies;
-        
+
+	} 
+    public boolean termsFormIndex(SQLTerm term1, SQLTerm term2, SQLTerm term3, String tableName) throws IOException{
+        for(String indexName : getAllTableIndicies(tableName))
+            for(String posiibleIndexName : Methods2.getAllPermutations(term1._strColumnName, term2._strColumnName, term3._strColumnName))
+                if(indexName.equals(posiibleIndexName + "Index"))
+                   return true;
+        return false;        
     }
-    public static void writeIndexInMetadata(String tableName, String[] columnNames, String indexName) throws IOException {// puts the index name in the metadata file instead of null in each column in columnNames
-    
-            BufferedReader reader = new BufferedReader(new FileReader("metadata.csv"));
-            BufferedWriter writer = new BufferedWriter(new FileWriter("temp.csv"));
-    
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] row = line.split(",");
-                if (row[0].equals(tableName)) {
-                    for (int i = 0; i < columnNames.length; i++) {
-                        if (row[1].equals(columnNames[i])) {
-                            row[4] = indexName;
-                            row[5] = "Octree";
-                            break;
-                        }
-                    }
-                }
-                writer.write(String.join(",", row));
-                writer.newLine();
-            }
-    
-            reader.close();
-            writer.close();
-    
-            // Replace the original metadata file with the updated version
-            new File("metadata.csv").delete();
-            new File("temp.csv").renameTo(new File("metadata.csv"));
-        }
-    
+
+    // select with index helpers
+    public List<Object> compact(SQLTerm[] arrSQLTerms, String[] strarrOperators){// to do
+        // convert inputs to lists
+        List<SQLTerm> termsList = new LinkedList<SQLTerm>();
+        List<String> operatorsList = new LinkedList<String>();
+        for(SQLTerm term : arrSQLTerms)
+            termsList.add(term);
+        for(String operator : strarrOperators)
+            operatorsList.add(operator);
+
+
+    }
+    public String getColAxisInIndex(String indexName, String colName){
+
+        String indexColumns = indexName.substring(0, indexName.length()-5); // remove "Index" from indexName
+        if(colName.equals(indexColumns.substring(0,colName.length())))
+            return "x";
+        if(colName.equals(indexColumns.substring(indexName.length()-colName.length(), indexName.length())))
+            return "z";
+        return "y";    
+    }
+
     // selectMatchingRows helpers
     private LinkedList<Row> singleSQLTermResult(SQLTerm sqlTerm, Page page) throws IOException, DBAppException { 
         LinkedList<Row> result = new LinkedList<Row>();
@@ -891,8 +956,8 @@ public class DBApp {
         }
         return result;
     }
-    private LinkedList<Row> applyOperatorsFromLeftToRight(LinkedList<Row>[] separated_SQLTermsResults, String[] strarrOperators) { // to do
-        Stack<LinkedList<Row>> dataStack = new Stack<LinkedList<Row>>();
+    private LinkedList<Object> applyOperatorsFromLeftToRight(LinkedList<Object>[] separated_SQLTermsResults, String[] strarrOperators) { // to do
+        Stack<LinkedList<Object>> dataStack = new Stack<LinkedList<Object>>();
         Stack<String> operatorsStack = new Stack<String>();
         for(int i = separated_SQLTermsResults.length - 1; i >= 0; i--)
             dataStack.push(separated_SQLTermsResults[i]);
@@ -902,32 +967,32 @@ public class DBApp {
             dataStack.push(applySingleOperator(dataStack.pop(), dataStack.pop(), operatorsStack.pop()));
         return dataStack.pop();        
     }
-    private LinkedList<Row> applySingleOperator(LinkedList<Row> list1, LinkedList<Row> list2, String operand) { 
-        LinkedList<Row> result = new LinkedList<Row>();
-        HashSet<Row> set1 = new HashSet<Row>(list1); // convert to hashset to increase performance of contains() from O(n) to O(1)
-        HashSet<Row> set2 = new HashSet<Row>(list2); // convert to hashset to increase performance of contains() from O(n) to O(1)
+    private LinkedList<Object> applySingleOperator(LinkedList<Object> list1, LinkedList<Object> list2, String operand) { 
+        LinkedList<Object> result = new LinkedList<Object>();
+        HashSet<Object> set1 = new HashSet<Object>(list1); // convert to hashset to increase performance of contains() from O(n) to O(1)
+        HashSet<Object> set2 = new HashSet<Object>(list2); // convert to hashset to increase performance of contains() from O(n) to O(1)
         if(operand.equals("AND"))
         {
-            for(Row row : set1)
-                if(set2.contains(row))
-                    result.add(row);
+            for(Object obj : set1)
+                if(set2.contains(obj))
+                    result.add(obj);
         }
         else if(operand.equals("OR"))
         {
-            for(Row row : set1)
-                result.add(row);
-            for(Row row : set2)
-                if(!set1.contains(row))
-                    result.add(row);
+            for(Object obj : set1)
+                result.add(obj);
+            for(Object obj : set2)
+                if(!set1.contains(obj))
+                    result.add(obj);
         }
         else if(operand.equals("XOR"))
         {
-            for(Row row : set1)
-                if(!set2.contains(row))
-                    result.add(row);
-            for(Row row : set2)
-                if(!set1.contains(row))
-                    result.add(row);
+            for(Object obj : set1)
+                if(!set2.contains(obj))
+                    result.add(obj);
+            for(Object obj : set2)
+                if(!set1.contains(obj))
+                    result.add(obj);
         }
  
         return result;
@@ -977,16 +1042,14 @@ public class DBApp {
         if (!found)
             throw new DBAppException("Column " + strColName + " does not exist in table " + strTableName + " !");
     }
-    private void validateIndexDoesNotExists(String indexName) throws IOException, DBAppException{
-        // search for index name from the metadata file
-        // if found throw exception
+    private void validateColumnNotIndexed(String strColName, String strTableName) throws IOException, DBAppException{
         boolean found = false;
         BufferedReader br = new BufferedReader(new FileReader("MetaData.csv"));
         String line = br.readLine();
         while (line != null) 
         {
             String[] content = line.split(",");
-            if (indexName.equals(content[4])) 
+            if (strTableName.equals(content[0]) && strColName.equals(content[1]) && !content[4].equals("null")) 
             {
                 found = true;
                 break;
@@ -996,7 +1059,7 @@ public class DBApp {
         br.close();
 
         if (found)
-            throw new DBAppException("Index " + indexName + " already exists !");
+            throw new DBAppException("Column " + strColName + " in table " + strTableName + " is already indexed !");
 
     }
     private void validateSQLTerms(SQLTerm[] arrSQLTerms) throws DBAppException, IOException {

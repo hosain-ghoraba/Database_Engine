@@ -1,12 +1,6 @@
 
  TA questions : 
 
- 1 - use index with 1 or 2 columns?
- 2 - precedance between AND, OR ,XOR ? if no , then : 
-    (we only search for an AND Chain whose start is the beginning of the SqlOperators)
-    a - there is no term between the 3 index columns than is not anded with them
-    b - the first index column must be ANDed with the term directly before it(which will be the result of all the previous SqlTerms)
-    am I right ?
-        
+1 - should I assume in select that : if an index will be used,the three SQLterms used in index will come right after each other in the arrSQLTerms array and in the right order ?        
 
 */
