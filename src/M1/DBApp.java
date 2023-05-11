@@ -895,7 +895,7 @@ public class DBApp {
     }
 
     // select with index helpers
-    public List<Object> compact(SQLTerm[] arrSQLTerms, String[] strarrOperators){// to do
+    public List<Object> compact(SQLTerm[] arrSQLTerms, String[] strarrOperators){// to complete later
         // convert inputs to lists
         List<SQLTerm> termsList = new LinkedList<SQLTerm>();
         List<String> operatorsList = new LinkedList<String>();
@@ -903,6 +903,7 @@ public class DBApp {
             termsList.add(term);
         for(String operator : strarrOperators)
             operatorsList.add(operator);
+        return null; // to remove later    
 
 
     }
