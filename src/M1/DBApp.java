@@ -747,7 +747,7 @@ public class DBApp {
         return s;
     }
 
-    ///////////////////////////////////////////// below are for M2
+    ///////////////////////////////////////////// below are Helpers for M2
 
     // createIndex helpers
     private static void writeIndexInMetadata(String tableName, String[] columnNames, String indexName) throws IOException {// puts the index name in the metadata file instead of null in each column in columnNames
