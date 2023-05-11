@@ -3,6 +3,7 @@ package M1;
 import java.io.*;
 import java.text.BreakIterator;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import javax.management.ObjectName;
@@ -125,7 +126,7 @@ public class DBApp {
             throw new DBAppException("One of the parameters is null!");
         if (!listofCreatedTables.contains(strTableName))
             throw new DBAppException("You cannot insert into a table that has not been created yet");
-        Methods.check_strings_are_Alphabitical(htblColNameValue);
+       // Methods.check_strings_are_Alphabitical(htblColNameValue);
         Methods.convert_strings_To_Lower_Case(htblColNameValue); // convert all string records in hashtable to lower case
         // 1- fetch the table from the disk
         String path = "src/resources/tables/" + strTableName + "/" + strTableName + ".ser";
@@ -140,6 +141,7 @@ public class DBApp {
             String strColName = strEnumeration.nextElement();
 //            tblToInsertInto.validateColType(colType(strColName));
             Column c = tblToInsertInto.getColumn(strColName);
+
             if(!colType(strColName,strTableName).equals(c.getStrColType()))
                 throw new DBAppException();
             // if this Column does not exist , throw exception
@@ -179,7 +181,7 @@ public class DBApp {
         }
         catch(Exception e)
         {
-//        	e.printStackTrace();
+           	e.printStackTrace();
             throw new DBAppException(e.getMessage());
         }
 
@@ -290,7 +292,7 @@ public class DBApp {
 //            tblToUpdate.validateColType(colType(strColName));
             Column c = tblToUpdate.getColumn(strColName);
             // if this Column does not exist , throw exception
-            if (/*!tblToUpdate.getVecColumns().contains(c)*/ c!=null)
+            if (!tblToUpdate.getVecColumns().contains(c))
                 throw new DBAppException("No such column. Check your Spelling for typos!");
             // get the value
             Object strColValue = htblColNameValue.get(strColName);
@@ -454,29 +456,6 @@ public class DBApp {
 
         // third, delete the table from the list of created tables
         listofCreatedTables.remove(strTableName);
-    }
-    private static void validation(Hashtable<String, String> htblColNameType, Hashtable<String, String> htblColNameMin,
-            Hashtable<String, String> htblColNameMax) throws DBAppException {
-
-        Enumeration<String> strEnumeration = htblColNameType.keys();
-        while (strEnumeration.hasMoreElements()) {
-            String strColName = strEnumeration.nextElement();
-            String strColType = htblColNameType.get(strColName);
-
-            if (!(strColType.equals("java.lang.Integer") || strColType.equals("java.lang.String") ||
-                    strColType.equals("java.lang.Double") || strColType.equals("java.util.Date")))
-                throw new DBAppException("The type " + strColType + " is not supported");
-
-            if (!htblColNameMin.containsKey(strColName) || !htblColNameMax.containsKey(strColName)) {
-                throw new DBAppException("The column " + strColName + " must exist");
-
-            }
-
-        }
-        if (!( htblColNameType.size() == htblColNameMin.size() && htblColNameType.size() == htblColNameMax.size()))
-        	throw new DBAppException("Columns not matching");
-        
-
     }
     public static void intoMeta(String filePath,List<String> dataline) throws DBAppException
     {
@@ -999,6 +978,29 @@ public class DBApp {
     }
     
     // misc validations
+    private static void validation(Hashtable<String, String> htblColNameType, Hashtable<String, String> htblColNameMin,
+                                   Hashtable<String, String> htblColNameMax) throws DBAppException {
+
+        Enumeration<String> strEnumeration = htblColNameType.keys();
+        while (strEnumeration.hasMoreElements()) {
+            String strColName = strEnumeration.nextElement();
+            String strColType = htblColNameType.get(strColName);
+
+            if (!(strColType.equals("java.lang.Integer") || strColType.equals("java.lang.String") ||
+                    strColType.equals("java.lang.Double") || strColType.equals("java.util.Date")))
+                throw new DBAppException("The type " + strColType + " is not supported");
+
+            if (!htblColNameMin.containsKey(strColName) || !htblColNameMax.containsKey(strColName)) {
+                throw new DBAppException("The column " + strColName + " must exist");
+
+            }
+
+        }
+        if (!( htblColNameType.size() == htblColNameMin.size() && htblColNameType.size() == htblColNameMax.size()))
+            throw new DBAppException("Columns not matching");
+
+
+    }
     private void validateTableExists(String strTableName) throws DBAppException, IOException {
         // search for table name from the metadata file
         // if not found throw exception
@@ -1165,11 +1167,9 @@ public class DBApp {
         // while(iterator.hasNext()){
         //     System.out.println(iterator.next());
         // }
-        
 
 
-      
-        
+
     
 
           

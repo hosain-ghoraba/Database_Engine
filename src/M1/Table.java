@@ -1,4 +1,6 @@
 package M1;
+import M2.Octree;
+
 import java.io.Serializable;
 import java.util.*;
 import java.text.*;
@@ -8,13 +10,18 @@ public class Table implements Serializable
     private String strTableName;
     private String strClusteringKeyColumn;
     private Vector<Column> vecColumns;
+
+    public Vector<Octree> getIndex() {
+        return index;
+    }
+
     private Vector<String> vecPages;
     private Hashtable<String,String> htblColNameType;
     private Hashtable<String,String> htblColNameMin;
     private Hashtable<String,String> htblColNameMax;
     private Hashtable<String,Integer> htblColNameIndex = new Hashtable<>(); //helper
     private int MaximumRowsCountinTablePage, pagesIDcounter = -1;
-
+    private Vector<Octree> index;
 
     public Table(String strTableName, String strClusteringKeyColumn, Hashtable<String,String> htblColNameType,
                  Hashtable<String,String> htblColNameMin,Hashtable<String,String> htblColNameMax , int MaximumRowsCountinTablePage ) {
@@ -22,6 +29,7 @@ public class Table implements Serializable
         this.strTableName = strTableName;
         this.strClusteringKeyColumn = strClusteringKeyColumn;
         this.MaximumRowsCountinTablePage = MaximumRowsCountinTablePage;
+        index = new Vector<>();
         vecColumns = new Vector<>(); // initially ,the vector size is by default 10
 
 
@@ -48,6 +56,7 @@ public class Table implements Serializable
         	Column column = vecColumns.get(i);
 			htblColNameIndex.put(column.getStrColName(), i);
 		}
+
 
     }
     public  Column getColumn(String colName){
@@ -85,7 +94,7 @@ public class Table implements Serializable
                 throw new DBAppException("You cannot use a value that is out of the bounds of this column");
         }
         else if (valueToCheck instanceof Date){
-            if(!colType.equals("java.lang.Date"))
+            if(!colType.equals("java.util.Date"))
                 throw new DBAppException("The value and its corresponding column must be of the same type");
             Date value =(Date) valueToCheck;
 

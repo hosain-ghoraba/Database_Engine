@@ -1,18 +1,16 @@
 package M2;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
 
-import javax.lang.model.util.ElementScanner14;
+import M1.DBAppException;
+import M1.Page;
 
 public class Methods2 {
 
@@ -149,53 +147,30 @@ public class Methods2 {
 			for(Octree child : octree.getChildren())
 				copyAllRecordsToList(child, toFill);
 
-	}	
-
-	public static List<List<Object>> getSubsetsOfSizeK(List<Object> input, int k) {
-			List<List<Object>> result = new LinkedList<>();
-			if (input == null || input.size() < k) {
-				return result;
-			}
-	
-			int n = input.size();
-			int[] index = new int[k];
-			for (int i = 0; i < k; i++) {
-				index[i] = i;
-			}
-	
-			while (index[0] <= n - k) {
-				List<Object> subset = new ArrayList<>(k);
-				for (int i = 0; i < k; i++) {
-					subset.add(input.get(index[i]));
-				}
-				result.add(subset);
-	
-				int t = k - 1;
-				while (t != 0 && index[t] == n - k + t) {
-					t--;
-				}
-				index[t]++;
-				for (int i = t + 1; i < k; i++) {
-					index[i] = index[i - 1] + 1;
-				}
-			}
-			return result;
-		}
-	public static List<String> getAllPermutations(String colName1,String colName2, String colName3){
-
-		List<String> result = new LinkedList<>();
-		result.add(colName1+colName2+colName3);
-		result.add(colName1+colName3+colName2);
-		result.add(colName2+colName1+colName3);
-		result.add(colName2+colName3+colName1);
-		result.add(colName3+colName1+colName2);
-		result.add(colName3+colName2+colName1);
-		return result;		
 	}
-	
+	public static Comparable parseType(String val, String dataType) throws DBAppException {
+		try {
+			if (dataType.equals("java.lang.Integer")) {
+				return Integer.parseInt(val);
+			}
+			if (dataType.equals("java.lang.Double")) {
+				return Double.parseDouble(val);
+			}
+			if (dataType.equals("java.util.Date")) {
+				return new SimpleDateFormat("yyyy-MM-dd").parse(val);
+			}
+			return val;
+		} catch (ParseException i) {
+			throw new DBAppException("Cannot parse value to passed type");
+		}
+	}
+
 	public static void main(String[] args) {
-		
+
+		Object o = Integer.valueOf(0);
+		System.out.println(o.getClass().getName());
+
+    }
+
     
 }
-}
-
