@@ -1019,18 +1019,15 @@ public class DBApp {
 
     }
 
-    public Set<Integer> getTablePagesIDs(String tableName)
+    public Set<Integer> getTablePagesIDs(String tableName) throws DBAppException
     {
-        File directory = new File("src/resources/tables/" + tableName + "/pages");
-        File[] files = directory.listFiles();
-        HashSet<Integer> pages_ids = new HashSet<Integer>();
-        for (File file : files) 
-        {
-            String fileName = file.getName(); // page10.ser for example
-            pages_ids.add(Integer.parseInt(fileName.substring(4, fileName.length()-4))); // to get the 10 only from page10.ser
-
-        }
-        return pages_ids;   
+        Set pages_ids = new HashSet<Integer>();
+        String tablePath = "src/resources/tables/" + tableName + "/" + tableName + ".ser";
+        Table table = (Table) deserialize(tablePath);
+        for(String pageName : table.getVecPages())
+            pages_ids.add(Integer.parseInt(pageName.substring(4, pageName.length()-4)));
+        serialize(tablePath, table);
+        return pages_ids;
     }
     public boolean indexCanHelp_simplified(SQLTerm[] arrSQLTerms, String[] strarrOperators) throws DBAppException, IOException {
 
