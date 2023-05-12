@@ -149,6 +149,22 @@ public class Methods2 {
 				copyAllRecordsToList(child, toFill);
 
 	}
+	public static Comparable parseType(String val, String dataType) throws DBAppException {
+		try {
+			if (dataType.equals("java.lang.Integer")) {
+				return Integer.parseInt(val);
+			}
+			if (dataType.equals("java.lang.Double")) {
+				return Double.parseDouble(val);
+			}
+			if (dataType.equals("java.util.Date")) {
+				return new SimpleDateFormat("yyyy/MM/dd").parse(val);
+			}
+			return val;
+		} catch (ParseException i) {
+			throw new DBAppException("Cannot parse value to passed type");
+		}
+	}
 	public static List<List<Object>> getSubsetsOfSizeK(List<Object> input, int k) {
 		List<List<Object>> result = new LinkedList<>();
 		if (input == null || input.size() < k) {
@@ -181,32 +197,15 @@ public class Methods2 {
 	}
 	public static List<String> getAllPermutations(String colName1,String colName2, String colName3){
 
-	List<String> result = new LinkedList<>();
-	result.add(colName1+colName2+colName3);
-	result.add(colName1+colName3+colName2);
-	result.add(colName2+colName1+colName3);
-	result.add(colName2+colName3+colName1);
-	result.add(colName3+colName1+colName2);
-	result.add(colName3+colName2+colName1);
-	return result;		
-}
-	public static Comparable parseType(String val, String dataType) throws DBAppException {
-		try {
-			if (dataType.equals("java.lang.Integer")) {
-				return Integer.parseInt(val);
-			}
-			if (dataType.equals("java.lang.Double")) {
-				return Double.parseDouble(val);
-			}
-			if (dataType.equals("java.util.Date")) {
-				return new SimpleDateFormat("yyyy-MM-dd").parse(val);
-			}
-			return val;
-		} catch (ParseException i) {
-			throw new DBAppException("Cannot parse value to passed type");
-		}
+		List<String> result = new LinkedList<>();
+		result.add(colName1+colName2+colName3);
+		result.add(colName1+colName3+colName2);
+		result.add(colName2+colName1+colName3);
+		result.add(colName2+colName3+colName1);
+		result.add(colName3+colName1+colName2);
+		result.add(colName3+colName2+colName1);
+		return result;
 	}
-
 	public static void main(String[] args) {
 
 		Object o = Integer.valueOf(0);

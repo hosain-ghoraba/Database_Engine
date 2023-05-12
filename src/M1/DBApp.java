@@ -16,7 +16,7 @@ import M2.Octree;
 
 import M2.SQLTerm;
 
-public class DBApp { 
+public class DBApp {
     static NULL NULL = new NULL();
     public static int MaximumRowsCountinTablePage;
     public int MaximumEntriesinOctreeNode;
@@ -25,7 +25,7 @@ public class DBApp {
 
     public DBApp() throws DBAppException {
         listofCreatedTables = new LinkedList<>();
-        
+
         readCSVTablesIntoCreatedList();
         init();
     }
@@ -50,10 +50,10 @@ public class DBApp {
         if(listofCreatedTables.contains(strTableName))
             throw new DBAppException("Table already exists! If you want to\n reset or Create it again," +
              " please call .DELETETableDependencies(TableName) method first then call createTable() method");
-        
+
         validation(htblColNameType, htblColNameMin, htblColNameMax); // validation method checks if the type of table's columns is one of the 4 types specified in the description,validation also checks if any column does not have maxVal or minVal , hence throws exception
-        
-        
+
+
         for(String colName : htblColNameMin.keySet()) // converts all min and max column values to lowercase (hosain)
             htblColNameMin.put(colName, htblColNameMin.get(colName).toLowerCase());
         for(String colName : htblColNameMax.keySet())
@@ -61,7 +61,7 @@ public class DBApp {
 
         readConfig();
 
-        
+
         if(!htblColNameType.containsKey(strClusteringKeyColumn))
             throw new DBAppException("Clustering key column does not exist in the table!");
 
@@ -90,7 +90,7 @@ public class DBApp {
 //        Enumeration<String> strmin = htblColNameMin.elements();
 //        Enumeration<String> strmax = htblColNameMax.elements();
 
-//        int i = 0;      
+//        int i = 0;
         while(strkey.hasMoreElements()) {
 //        	System.out.println(strkey.nextElement());
         	String s = strkey.nextElement();
@@ -116,8 +116,8 @@ public class DBApp {
             e.printStackTrace();
             throw new DBAppException(e.getMessage());
         }
-        
-    }   
+
+    }
     public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue)throws DBAppException {
         // surroud the whole method with try catch to catch any exception and re-throw it as DBAppException
         try
@@ -126,7 +126,7 @@ public class DBApp {
             throw new DBAppException("One of the parameters is null!");
         if (!listofCreatedTables.contains(strTableName))
             throw new DBAppException("You cannot insert into a table that has not been created yet");
-       // Methods.check_strings_are_Alphabitical(htblColNameValue);
+        Methods.check_strings_are_Alphabitical(htblColNameValue);
         Methods.convert_strings_To_Lower_Case(htblColNameValue); // convert all string records in hashtable to lower case
         // 1- fetch the table from the disk
         String path = "src/resources/tables/" + strTableName + "/" + strTableName + ".ser";
@@ -163,7 +163,7 @@ public class DBApp {
                 throw new DBAppException(dbe.getMessage());
             }
         }
-        
+
         // insert the non given column values with NULL (other than the clustering key, if any)
         if(vecValues.size() < tblToInsertInto.getVecColumns().size()) { //not all columns are inserted
             for (Column c : tblToInsertInto.getVecColumns()) {
@@ -249,9 +249,9 @@ public class DBApp {
         // 5- return table & page back to disk after update
         serialize(path, tblToUpdate);
         OperationSignatureDisplay(OpType.UPDATE, tblToUpdate, htblColNameValue, strClusteringKeyValue);
-        
-        
-        
+
+
+
 
         // test
         // Row entry = new Row(v);
@@ -314,7 +314,7 @@ public class DBApp {
                 System.out.println("No rows matches these conditions.");
             else
                 candidatePage.deleteEntry(rowtodelete);
-            
+
             tblToUpdate.savePageToDisk(candidatePage, candidateIdx);
         } else {
             tblToUpdate.deleteRowsWithoutCKey(htblColNameValue);
@@ -323,7 +323,7 @@ public class DBApp {
         // 3- delete page if empty
         //int size = tblToUpdate.getVecPages().size();
         //Iterator<String> iteratePg = tblToUpdate.getVecPages().iterator();
-        
+
         List<String> tempPages = new ArrayList<String>();
         for (int i = 0; i < tblToUpdate.getVecPages().size(); i++) {
             tempPages.add(tblToUpdate.getVecPages().get(i));
@@ -352,7 +352,7 @@ public class DBApp {
         {
             throw new DBAppException(e.getMessage());
         }
-        
+
     }
     public Iterator selectFromTable(SQLTerm[] arrSQLTerms,String[] strarrOperators)throws DBAppException{
         try
@@ -370,7 +370,7 @@ public class DBApp {
         catch(Exception e)
         {
             e.printStackTrace();
-            throw new DBAppException(e.getMessage()); 
+            throw new DBAppException(e.getMessage());
         }
     }
     public void createIndex(String strTableName,String[] strarrColName) throws DBAppException
@@ -385,9 +385,9 @@ public class DBApp {
             validateColumnNotIndexed(colName, strTableName);
         }
         String indexName = "";
-        for(String colName : strarrColName)           
+        for(String colName : strarrColName)
             indexName += colName;
-        indexName += "Index";      
+        indexName += "Index";
             writeIndexInMetadata(strTableName, strarrColName, indexName);// replace "null" with the index name
         // next, create the index file
         String tablePath = "src/resources/tables/" + strTableName + "/" + strTableName + ".ser";
@@ -433,7 +433,7 @@ public class DBApp {
             }
             br.close();
         } catch ( IOException e) {
-            throw new DBAppException("Error reading csv file");    
+            throw new DBAppException("Error reading csv file");
         }
 
         // second, write the new data to the csv file
@@ -465,11 +465,11 @@ public class DBApp {
         try {
             // create FileWriter object with file as parameter
 //            FileWriter outputfile = new FileWriter(file);
-      
+
             // create CSVWriter object filewriter object as parameter
 //            BufferedWriter writer = new BufferedWriter(outputfile);
             CsvWriter writer = new CsvWriter(file);
-            
+
              //adding header to csv
             if( !CsvWriter.isHeadersWriten()) {
 	            String[] header = {"Table Name", "Column Name", "Column Type", "ClusteringKey", "IndexName","IndexType", "min", "max" };
@@ -490,10 +490,10 @@ public class DBApp {
 //    				i=0;
 //    				line = br.readLine();
 //    			}
-//    			
+//
 //    		}
             writer.writeRow(dataline);
-            
+
             // closing writer connection
             //writer.close();
         }
@@ -515,16 +515,16 @@ public class DBApp {
                 	cols[k] = (String) en.nextElement();
                 	output.append((k == cols.length-1)?cols[k++]+") VALUES (": cols[k++]+", ");
                 }
-                
+
                 for (int i = 0; i < cols.length; i++) {
 					output.append((i == cols.length-1)?htblColNameVal.getOrDefault(cols[i], "Null")+");"
 													: htblColNameVal.getOrDefault(cols[i], "Null")+", ");
 				}
                 output.append("\n\nand Result Set Output Table: ####################\n")
                 		.append(table.toString()).append("\n######################\n");
-                
+
                 System.out.println(output);
-                
+
                 break;
             case DELETE:
 
@@ -537,10 +537,10 @@ public class DBApp {
                 String[] cols2 = new String[htblColNameVal.size()];
                 int k2 = 0;
                 while (en2.hasMoreElements())	cols2[k2++] = (String) en2.nextElement();
-                	
-                
+
+
                 for (int i = 0; i < cols2.length; i++) {
-                	
+
                 	output2.append(cols2[i]+" = ");
 					output2.append(htblColNameVal.getOrDefault(cols2[i], "Null"));
 					if( i < cols2.length-1) output2.append("AND ");
@@ -549,12 +549,12 @@ public class DBApp {
             }
                 output2.append("\n\nand Result Set output Table: ####################\n")
                 		.append(table.toString()).append("\n######################\n");
-                
+
                 System.out.println(output2);
-                
+
                 break;
 
-            
+
             default: System.out.println("No enough or Wrong Info Given");
 
         }
@@ -562,17 +562,17 @@ public class DBApp {
     public static void OperationSignatureDisplay(Table table, Hashtable<String,String> htblColNameType, OpType operation){
         switch(operation){
             case CREATE:
-                    
+
                     StringBuilder output4 = new StringBuilder("-------SQL Equivalent Command:\n"
                     		+ "CREATE TABLE " +table.getStrTableName() + " (\n");
-    
+
                     Enumeration<String> en4 = htblColNameType.keys();
                     String[] cols4 = new String[htblColNameType.size()];
                     int k4 = 0;
                     while (en4.hasMoreElements()) {
                     	cols4[k4++] = (String) en4.nextElement();
                     }
-                    
+
                     for (int i = 0; i < cols4.length; i++) {
                        	output4.append("\t" + cols4[i]+" :: ");
                        	if(!table.getStrClusteringKeyColumn().equals(cols4[i]))
@@ -587,21 +587,21 @@ public class DBApp {
             default: System.out.println("No enough or Wrong Info Given");
 
         }
-                    
+
     }
     public static void OperationSignatureDisplay(OpType operation, Table table, Hashtable<String,Object> htblColNameVal, String clusterKey) {
 	    if(operation == OpType.UPDATE) {
 	        StringBuilder output3 = new StringBuilder("-------SQL Equivalent Command:\n"
 	        		+ "UPDATE " +table.getStrTableName()+ " SET\n");
-	
+
 	        Enumeration<String> en3 = htblColNameVal.keys();
 	        String[] cols3 = new String[htblColNameVal.size()];
 	        int k3 = 0;
 	        while (en3.hasMoreElements())	cols3[k3++] = (String) en3.nextElement();
-	        	
-	        
+
+
 	        for (int i = 0; i < cols3.length; i++) {
-	        	
+
 	        	output3.append("\t"+cols3[i]+" = ");
 				output3.append(htblColNameVal.getOrDefault(cols3[i], "Null"));
 				if( i < cols3.length-1) output3.append(",\n");
@@ -609,9 +609,9 @@ public class DBApp {
 			}
 	        output3.append("\n\nand Result Set output Table: ####################\n")
 	        		.append(table.toString()).append("\n######################\n");
-	        
+
 	        System.out.println(output3);
-	        
+
 	    }else	System.out.println("No enough or Wrong Info Given");
     }
     public void readConfig() throws DBAppException {
@@ -669,7 +669,7 @@ public class DBApp {
             fileOutStr.close();
         } catch (IOException i) {
             i.printStackTrace();
-            
+
         }
     }
     public static Object deserialize(String path) throws DBAppException {
@@ -702,7 +702,7 @@ public class DBApp {
 
             br.close();
         } catch ( IOException e2) {
-            throw new DBAppException("Error reading csv file");    
+            throw new DBAppException("Error reading csv file");
         }
 
 	}
@@ -721,8 +721,8 @@ public class DBApp {
         br.close();
         } catch (IOException e) {
         	throw new DBAppException(e.getMessage());
-		} 
-			
+		}
+
         return s;
     }
 
@@ -730,7 +730,7 @@ public class DBApp {
 
     // createIndex helpers
     private static void writeIndexInMetadata(String tableName, String[] columnNames, String indexName) throws IOException {// puts the index name in the metadata file instead of null in each column in columnNames
-    
+
         BufferedReader reader = new BufferedReader(new FileReader("metadata.csv"));
         BufferedWriter writer = new BufferedWriter(new FileWriter("temp.csv"));
 
@@ -758,11 +758,11 @@ public class DBApp {
         new File("temp.csv").renameTo(new File("metadata.csv"));
     }
     private void fillTreeFromTable(Octree tree, Table table, String[] strarrColName) throws DBAppException, IOException {
-        for (String strPageID : table.getVecPages()) 
-        {            
+        for (String strPageID : table.getVecPages())
+        {
             String pagePath = "src/resources/tables/" + table.getStrTableName() + "/pages/" + strPageID + ".ser";                                                                   // page10.ser
             Page page = (Page) deserialize(pagePath);
-            for (Row row : page.getData()) 
+            for (Row row : page.getData())
             {
                 Comparable row_x_value = (Comparable) row.getColumnValue(strarrColName[0],table.getStrTableName());
                 Comparable row_y_value = (Comparable) row.getColumnValue(strarrColName[1],table.getStrTableName());
@@ -790,12 +790,12 @@ public class DBApp {
                 List<List<Object>> allTriples = Methods2.getSubsetsOfSizeK(chain,3);
                 for(List<Object> triple : allTriples)
                     if(termsFormIndex((SQLTerm) triple.get(0), (SQLTerm) triple.get(1), (SQLTerm) triple.get(2), arrSQLTerms[0]._strTableName))
-                        return true;         
+                        return true;
             }
-            
+
         }
         return false;
-        
+
     }
     private HashSet<Integer> selectPages_UsingIndex(SQLTerm[] arrSQLTerms, String[] strarrOperators) {
         List<Object> comparessedParamerters = compact(arrSQLTerms, strarrOperators);
@@ -803,36 +803,36 @@ public class DBApp {
         List param2 = (List)comparessedParamerters.get(1);
         LinkedList<Object>[] pages = new LinkedList[param1.size()];
         String[] operators = new String[param2.size()];
-        for (int i = 0; i < param1.size(); i++) 
+        for (int i = 0; i < param1.size(); i++)
             pages[i] = (LinkedList<Object>) param1.get(i);
-        for (int i = 0; i < param2.size(); i++) 
+        for (int i = 0; i < param2.size(); i++)
             operators[i] = (String) param2.get(i);
         LinkedList<Object> obj_pagesID = applyOperatorsFromLeftToRight(pages, strarrOperators);
         HashSet<Integer> pagesID = new HashSet<Integer>();
-        for (Object page : obj_pagesID)        
-            pagesID.add((Integer) page);      
+        for (Object page : obj_pagesID)
+            pagesID.add((Integer) page);
         return pagesID;
-        
+
     }
     private HashSet<Integer> selectPages_WithoutIndex(SQLTerm[] arrSQLTerms, String[] strarrOperators) {
         String tableName = arrSQLTerms[0]._strTableName;
         File directory = new File("src/resources/tables/" + tableName + "/pages");
         File[] files = directory.listFiles();
         HashSet<Integer> pages_ids = new HashSet<Integer>();
-        for (File file : files) 
+        for (File file : files)
         {
             String fileName = file.getName(); // page10.ser for example
             pages_ids.add(Integer.parseInt(fileName.substring(4, fileName.length()-4))); // to get the 10 only from page10.ser
 
         }
-        return pages_ids;   
-        
+        return pages_ids;
+
     }
     private LinkedList<Row> selectMatchingRows(SQLTerm[] arrSQLTerms, String[] strarrOperators, HashSet<Integer> candidatePages) throws DBAppException, IOException {
     LinkedList<Object>[] separated_SQLTermsResults = new LinkedList[arrSQLTerms.length];
     for(int i = 0 ; i < separated_SQLTermsResults.length ; i++)
         separated_SQLTermsResults[i] = new LinkedList<Object>();
-    for (Integer page_id : candidatePages) 
+    for (Integer page_id : candidatePages)
     {
         String pagePath = "src/resources/tables/" + arrSQLTerms[0]._strTableName + "/pages/page" + page_id + ".ser";
         Page page = (Page) deserialize(pagePath);
@@ -842,7 +842,7 @@ public class DBApp {
     }
     // now we have all the rows that match each SQLTerm in separated_SQLTermsResults
     // we need to apply the operators on them
-    
+
     LinkedList<Object> resultObjects =  applyOperatorsFromLeftToRight(separated_SQLTermsResults, strarrOperators);
     LinkedList<Row> resultRows = new LinkedList<Row>();
     for(Object obj : resultObjects)
@@ -851,14 +851,14 @@ public class DBApp {
     }
 
     // indexCanHelp helpers
-    public Set<String> getAllTableIndicies(String tableName) throws IOException { 
+    public Set<String> getAllTableIndicies(String tableName) throws IOException {
         Set<String> indicies = new HashSet<>();
         BufferedReader br = new BufferedReader(new FileReader("MetaData.csv"));
         String line = br.readLine();
-        while (line != null) 
+        while (line != null)
         {
             String[] content = line.split(",");
-            if (tableName.equals(content[0]) && !content[4].equals("null"))     
+            if (tableName.equals(content[0]) && !content[4].equals("null"))
                 indicies.add(content[4]);
             line = br.readLine();
         }
@@ -868,7 +868,7 @@ public class DBApp {
     public static List<int[]> getAndedTermsBoundries(List<String> operators){
 		List<int[]> result = new LinkedList<>();
 		for(int i = 0; i < operators.size(); i++)
-			if(operators.get(i).equals("AND"))	
+			if(operators.get(i).equals("AND"))
 			{
 				int j;
 				for(j = i+1; j < operators.size(); j++)
@@ -878,20 +878,20 @@ public class DBApp {
 					else
 						break;
 				}
-				result.add(new int[]{i, j});// i is the index of the sql operator before the first AND, j is the index of the sql operator after the last AND		
+				result.add(new int[]{i, j});// i is the index of the sql operator before the first AND, j is the index of the sql operator after the last AND
 				i = j;
-		
+
 			}
 		return result;
 
 
-	} 
-    public boolean termsFormIndex(SQLTerm term1, SQLTerm term2, SQLTerm term3, String tableName) throws IOException{
+	}
+   public boolean termsFormIndex(SQLTerm term1, SQLTerm term2, SQLTerm term3, String tableName) throws IOException{
         for(String indexName : getAllTableIndicies(tableName))
             for(String posiibleIndexName : Methods2.getAllPermutations(term1._strColumnName, term2._strColumnName, term3._strColumnName))
                 if(indexName.equals(posiibleIndexName + "Index"))
                    return true;
-        return false;        
+        return false;
     }
 
     // select with index helpers
@@ -907,6 +907,8 @@ public class DBApp {
 
 
     }
+
+
     public String getColAxisInIndex(String indexName, String colName){
 
         String indexColumns = indexName.substring(0, indexName.length()-5); // remove "Index" from indexName
@@ -914,11 +916,11 @@ public class DBApp {
             return "x";
         if(colName.equals(indexColumns.substring(indexName.length()-colName.length(), indexName.length())))
             return "z";
-        return "y";    
+        return "y";
     }
 
     // selectMatchingRows helpers
-    private LinkedList<Row> singleSQLTermResult(SQLTerm sqlTerm, Page page) throws IOException, DBAppException { 
+    private LinkedList<Row> singleSQLTermResult(SQLTerm sqlTerm, Page page) throws IOException, DBAppException {
         LinkedList<Row> result = new LinkedList<Row>();
         Comparable sqlTermValue = (Comparable) sqlTerm._objValue;
         for(Row row : page.getData())
@@ -931,7 +933,7 @@ public class DBApp {
                 case ">" : if(cellValue.compareTo(sqlTermValue) > 0) result.add(row); break;
                 case ">=" : if(cellValue.compareTo(sqlTermValue) >= 0) result.add(row); break;
                 case "<" : if(cellValue.compareTo(sqlTermValue) < 0) result.add(row); break;
-                case "<=" : if(cellValue.compareTo(sqlTermValue) <= 0) result.add(row); break;                              
+                case "<=" : if(cellValue.compareTo(sqlTermValue) <= 0) result.add(row); break;
             }
         }
         return result;
@@ -945,9 +947,9 @@ public class DBApp {
             operatorsStack.push(strarrOperators[i]);
         while(!operatorsStack.isEmpty())
             dataStack.push(applySingleOperator(dataStack.pop(), dataStack.pop(), operatorsStack.pop()));
-        return dataStack.pop();        
+        return dataStack.pop();
     }
-    private LinkedList<Object> applySingleOperator(LinkedList<Object> list1, LinkedList<Object> list2, String operand) { 
+    private LinkedList<Object> applySingleOperator(LinkedList<Object> list1, LinkedList<Object> list2, String operand) {
         LinkedList<Object> result = new LinkedList<Object>();
         HashSet<Object> set1 = new HashSet<Object>(list1); // convert to hashset to increase performance of contains() from O(n) to O(1)
         HashSet<Object> set2 = new HashSet<Object>(list2); // convert to hashset to increase performance of contains() from O(n) to O(1)
@@ -974,10 +976,10 @@ public class DBApp {
                 if(!set1.contains(obj))
                     result.add(obj);
         }
- 
+
         return result;
     }
-    
+
     // misc validations
     private static void validation(Hashtable<String, String> htblColNameType, Hashtable<String, String> htblColNameMin,
                                    Hashtable<String, String> htblColNameMax) throws DBAppException {
@@ -1008,10 +1010,10 @@ public class DBApp {
         boolean found = false;
         BufferedReader br = new BufferedReader(new FileReader("MetaData.csv"));
         String line = br.readLine();
-        while (line != null) 
+        while (line != null)
         {
             String[] content = line.split(",");
-            if (strTableName.equals(content[0])) 
+            if (strTableName.equals(content[0]))
             {
                 found = true;
                 break;
@@ -1030,10 +1032,10 @@ public class DBApp {
         boolean found = false;
         BufferedReader br = new BufferedReader(new FileReader("MetaData.csv"));
         String line = br.readLine();
-        while (line != null) 
+        while (line != null)
         {
             String[] content = line.split(",");
-            if (strTableName.equals(content[0]) && strColName.equals(content[1])) 
+            if (strTableName.equals(content[0]) && strColName.equals(content[1]))
             {
                 found = true;
                 break;
@@ -1049,10 +1051,10 @@ public class DBApp {
         boolean found = false;
         BufferedReader br = new BufferedReader(new FileReader("MetaData.csv"));
         String line = br.readLine();
-        while (line != null) 
+        while (line != null)
         {
             String[] content = line.split(",");
-            if (strTableName.equals(content[0]) && strColName.equals(content[1]) && !content[4].equals("null")) 
+            if (strTableName.equals(content[0]) && strColName.equals(content[1]) && !content[4].equals("null"))
             {
                 found = true;
                 break;
@@ -1073,7 +1075,7 @@ public class DBApp {
             String currentTable = term._strTableName;
             if(!currentTable.equals(tableName))
                 throw new DBAppException("All SQL terms must be on the same table !");
-            String colName = term._strColumnName;    
+            String colName = term._strColumnName;
             validateColumnExistsInTable(colName, currentTable);
             String operator = term._strOperator;
             boolean operatorIsSupported = operator.equals("=") || operator.equals("!=" ) || operator.equals(">") || operator.equals("<") || operator.equals(">=") || operator.equals("<=");
@@ -1082,7 +1084,7 @@ public class DBApp {
             String colType = colType(colName, currentTable);
             if(colType == null)
                 throw new DBAppException("Column " + colName + " does not exist in table " + currentTable + " !");
-            if(! term._objValue.getClass().getName().equals(colType))    
+            if(! term._objValue.getClass().getName().equals(colType))
                 throw new DBAppException("Value " + term._objValue + " is not of type " + colType + " !");
        }
     }
@@ -1092,27 +1094,27 @@ public class DBApp {
         for(String operator : strarrOperators)
             if(!(operator.equals("AND") || operator.equals("OR") || operator.equals("XOR")))
                 throw new DBAppException("Operator " + operator + " is not supported !");
-        
-            
+
+
     }
     private void validateColNames(String strTableName, String[] strarrColName) throws DBAppException, IOException {
         if(strarrColName.length != 3)
             throw new DBAppException("you must specify exactly 3 column names to be used in the index!");
         for(String colName : strarrColName)
-            validateColumnExistsInTable(colName, strTableName); 
+            validateColumnExistsInTable(colName, strTableName);
 
-        
-            
+
+
     }
 
 
     public static void main(String[] args) throws IOException, DBAppException {
-        
+
         DBApp db = new DBApp();
         //db.createIndex("University", new String[]{"Id", "Name", "Job"});
 
         // db.DELETETableDependencies("University");
-  
+
 		// Hashtable<String, String> htNameType = new Hashtable<>();
 		// htNameType.put("Id", "java.lang.Integer");
 		// htNameType.put("Name", "java.lang.String");
@@ -1130,13 +1132,13 @@ public class DBApp {
 
         // // generating 20 records
         // Hashtable<String,Object>[] records = new Hashtable[20];
-        // for(int i = 0; i < records.length; i++)      
+        // for(int i = 0; i < records.length; i++)
         //     records[i] = new Hashtable<String, Object>();
         // String[] names = {"ahmad", "mohamed", "ali", "omar", "zaky", "khaled", "hassan", "hussain", "youssef", "yassin",
-        //                    "akrm", "bebo", "loai", "hashem", "mona", "khadija", "bola", "hamdi", "wael", "sharkawy" };   
+        //                    "akrm", "bebo", "loai", "hashem", "mona", "khadija", "bola", "hamdi", "wael", "sharkawy" };
         // String[] jobs = {"doctor", "engineer", "lawyer", "teacher", "policeman", "firefighter", "dentist", "nurse", "farmer", "pilot",
-        //                    "blacksmith", "carpenter", "plumber", "electrician", "mechanic", "architect", "designer", "artist", "chef", "waiter" };                    
-        // for(int i = 0; i < records.length; i++)      
+        //                    "blacksmith", "carpenter", "plumber", "electrician", "mechanic", "architect", "designer", "artist", "chef", "waiter" };
+        // for(int i = 0; i < records.length; i++)
         // {
         //     Hashtable<String, Object> hashtable = records[i];
         //     hashtable.put("Id", i+2);
@@ -1144,12 +1146,12 @@ public class DBApp {
         //     hashtable.put("Job", jobs[i]);
         //     db.insertIntoTable("University", hashtable);
 
-        // }      
-            
-     
+        // }
 
 
-          
+
+
+
 		// SQLTerm[] arrSQLTerms;
         // arrSQLTerms = new SQLTerm[2];
         // arrSQLTerms[0] = new SQLTerm();
@@ -1171,9 +1173,9 @@ public class DBApp {
 
 
 
-    
 
-          
+
+
 
 }
 }
