@@ -780,7 +780,7 @@ public class DBApp {
     }
 
     // select helpers
-    private Set<Integer> selectPages_WithoutIndex(String tableName) {
+    private Set<Integer> selectPages_WithoutIndex(String tableName) throws DBAppException {
         return getTablePagesIDs(tableName);
 
     }
@@ -828,7 +828,7 @@ public class DBApp {
         String indexColumns = indexName.substring(0, indexName.length()-5); // remove "Index" from indexName
         if(colName.equals(indexColumns.substring(0,colName.length())))
             return "x";
-        if(colName.equals(indexColumns.substring(indexName.length()-colName.length(), indexName.length())))
+        if(colName.equals(indexColumns.substring(indexColumns.length()-colName.length(), indexColumns.length())))
             return "z";
         return "y";
     }
@@ -1025,7 +1025,7 @@ public class DBApp {
         String tablePath = "src/resources/tables/" + tableName + "/" + tableName + ".ser";
         Table table = (Table) deserialize(tablePath);
         for(String pageName : table.getVecPages())
-            pages_ids.add(Integer.parseInt(pageName.substring(4, pageName.length()-4)));
+            pages_ids.add(Integer.parseInt(pageName.substring(4)));
         serialize(tablePath, table);
         return pages_ids;
     }
@@ -1043,6 +1043,7 @@ public class DBApp {
         Set<Integer> allTablePages = getTablePagesIDs(arrSQLTerms[0]._strTableName);
         String tableName = arrSQLTerms[0]._strTableName;
         List<Set<Integer>> resultPages = new LinkedList<Set<Integer>>();
+        List<String> resultOperators = new LinkedList<String>();
         for(int i = 0; i < arrSQLTerms.length-2; i++)
         {
             if(termsFormIndex(arrSQLTerms[i] ,arrSQLTerms[i+1] , arrSQLTerms[i+2] , tableName))
@@ -1056,6 +1057,7 @@ public class DBApp {
             else
             {
                 resultPages.add(allTablePages);
+                resultOperators.add(strarrOperators[i]);
             }
 
         }
@@ -1063,7 +1065,7 @@ public class DBApp {
         resultPages.add(allTablePages); // because we didn't add corrrosponding pages for the last 2 terms
         resultPages.add(allTablePages);
         Set<Integer>[] resultPagesArray = resultPages.toArray(new Set[resultPages.size()]);
-        return applyOperatorsFromLeftToRight(resultPagesArray, strarrOperators);
+        return applyOperatorsFromLeftToRight(resultPagesArray, resultOperators.toArray(new String[resultOperators.size()]));
     }             
     private Set<Integer> getPagesFromIndex(SQLTerm sqlTerm1, SQLTerm sqlTerm2, SQLTerm sqlTerm3, String tableName) throws IOException, DBAppException {
        
@@ -1076,7 +1078,7 @@ public class DBApp {
                 break;
             for(String possibleName : Methods2.getAllPermutations(sqlTerm1._strColumnName, sqlTerm2._strColumnName, sqlTerm3._strColumnName))
             {
-                if(currentIndex.equals(possibleName))
+                if(currentIndex.equals(possibleName+"Index"))
                 {
                     targetIndexName = currentIndex;
                     found = true;
@@ -1112,7 +1114,7 @@ public class DBApp {
         else if(term3_dimension.equals("z"))
             z_dimention_term = sqlTerm3;
 
-        String octreePath = "src/resources/tables/" + tableName + "/indices/" + targetIndexName + ".ser";
+        String octreePath = "src/resources/tables/" + tableName + "/Indicies/" + targetIndexName + ".ser";
         Octree octree = (Octree) deserialize(octreePath);
         Set<Integer> resultPages = new HashSet<>();
         Methods2.fillSetWithPages_satisfyingCondition_forInputValue(octree, resultPages,
@@ -1125,7 +1127,8 @@ public class DBApp {
     public static void main(String[] args) throws IOException, DBAppException {
 
         DBApp db = new DBApp();
-        //db.createIndex("University", new String[]{"Id", "Name", "Job"});
+        System.out.println(db.getAllTableIndicies("University"));
+        // db.createIndex("University", new String[]{"Id", "Name", "Job"});
 
         // db.DELETETableDependencies("University");
 
@@ -1166,24 +1169,19 @@ public class DBApp {
 
 
 
-		// SQLTerm[] arrSQLTerms;
-        // arrSQLTerms = new SQLTerm[2];
-        // arrSQLTerms[0] = new SQLTerm();
-        // arrSQLTerms[0]._strTableName = "University";
-        // arrSQLTerms[0]._strColumnName = "Id";
-        // arrSQLTerms[0]._strOperator = ">";
-        // arrSQLTerms[0]._objValue = 10;
-        // arrSQLTerms[1] = new SQLTerm();
-        // arrSQLTerms[1]._strTableName = "University";
-        // arrSQLTerms[1]._strColumnName = "Name";
-        // arrSQLTerms[1]._strOperator = "=";
-        // arrSQLTerms[1]._objValue = "ahmad";
-        // String[] strarrOperators = new String[1];
-        // strarrOperators[0] = "OR";
-        // Iterator<Row> iterator = db.selectFromTable(arrSQLTerms, strarrOperators);
-        // while(iterator.hasNext()){
-        //     System.out.println(iterator.next());
-        // }
+		SQLTerm[] arrSQLTerms;
+        arrSQLTerms = new SQLTerm[5];
+        arrSQLTerms[0] = new SQLTerm( "University", "Id", "=", 3);
+        arrSQLTerms[1] = new SQLTerm( "University", "Name", ">", "AAA");
+        arrSQLTerms[2] = new SQLTerm( "University", "Job", "=", "aaa");
+        arrSQLTerms[3] = new SQLTerm( "University", "Id", "=", 5);
+        arrSQLTerms[4] = new SQLTerm( "University", "Name", "=", "ahmad");
+        String[] strarrOperators = new String[] {"AND","AND","AND","AND"};
+
+        Iterator<Row> iterator = db.selectFromTable(arrSQLTerms, strarrOperators);
+        while(iterator.hasNext()){
+            System.out.println(iterator.next());
+        }
         System.out.println(db.listofCreatedTables.toString());
 
 
