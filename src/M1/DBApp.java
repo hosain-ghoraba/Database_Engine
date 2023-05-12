@@ -49,7 +49,8 @@ public class DBApp {
         //check if table already exists
         if(listofCreatedTables.contains(strTableName))
             throw new DBAppException("Table already exists! If you want to\n reset or Create it again," +
-             " please call .DELETETableDependencies(TableName) method first then call createTable() method");
+             " please call ." +
+                    "DELETETableDependencies(TableName) method first then call createTable() method");
 
         validation(htblColNameType, htblColNameMin, htblColNameMax); // validation method checks if the type of table's columns is one of the 4 types specified in the description,validation also checks if any column does not have maxVal or minVal , hence throws exception
 
@@ -416,12 +417,12 @@ public class DBApp {
 }
     // M1 helpers
     public void DELETETableDependencies(String strTableName) throws DBAppException {
-    	// delete its references in the csv files and listofCreatedTables
+        // delete its references in the csv files and listofCreatedTables
 
         // first, read all data and extract all tables other than the given table
         List<String> data = new ArrayList<>();
         BufferedReader br;
-		try {
+        try {
             br = new BufferedReader(new FileReader("MetaData.csv"));
             String line = br.readLine();
 
@@ -438,25 +439,26 @@ public class DBApp {
 
         // second, write the new data to the csv file
         try {
-			File file = new File("MetaData.csv");
-			new FileWriter(file, false).close();;
+            File file = new File("MetaData.csv");
+            new FileWriter(file, false).close();;
             FileWriter fr = new FileWriter(file, true);
-			PrintWriter printWriter = new PrintWriter(fr);
-			StringBuilder stringBuilder = new StringBuilder();
-			for (String line : data) {
-				stringBuilder.append(line);
-				stringBuilder.append('\n');
-			}
-			printWriter.write(stringBuilder.toString());
-			printWriter.flush();
-			printWriter.close();
+            PrintWriter printWriter = new PrintWriter(fr);
+            StringBuilder stringBuilder = new StringBuilder();
+            for (String line : data) {
+                stringBuilder.append(line);
+                stringBuilder.append('\n');
+            }
+            printWriter.write(stringBuilder.toString());
+            printWriter.flush();
+            printWriter.close();
         } catch (IOException e) {
-			throw new DBAppException(e.getMessage());
-		}
+            throw new DBAppException(e.getMessage());
+        }
 
         // third, delete the table from the list of created tables
         listofCreatedTables.remove(strTableName);
     }
+
     public static void intoMeta(String filePath,List<String> dataline) throws DBAppException
     {
         // first create file object for file placed at location
@@ -1170,8 +1172,7 @@ public class DBApp {
         // while(iterator.hasNext()){
         //     System.out.println(iterator.next());
         // }
-
-
+        System.out.println(db.listofCreatedTables.toString());
 
 
 

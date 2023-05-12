@@ -2,11 +2,5 @@ Table Name,Column Name,Column Type,ClusteringKey,IndexName,IndexType,min,max
 University,Name,java.lang.String,false,University__Id_Name_Job,Octree,aaa,zz
 University,Id,java.lang.Integer,true,University__Id_Name_Job,Octree,1,1000
 University,Job,java.lang.String,false,University__Id_Name_Job,Octree,aaa,zzz
-clubs,date,java.util.Date,false,null,null,1990/1/1,2000/1/1
-clubs,name,java.lang.String,false,null,null,a,z
-clubs,id,java.lang.Integer,true,null,null,1,1000
 
-employee,name,java.lang.String,false,null,null,a,zzzzzzzz
-employee,salary,java.lang.Double,false,null,null,0,10000
-employee,dob,java.util.Date,false,null,null,1930/01/01,2030/12/31
-employee,id,java.lang.Integer,true,null,null,1,1000
+

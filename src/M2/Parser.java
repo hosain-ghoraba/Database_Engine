@@ -3,11 +3,11 @@ package M2;
 import M1.*;
 import M1.DBAppException;
 
-import java.io.File;
+import java.io.*;
 
 import java.util.Iterator;
 import java.util.*;
-
+import M1.DBApp;
 
 public class Parser {
 
@@ -310,6 +310,7 @@ public class Parser {
         if (clusteringKey.equals(""))
             throw new DBAppException("table must have a primary (clustering) key. Specify using: PRIMARY KEY(INTENDED_KEY)");
         DBApp db = new DBApp();
+        //listofCreatedTables.add(tableName);
         db.createTable(tableName, clusteringKey, colNameType, colNameMin, colNameMax);
     }
 
@@ -323,6 +324,7 @@ public class Parser {
         file.delete();
     }
 
+
     public static void main(String[] args) throws DBAppException {
          // you must end every sql statement with space before pressing enter
 
@@ -334,7 +336,7 @@ public class Parser {
 
 
         Parser p = new Parser();
-
+ DBApp dbApp = new DBApp();
         Scanner sc = new Scanner(System.in);
         while (true) {
             String instruction = sc.nextLine();
@@ -362,6 +364,7 @@ public class Parser {
                 if (sa.readNextWord().equals("table")) {
                     sa.nextWord();
                     String tableName = sa.nextWord();
+                    dbApp.DELETETableDependencies(tableName);
                     String path = "src/resources/tables/" + tableName;
                     File index = new File(path);
                     deleteDirectory(index);
