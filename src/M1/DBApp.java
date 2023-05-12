@@ -859,7 +859,7 @@ public class DBApp {
             dataStack.push(separated_SQLTermsResults[i]);
         for(int i = strarrOperators.length - 1; i >= 0; i--)
             operatorsStack.push(strarrOperators[i]);
-        while(!operatorsStack.isEmpty())
+        while(dataStack.size() > 1)
             dataStack.push(applySingleOperator(dataStack.pop(), dataStack.pop(), operatorsStack.pop()));
         return dataStack.pop();
     }
@@ -873,11 +873,8 @@ public class DBApp {
         }
         else if(operand.equals("OR"))
         {
-            for(T obj : set1)
-                result.add(obj);
-            for(T obj : set2)
-                if(!set1.contains(obj))
-                    result.add(obj);
+            result.addAll(set1);
+            result.addAll(set2);
         }
         else if(operand.equals("XOR"))
         {
@@ -1040,6 +1037,7 @@ public class DBApp {
     }
     public Set<Integer> selectPages_UsingIndex_simplified(SQLTerm[] arrSQLTerms, String[] strarrOperators) throws IOException, DBAppException    
     {
+        System.out.println("WE are selecting using index now !");
         Set<Integer> allTablePages = getTablePagesIDs(arrSQLTerms[0]._strTableName);
         String tableName = arrSQLTerms[0]._strTableName;
         List<Set<Integer>> resultPages = new LinkedList<Set<Integer>>();
@@ -1065,6 +1063,8 @@ public class DBApp {
         resultPages.add(allTablePages); // because we didn't add corrrosponding pages for the last 2 terms
         resultPages.add(allTablePages);
         Set<Integer>[] resultPagesArray = resultPages.toArray(new Set[resultPages.size()]);
+        System.out.println("result pages array is " + Arrays.toString(resultPagesArray));
+        System.out.println("result operators array is " + resultOperators);
         return applyOperatorsFromLeftToRight(resultPagesArray, resultOperators.toArray(new String[resultOperators.size()]));
     }             
     private Set<Integer> getPagesFromIndex(SQLTerm sqlTerm1, SQLTerm sqlTerm2, SQLTerm sqlTerm3, String tableName) throws IOException, DBAppException {
@@ -1127,10 +1127,9 @@ public class DBApp {
     public static void main(String[] args) throws IOException, DBAppException {
 
         DBApp db = new DBApp();
-        System.out.println(db.getAllTableIndicies("University"));
+        // System.out.println(db.getAllTableIndicies("University"));
         // db.createIndex("University", new String[]{"Id", "Name", "Job"});
 
-        // db.DELETETableDependencies("University");
 
 		// Hashtable<String, String> htNameType = new Hashtable<>();
 		// htNameType.put("Id", "java.lang.Integer");
@@ -1169,16 +1168,18 @@ public class DBApp {
 
 
 
-		SQLTerm[] arrSQLTerms;
-        arrSQLTerms = new SQLTerm[5];
-        arrSQLTerms[0] = new SQLTerm( "University", "Id", "=", 3);
-        arrSQLTerms[1] = new SQLTerm( "University", "Name", ">", "AAA");
-        arrSQLTerms[2] = new SQLTerm( "University", "Job", "=", "aaa");
-        arrSQLTerms[3] = new SQLTerm( "University", "Id", "=", 5);
-        arrSQLTerms[4] = new SQLTerm( "University", "Name", "=", "ahmad");
-        String[] strarrOperators = new String[] {"AND","AND","AND","AND"};
+		ArrayList<SQLTerm>  listSQLTerms = new ArrayList<>();
+        listSQLTerms.add(new SQLTerm("University", "Name", ">", "A"));
+        listSQLTerms.add(new SQLTerm("University", "Job", ">", "A"));
+        listSQLTerms.add(new SQLTerm("University", "Id", "!=", 7));
+        listSQLTerms.add(new SQLTerm("University", "Job", ">", "A"));
+        listSQLTerms.add(new SQLTerm("University", "Name", ">", "A"));
+        listSQLTerms.add(new SQLTerm("University", "Id", "<", 8));
 
-        Iterator<Row> iterator = db.selectFromTable(arrSQLTerms, strarrOperators);
+
+        String[] strarrOperators = new String[] {"AND","AND","OR","AND","AND"};
+
+        Iterator<Row> iterator = db.selectFromTable(listSQLTerms.toArray(new SQLTerm[listSQLTerms.size()]), strarrOperators);
         while(iterator.hasNext()){
             System.out.println(iterator.next());
         }
