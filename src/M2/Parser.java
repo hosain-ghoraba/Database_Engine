@@ -325,6 +325,14 @@ public class Parser {
 
     public static void main(String[] args) throws DBAppException {
          // you must end every sql statement with space before pressing enter
+
+// مثال لتجربة الكود
+        //create table employee(id int check(id between 1 and 1000),name varchar check (name between 'a' and 'zzzzzzzz'),salary double check(salary between 0 and 10000),dob date check(dob between '1930/01/01' and '2030/12/31'),primary key(id))
+        //insert into employee values(103,'akrm',1000,'1990/10/10);
+        //delete from employee where id = 103 ;
+        //update employee set name = 'akram' where id = 103 ;
+
+
         Parser p = new Parser();
 
         Scanner sc = new Scanner(System.in);
