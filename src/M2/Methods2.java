@@ -151,6 +151,17 @@ public class Methods2 {
 				copyAllRecordsToList(child, toFill);
 
 	}
+	public static List<String> getAllPermutations(String colName1,String colName2, String colName3){
+
+		List<String> result = new LinkedList<>();
+		result.add(colName1+colName2+colName3);
+		result.add(colName1+colName3+colName2);
+		result.add(colName2+colName1+colName3);
+		result.add(colName2+colName3+colName1);
+		result.add(colName3+colName1+colName2);
+		result.add(colName3+colName2+colName1);
+		return result;
+	}
 	public static Comparable parseType(String val, String dataType) throws DBAppException {
 		try {
 			if (dataType.equals("java.lang.Integer")) {
@@ -199,17 +210,7 @@ public class Methods2 {
 	// 	}
 	// 	return result;
 	// }
-	// public static List<String> getAllPermutations(String colName1,String colName2, String colName3){
-
-	// 	List<String> result = new LinkedList<>();
-	// 	result.add(colName1+colName2+colName3);
-	// 	result.add(colName1+colName3+colName2);
-	// 	result.add(colName2+colName1+colName3);
-	// 	result.add(colName2+colName3+colName1);
-	// 	result.add(colName3+colName1+colName2);
-	// 	result.add(colName3+colName2+colName1);
-	// 	return result;
-	// }
+	
 	// private HashSet<Integer> selectPages_UsingIndex(SQLTerm[] arrSQLTerms, String[] strarrOperators) {
     //     List<Object> comparessedParamerters = compact(arrSQLTerms, strarrOperators);
     //     List param1 = (List)comparessedParamerters.get(0);
