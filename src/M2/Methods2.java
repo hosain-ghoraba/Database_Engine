@@ -6,16 +6,18 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import M1.DBAppException;
 import M1.Page;
 
 public class Methods2 {
 
-    public static void fillSetWithPages_satisfyingCondition_forInputValue(Octree octree, HashSet<Integer> toFill, String x_condition, String y_condition, String z_condition, Comparable x_value, Comparable y_value, Comparable z_value ){ // fills the set with all points where (point) (operator) (value) == true
+    public static void fillSetWithPages_satisfyingCondition_forInputValue(Octree octree, Set<Integer> toFill, String x_condition, String y_condition, String z_condition, Comparable x_value, Comparable y_value, Comparable z_value ){ // fills the set with all points where (point) (operator) (value) == true
 		
 		boolean search_is_worthy = Tree_is_candidate_forSearch(octree, x_condition, y_condition, z_condition, x_value, y_value, z_value);
 		if(search_is_worthy) 
@@ -206,6 +208,80 @@ public class Methods2 {
 		result.add(colName3+colName2+colName1);
 		return result;
 	}
+
+
+	// drafts 
+	
+	// private HashSet<Integer> selectPages_UsingIndex(SQLTerm[] arrSQLTerms, String[] strarrOperators) {
+    //     List<Object> comparessedParamerters = compact(arrSQLTerms, strarrOperators);
+    //     List param1 = (List)comparessedParamerters.get(0);
+    //     List param2 = (List)comparessedParamerters.get(1);
+    //     LinkedList<Object>[] pages = new LinkedList[param1.size()];
+    //     String[] operators = new String[param2.size()];
+    //     for (int i = 0; i < param1.size(); i++) 
+    //         pages[i] = (LinkedList<Object>) param1.get(i);
+    //     for (int i = 0; i < param2.size(); i++) 
+    //         operators[i] = (String) param2.get(i);
+    //     LinkedList<Object> obj_pagesID = applyOperatorsFromLeftToRight(pages, strarrOperators);
+    //     HashSet<Integer> pagesID = new HashSet<Integer>();
+    //     for (Object page : obj_pagesID)        
+    //         pagesID.add((Integer) page);      
+    //     return pagesID;
+        
+    // }
+	// public boolean indexCanHelp(SQLTerm[] arrSQLTerms, String[] strarrOperators) throws IOException, DBAppException {
+    //     List<int[]> ANDChains = getAndedTermsBoundries(Arrays.asList(strarrOperators));
+    //     for(int[] chainBoundry : ANDChains)
+    //     {
+    //         if(chainBoundry[1] - chainBoundry[0] >= 2)
+    //         {
+    //             List<Object> chain = new LinkedList<>();
+    //             for(int i = chainBoundry[0] ; i < chainBoundry[1] ; i++)
+    //                 chain.add(arrSQLTerms[i]);
+    //             List<List<Object>> allTriples = Methods2.getSubsetsOfSizeK(chain,3);
+    //             for(List<Object> triple : allTriples)
+    //                 if(termsFormIndex((SQLTerm) triple.get(0), (SQLTerm) triple.get(1), (SQLTerm) triple.get(2), arrSQLTerms[0]._strTableName))
+    //                     return true;         
+    //         }
+            
+    //     }
+    //     return false;
+        
+    // }
+	// public static List<int[]> getAndedTermsBoundries(List<String> operators){
+	// 	List<int[]> result = new LinkedList<>();
+	// 	for(int i = 0; i < operators.size(); i++)
+	// 		if(operators.get(i).equals("AND"))	
+	// 		{
+	// 			int j;
+	// 			for(j = i+1; j < operators.size(); j++)
+	// 			{
+	// 				if(operators.get(j).equals("AND"))
+	// 					continue;
+	// 				else
+	// 					break;
+	// 			}
+	// 			result.add(new int[]{i, j});// i is the index of the sql operator before the first AND, j is the index of the sql operator after the last AND		
+	// 			i = j;
+		
+	// 		}
+	// 	return result;
+
+
+	// } 
+	// public List<Object> compact(SQLTerm[] arrSQLTerms, String[] strarrOperators){// to complete later
+    //     // convert inputs to lists
+    //     List<SQLTerm> termsList = new LinkedList<SQLTerm>();
+    //     List<String> operatorsList = new LinkedList<String>();
+    //     for(SQLTerm term : arrSQLTerms)
+    //         termsList.add(term);
+    //     for(String operator : strarrOperators)
+    //         operatorsList.add(operator);
+    //     return null; // to remove later    
+
+
+    // }
+	
 	public static void main(String[] args) {
 
 		Object o = Integer.valueOf(0);

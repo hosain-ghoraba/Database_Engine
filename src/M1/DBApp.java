@@ -360,12 +360,12 @@ public class DBApp {
         {
             validateSQLTerms(arrSQLTerms);
             validateOperators(arrSQLTerms, strarrOperators);
-            HashSet<Integer> candidatePages = new HashSet<Integer>();
-            if(indexCanHelp(arrSQLTerms,strarrOperators))
-                candidatePages = selectPages_UsingIndex(arrSQLTerms, strarrOperators);
+            Set<Integer> candidatePages = new HashSet<Integer>();
+            if(indexCanHelp_simplified(arrSQLTerms,strarrOperators))
+                candidatePages = selectPages_UsingIndex_simplified(arrSQLTerms, strarrOperators);
             else
-                candidatePages = selectPages_WithoutIndex(arrSQLTerms, strarrOperators);
-            LinkedList<Row> matchingRows = selectMatchingRows(arrSQLTerms, strarrOperators, candidatePages);
+                candidatePages = selectPages_WithoutIndex(arrSQLTerms[0]._strTableName);
+            Set<Row> matchingRows = selectMatchingRows(arrSQLTerms, strarrOperators, candidatePages);
             return matchingRows.iterator();
         }
         catch(Exception e)
@@ -780,61 +780,15 @@ public class DBApp {
     }
 
     // select helpers
-    public boolean indexCanHelp(SQLTerm[] arrSQLTerms, String[] strarrOperators) throws IOException, DBAppException {
-        List<int[]> ANDChains = getAndedTermsBoundries(Arrays.asList(strarrOperators));
-        for(int[] chainBoundry : ANDChains)
-        {
-            if(chainBoundry[1] - chainBoundry[0] >= 2)
-            {
-                List<Object> chain = new LinkedList<>();
-                for(int i = chainBoundry[0] ; i < chainBoundry[1] ; i++)
-                    chain.add(arrSQLTerms[i]);
-                List<List<Object>> allTriples = Methods2.getSubsetsOfSizeK(chain,3);
-                for(List<Object> triple : allTriples)
-                    if(termsFormIndex((SQLTerm) triple.get(0), (SQLTerm) triple.get(1), (SQLTerm) triple.get(2), arrSQLTerms[0]._strTableName))
-                        return true;
-            }
-
-        }
-        return false;
+    private Set<Integer> selectPages_WithoutIndex(String tableName) {
+        return getTablePagesIDs(tableName);
 
     }
-    private HashSet<Integer> selectPages_UsingIndex(SQLTerm[] arrSQLTerms, String[] strarrOperators) {
-        List<Object> comparessedParamerters = compact(arrSQLTerms, strarrOperators);
-        List param1 = (List)comparessedParamerters.get(0);
-        List param2 = (List)comparessedParamerters.get(1);
-        LinkedList<Object>[] pages = new LinkedList[param1.size()];
-        String[] operators = new String[param2.size()];
-        for (int i = 0; i < param1.size(); i++)
-            pages[i] = (LinkedList<Object>) param1.get(i);
-        for (int i = 0; i < param2.size(); i++)
-            operators[i] = (String) param2.get(i);
-        LinkedList<Object> obj_pagesID = applyOperatorsFromLeftToRight(pages, strarrOperators);
-        HashSet<Integer> pagesID = new HashSet<Integer>();
-        for (Object page : obj_pagesID)
-            pagesID.add((Integer) page);
-        return pagesID;
-
-    }
-    private HashSet<Integer> selectPages_WithoutIndex(SQLTerm[] arrSQLTerms, String[] strarrOperators) {
-        String tableName = arrSQLTerms[0]._strTableName;
-        File directory = new File("src/resources/tables/" + tableName + "/pages");
-        File[] files = directory.listFiles();
-        HashSet<Integer> pages_ids = new HashSet<Integer>();
-        for (File file : files)
-        {
-            String fileName = file.getName(); // page10.ser for example
-            pages_ids.add(Integer.parseInt(fileName.substring(4, fileName.length()-4))); // to get the 10 only from page10.ser
-
-        }
-        return pages_ids;
-
-    }
-    private LinkedList<Row> selectMatchingRows(SQLTerm[] arrSQLTerms, String[] strarrOperators, HashSet<Integer> candidatePages) throws DBAppException, IOException {
-    LinkedList<Object>[] separated_SQLTermsResults = new LinkedList[arrSQLTerms.length];
+    private Set<Row> selectMatchingRows(SQLTerm[] arrSQLTerms, String[] strarrOperators, Set<Integer> candidatePages) throws DBAppException, IOException {
+    Set<Row>[] separated_SQLTermsResults = new Set[arrSQLTerms.length];
     for(int i = 0 ; i < separated_SQLTermsResults.length ; i++)
-        separated_SQLTermsResults[i] = new LinkedList<Object>();
-    for (Integer page_id : candidatePages)
+        separated_SQLTermsResults[i] = new HashSet<Row>();
+    for (Integer page_id : candidatePages) 
     {
         String pagePath = "src/resources/tables/" + arrSQLTerms[0]._strTableName + "/pages/page" + page_id + ".ser";
         Page page = (Page) deserialize(pagePath);
@@ -844,16 +798,11 @@ public class DBApp {
     }
     // now we have all the rows that match each SQLTerm in separated_SQLTermsResults
     // we need to apply the operators on them
-
-    LinkedList<Object> resultObjects =  applyOperatorsFromLeftToRight(separated_SQLTermsResults, strarrOperators);
-    LinkedList<Row> resultRows = new LinkedList<Row>();
-    for(Object obj : resultObjects)
-        resultRows.add((Row) obj);
-    return resultRows;
+    return applyOperatorsFromLeftToRight(separated_SQLTermsResults, strarrOperators);
     }
 
-    // indexCanHelp helpers
-    public Set<String> getAllTableIndicies(String tableName) throws IOException {
+    // misc helpers
+    public Set<String> getAllTableIndicies(String tableName) throws IOException { 
         Set<String> indicies = new HashSet<>();
         BufferedReader br = new BufferedReader(new FileReader("MetaData.csv"));
         String line = br.readLine();
@@ -866,51 +815,14 @@ public class DBApp {
         }
         br.close();
         return indicies;
-    }
-    public static List<int[]> getAndedTermsBoundries(List<String> operators){
-		List<int[]> result = new LinkedList<>();
-		for(int i = 0; i < operators.size(); i++)
-			if(operators.get(i).equals("AND"))
-			{
-				int j;
-				for(j = i+1; j < operators.size(); j++)
-				{
-					if(operators.get(j).equals("AND"))
-						continue;
-					else
-						break;
-				}
-				result.add(new int[]{i, j});// i is the index of the sql operator before the first AND, j is the index of the sql operator after the last AND
-				i = j;
-
-			}
-		return result;
-
-
-	}
-   public boolean termsFormIndex(SQLTerm term1, SQLTerm term2, SQLTerm term3, String tableName) throws IOException{
+    }  
+    public boolean termsFormIndex(SQLTerm term1, SQLTerm term2, SQLTerm term3, String tableName) throws IOException{
         for(String indexName : getAllTableIndicies(tableName))
             for(String posiibleIndexName : Methods2.getAllPermutations(term1._strColumnName, term2._strColumnName, term3._strColumnName))
                 if(indexName.equals(posiibleIndexName + "Index"))
                    return true;
-        return false;
-    }
-
-    // select with index helpers
-    public List<Object> compact(SQLTerm[] arrSQLTerms, String[] strarrOperators){// to complete later
-        // convert inputs to lists
-        List<SQLTerm> termsList = new LinkedList<SQLTerm>();
-        List<String> operatorsList = new LinkedList<String>();
-        for(SQLTerm term : arrSQLTerms)
-            termsList.add(term);
-        for(String operator : strarrOperators)
-            operatorsList.add(operator);
-        return null; // to remove later    
-
-
-    }
-
-
+        return false;        
+    }    
     public String getColAxisInIndex(String indexName, String colName){
 
         String indexColumns = indexName.substring(0, indexName.length()-5); // remove "Index" from indexName
@@ -922,8 +834,8 @@ public class DBApp {
     }
 
     // selectMatchingRows helpers
-    private LinkedList<Row> singleSQLTermResult(SQLTerm sqlTerm, Page page) throws IOException, DBAppException {
-        LinkedList<Row> result = new LinkedList<Row>();
+    private Set<Row> singleSQLTermResult(SQLTerm sqlTerm, Page page) throws IOException, DBAppException { 
+        Set<Row> result = new HashSet<Row>();
         Comparable sqlTermValue = (Comparable) sqlTerm._objValue;
         for(Row row : page.getData())
         {
@@ -940,8 +852,8 @@ public class DBApp {
         }
         return result;
     }
-    private LinkedList<Object> applyOperatorsFromLeftToRight(LinkedList<Object>[] separated_SQLTermsResults, String[] strarrOperators) { // to do
-        Stack<LinkedList<Object>> dataStack = new Stack<LinkedList<Object>>();
+    private <T> Set<T> applyOperatorsFromLeftToRight(Set<T>[] separated_SQLTermsResults, String[] strarrOperators) { // to do
+        Stack<Set<T>> dataStack = new Stack<>();
         Stack<String> operatorsStack = new Stack<String>();
         for(int i = separated_SQLTermsResults.length - 1; i >= 0; i--)
             dataStack.push(separated_SQLTermsResults[i]);
@@ -951,30 +863,28 @@ public class DBApp {
             dataStack.push(applySingleOperator(dataStack.pop(), dataStack.pop(), operatorsStack.pop()));
         return dataStack.pop();
     }
-    private LinkedList<Object> applySingleOperator(LinkedList<Object> list1, LinkedList<Object> list2, String operand) {
-        LinkedList<Object> result = new LinkedList<Object>();
-        HashSet<Object> set1 = new HashSet<Object>(list1); // convert to hashset to increase performance of contains() from O(n) to O(1)
-        HashSet<Object> set2 = new HashSet<Object>(list2); // convert to hashset to increase performance of contains() from O(n) to O(1)
+    private <T> Set<T> applySingleOperator(Set<T> set1, Set<T> set2, String operand) { 
+        Set<T> result = new HashSet<>(set1.size() + set2.size());
         if(operand.equals("AND"))
         {
-            for(Object obj : set1)
+            for(T obj : set1)
                 if(set2.contains(obj))
                     result.add(obj);
         }
         else if(operand.equals("OR"))
         {
-            for(Object obj : set1)
+            for(T obj : set1)
                 result.add(obj);
-            for(Object obj : set2)
+            for(T obj : set2)
                 if(!set1.contains(obj))
                     result.add(obj);
         }
         else if(operand.equals("XOR"))
         {
-            for(Object obj : set1)
+            for(T obj : set1)
                 if(!set2.contains(obj))
                     result.add(obj);
-            for(Object obj : set2)
+            for(T obj : set2)
                 if(!set1.contains(obj))
                     result.add(obj);
         }
@@ -1109,6 +1019,111 @@ public class DBApp {
 
     }
 
+    public Set<Integer> getTablePagesIDs(String tableName)
+    {
+        File directory = new File("src/resources/tables/" + tableName + "/pages");
+        File[] files = directory.listFiles();
+        HashSet<Integer> pages_ids = new HashSet<Integer>();
+        for (File file : files) 
+        {
+            String fileName = file.getName(); // page10.ser for example
+            pages_ids.add(Integer.parseInt(fileName.substring(4, fileName.length()-4))); // to get the 10 only from page10.ser
+
+        }
+        return pages_ids;   
+    }
+    public boolean indexCanHelp_simplified(SQLTerm[] arrSQLTerms, String[] strarrOperators) throws DBAppException, IOException {
+
+        String tableName = arrSQLTerms[0]._strTableName;
+        for(int i = 0; i < arrSQLTerms.length-2; i++)
+            if(termsFormIndex(arrSQLTerms[i] ,arrSQLTerms[i+1] , arrSQLTerms[i+2] , tableName))
+                if(strarrOperators[i].equals("AND") && strarrOperators[i+1].equals("AND"))
+                    return true;
+        return false;
+    }
+    public Set<Integer> selectPages_UsingIndex_simplified(SQLTerm[] arrSQLTerms, String[] strarrOperators) throws IOException, DBAppException    
+    {
+        Set<Integer> allTablePages = getTablePagesIDs(arrSQLTerms[0]._strTableName);
+        String tableName = arrSQLTerms[0]._strTableName;
+        List<Set<Integer>> resultPages = new LinkedList<Set<Integer>>();
+        for(int i = 0; i < arrSQLTerms.length-2; i++)
+        {
+            if(termsFormIndex(arrSQLTerms[i] ,arrSQLTerms[i+1] , arrSQLTerms[i+2] , tableName))
+            {
+                if(strarrOperators[i].equals("AND") && strarrOperators[i+1].equals("AND"))
+                {
+                    resultPages.add(getPagesFromIndex(arrSQLTerms[i], arrSQLTerms[i+1], arrSQLTerms[i+2], tableName));
+                    i+=2;
+                }
+            }
+            else
+            {
+                resultPages.add(allTablePages);
+            }
+
+        }
+
+        resultPages.add(allTablePages); // because we didn't add corrrosponding pages for the last 2 terms
+        resultPages.add(allTablePages);
+        Set<Integer>[] resultPagesArray = resultPages.toArray(new Set[resultPages.size()]);
+        return applyOperatorsFromLeftToRight(resultPagesArray, strarrOperators);
+    }             
+    private Set<Integer> getPagesFromIndex(SQLTerm sqlTerm1, SQLTerm sqlTerm2, SQLTerm sqlTerm3, String tableName) throws IOException, DBAppException {
+       
+        Set<String> allIndicies = getAllTableIndicies(tableName);
+        String targetIndexName = "";
+        boolean found = false;
+        for(String currentIndex : allIndicies)
+        {
+            if(found)
+                break;
+            for(String possibleName : Methods2.getAllPermutations(sqlTerm1._strColumnName, sqlTerm2._strColumnName, sqlTerm3._strColumnName))
+            {
+                if(currentIndex.equals(possibleName))
+                {
+                    targetIndexName = currentIndex;
+                    found = true;
+                    break;
+                }
+            }
+        }
+        SQLTerm x_dimention_term = null;
+        SQLTerm y_dimention_term = null;
+        SQLTerm z_dimention_term = null;
+        String term1_dimension = getColAxisInIndex(targetIndexName, sqlTerm1._strColumnName);
+        String term2_dimension = getColAxisInIndex(targetIndexName, sqlTerm2._strColumnName);
+        String term3_dimension = getColAxisInIndex(targetIndexName, sqlTerm3._strColumnName);
+
+        if(term1_dimension.equals("x"))
+            x_dimention_term = sqlTerm1;
+        else if(term1_dimension.equals("y"))
+            y_dimention_term = sqlTerm1;
+        else if(term1_dimension.equals("z"))
+            z_dimention_term = sqlTerm1;
+
+        if(term2_dimension.equals("x"))
+            x_dimention_term = sqlTerm2;
+        else if(term2_dimension.equals("y"))
+            y_dimention_term = sqlTerm2;
+        else if(term2_dimension.equals("z"))
+            z_dimention_term = sqlTerm2;
+
+        if(term3_dimension.equals("x"))
+            x_dimention_term = sqlTerm3;
+        else if(term3_dimension.equals("y"))
+            y_dimention_term = sqlTerm3;
+        else if(term3_dimension.equals("z"))
+            z_dimention_term = sqlTerm3;
+
+        String octreePath = "src/resources/tables/" + tableName + "/indices/" + targetIndexName + ".ser";
+        Octree octree = (Octree) deserialize(octreePath);
+        Set<Integer> resultPages = new HashSet<>();
+        Methods2.fillSetWithPages_satisfyingCondition_forInputValue(octree, resultPages,
+            x_dimention_term._strOperator, y_dimention_term._strOperator, z_dimention_term._strOperator,
+            (Comparable) x_dimention_term._objValue,(Comparable) y_dimention_term._objValue,(Comparable) z_dimention_term._objValue);
+        serialize(octreePath, octree);
+        return resultPages;
+    }
 
     public static void main(String[] args) throws IOException, DBAppException {
 
