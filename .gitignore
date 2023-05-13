@@ -36,6 +36,8 @@ bin/
 .vscode/
 src/resources/tables/
 target/
+metadata/
+
 
 
 
