@@ -24,6 +24,7 @@ hs_err_pid*
 
 
 # misc
+MetaData.csv
 *.ser
 
 .idea/
@@ -36,7 +37,6 @@ bin/
 .vscode/
 src/resources/tables/
 target/
-MetaData.csv/
 
 
 
