@@ -36,7 +36,7 @@ bin/
 .vscode/
 src/resources/tables/
 target/
-metadata.csv/
+MetadData.csv/
 
 
 
