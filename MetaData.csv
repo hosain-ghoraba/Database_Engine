@@ -1,4 +1,0 @@
-Table Name,Column Name,Column Type,ClusteringKey,IndexName,IndexType,min,max
-University,Name,java.lang.String,false,IdNameJobIndex,Octree,aaa,zz
-University,Id,java.lang.Integer,true,IdNameJobIndex,Octree,1,1000
-University,Job,java.lang.String,false,IdNameJobIndex,Octree,aaa,zz
