@@ -53,7 +53,8 @@ public class Octree implements Serializable {
 	public LinkedList<Integer> getPagesAtPoint(Comparable x, Comparable y, Comparable z) {
 		validateNotNull(x, y, z);
 		if(!this.pointExists(x, y, z))
-			throw new IllegalArgumentException("Point " + x + " " + y + " " + z + " doesn't exist in the octree");
+			//throw new IllegalArgumentException("Point " + x + " " + y + " " + z + " doesn't exist in the octree");
+			return new LinkedList<Integer>(); // return empty list
 		if(this.isLeaf())
 			return records.get(new OctPoint(x,y,z));
 		else

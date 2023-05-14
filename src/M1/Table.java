@@ -496,8 +496,14 @@ ______
     }
     
     
-    public int findRowToUpdORdel(Object key, int candidateIdx) throws DBAppException {
-		Vector<Row> candidatePageData = this.loadPage(candidateIdx).getData() ;
+    public int findRowToUpdORdel(Object key, int candidateIdx, boolean isPID_falseForVectorIndex_trueForPIDonDisk) throws DBAppException {
+		Vector<Row> candidatePageData;
+        if(isPID_falseForVectorIndex_trueForPIDonDisk)
+            candidatePageData = this.loadPageByPID(candidateIdx).getData();
+        else
+            candidatePageData = this.loadPage(candidateIdx).getData();
+
+
 		//binary searching on row to be updated or deleted
         int lo = 0, hi = candidatePageData.size() - 1;
         while (lo <= hi) {
@@ -513,6 +519,89 @@ ______
 		return -1;
 	}
 
+    private String getClusteringIndexName() /* if exists, otherwise null */ throws DBAppException{
+        BufferedReader br;
+		try {
+            br = new BufferedReader(new FileReader("MetaData.csv"));
+            String line ;
+            br.readLine();
+            line = br.readLine();
+            while (line != null) {
+                String[] values = line.split(",");
+                if(values[0].equals(strTableName) && values[3].contains("true") /* this is ,y clustering key of the table */){
+                    if(!values[5].contains("null")) {
+                        br.close();
+                        return values[4];
+                    } else{ br.close(); return null;}
+                }
+                line = br.readLine();
+            }
+
+            br.close();
+
+            return null;
+        } catch ( IOException e2) {
+            throw new DBAppException("Error reading csv file");
+        }
+    }
+
+    public void updateTableRow(Object clstrKeyVal, Hashtable<String, Object> colNameVal) throws DBAppException {
+        String clusteringIndexName = getClusteringIndexName();
+        LinkedList<Integer> addressedPagesID;
+        if(clusteringIndexName != null) {
+            //the page(s) to be deleted are the ones that are got from the clustering index
+            
+            Tuple3 tupIndex = null;
+            for (Tuple3 tuple : indicies) {
+                if(tuple.X_idx.equals(strClusteringKeyColumn)){
+                    tupIndex = tuple;
+                    break;
+                }
+            }
+
+            Hashtable<String,Object> htblclusterKeyVal = new Hashtable<>();
+            htblclusterKeyVal.put(strClusteringKeyColumn, clstrKeyVal);
+
+            
+            Octree tree = (Octree) DBApp.deserialize("src/resources/tables/"+ strTableName + "/Indicies/"+tupIndex.getFilename());
+
+            Axis[] axis = tupIndex.getGivenAxes(colNameVal); //guaranteed to be 1 axis only
+            addressedPagesID = tree.getPagesAtPartialPoint((Comparable)clstrKeyVal, axis[0]);
+
+            
+        } else {
+            //the page(s) to be deleted is the one that is got from Pages BS & have the clustering key value
+
+            addressedPagesID = new LinkedList<>();
+            int candidateIdx = this.binarySrch(clstrKeyVal);
+
+            try {
+                addressedPagesID.add( Integer.parseInt(vecPages.get(candidateIdx).split("page")[1])  ); //extract page id from name
+            } catch (Exception e) {
+                throw new DBAppException("Error reading page and extracting data");
+            }
+        }
+
+            // TODO : update the row in the index
+            for (Integer pid : addressedPagesID) {
+                int rowIdxToUpdate = this.findRowToUpdORdel(clstrKeyVal, pid , true);
+                if (rowIdxToUpdate < 0) 
+                    continue;
+                else {
+                    //row and page found to be updated
+                    Page candidatePage = this.loadPageByPID(pid);
+                    candidatePage.updateRow(this,rowIdxToUpdate, colNameVal);
+                    this.savePageToDisk(candidatePage, pid);
+                    return;
+                }
+            }
+
+            
+            System.out.println("No such row matches to update it");
+            return;
+    }
+
+
     private boolean inputHasIndex(Hashtable<String, Object> colNameVal) throws DBAppException{
         BufferedReader br;
 		try {
@@ -522,7 +611,7 @@ ______
             line = br.readLine();
             while (line != null) {
                 String[] values = line.split(",");
-                if(values[0].equals(strTableName) && !values[5].contains("null") && colNameVal.containsKey(values[1])){
+                if(values[0].equals(strTableName) && values[5].contains("Index") && colNameVal.containsKey(values[1])){
                     br.close();
                     return true;
                 }
@@ -536,6 +625,49 @@ ______
             throw new DBAppException("Error reading csv file");
         }
     }
+
+    public int deleteRowWITHCKey(Object clusteringKeyVal ,Hashtable<String, Object> colNameVal) throws DBAppException{
+        LinkedList<Integer> addressedPagesID;
+
+        if(inputHasIndex(colNameVal)){
+            //get the pages to be deleted from the index
+            addressedPagesID = getPagesToDeleteWithIndex(colNameVal);
+            
+        }
+        else {
+            //the page(s) to be deleted is the one that is got from Pages BS & have the clustering key value
+            addressedPagesID = new LinkedList<>();
+            int candidateIdx = this.binarySrch(clusteringKeyVal);
+
+            try {
+                addressedPagesID.add( Integer.parseInt(vecPages.get(candidateIdx).split("page")[1])  ); //extract page id from name
+            } catch (Exception e) {
+                throw new DBAppException("Error reading page and extracting data");
+            }
+        }
+
+        // old normal code of binary searching on Page Rows
+        // once you find the row to delete, break; since it's unique
+
+
+        //TODO: delete from index
+        for (Integer pid : addressedPagesID) {
+            
+            int rowtodelete = this.findRowToUpdORdel(clusteringKeyVal, pid, true);
+            if (rowtodelete < 0)
+                continue;
+            else{
+                Page candidatePage = this.loadPage(pid);
+                candidatePage.deleteEntry(rowtodelete);
+                this.savePageToDisk(candidatePage, pid);
+                return 1;
+            }
+
+        }
+        
+        System.out.println("No rows matches these conditions.");
+        return 0;
+    }
     
     public int deleteRowsWithoutCKey(Hashtable<String, Object> colNameVal) throws DBAppException {
         LinkedList<Integer> addressedPagesID;
@@ -547,8 +679,12 @@ ______
 
             //formulate and initiate the pagesIds with the one in vecPages to linear scan the whole table
             addressedPagesID = new LinkedList<>();
-            for (int i = 0; i < vecPages.size(); i++) {
-                addressedPagesID.add( Integer.parseInt(vecPages.get(i).split("page")[1])  ); //extract page id from name
+            try{
+                for (int i = 0; i < vecPages.size(); i++) {
+                    addressedPagesID.add( Integer.parseInt(vecPages.get(i).split("page")[1])  ); //extract page id from name
+                }
+            } catch (Exception e) {
+                throw new DBAppException("Error reading page and extracting data");
             }
         }
 

@@ -199,8 +199,11 @@ public class DBApp {
             throw new DBAppException("One of the parameters is null!");
         if (!listofCreatedTables.contains(strTableName))
             throw new DBAppException("You cannot update a table that has not been created yet");
+
         Methods.check_strings_are_Alphabitical(htblColNameValue); // check if all string records inside the hashtable are alphabitical
         Methods.convert_strings_To_Lower_Case(htblColNameValue); // convert all string records in hashtable to lower case
+
+        
         // 1- fetch the table from the disk
         String path = "src/resources/tables/" + strTableName + "/" + strTableName + ".ser";
         Table tblToUpdate = (Table) deserialize(path);
@@ -213,7 +216,7 @@ public class DBApp {
 //            tblToUpdate.validateColType(colType(columnName,strTableName));
             Object newValue = htblColNameValue.get(columnName);
 
-            // if it is the value of the clustering key, insert into the first cell
+            // if it is the value of the clustering key, throw exception
             if (columnName.equals(tblToUpdate.getStrClusteringKeyColumn())) {
                 //v.add(0, strClusteringKeyValue);
             	throw new DBAppException("You cannot update the clustering key");
@@ -228,23 +231,10 @@ public class DBApp {
             String clustercolumn = tblToUpdate.getStrClusteringKeyColumn();
             Column c = tblToUpdate.getColumn(clustercolumn);
             Object objClusteringKeyVal = tblToUpdate.getValueBasedOnType(strClusteringKeyValue, c);
-            candidateIdx = tblToUpdate.binarySrch(objClusteringKeyVal);
-            Page candidatePage = tblToUpdate.loadPage(candidateIdx);
-
-            int rowIdxToUpdate = tblToUpdate.findRowToUpdORdel(objClusteringKeyVal, candidateIdx);
-            if (rowIdxToUpdate < 0) {
-                System.out.println("No such row matches to update it");
-                return;
-            } else {
-                //rowToUpdate.setData(v);
-                candidatePage.updateRow(tblToUpdate,rowIdxToUpdate, htblColNameValue);
-            }
-            tblToUpdate.savePageToDisk(candidatePage, candidateIdx);
+            
+            tblToUpdate.updateTableRow(objClusteringKeyVal, htblColNameValue);
         }
 
-//        else {
-//            tblToUpdate.deleteRowsWithoutCKey(htblColNameValue);
-//        }
 
         // 4- Update the values of the columns in the row
         //rowToUpdate.setData(v);
@@ -309,20 +299,13 @@ public class DBApp {
         }
 
         if (clusteringKeyVal != null) {
-            int candidateIdx = tblToUpdate.binarySrch(clusteringKeyVal);
-            Page candidatePage = tblToUpdate.loadPage(candidateIdx);
+            int deletedrows = tblToUpdate.deleteRowWITHCKey(clusteringKeyVal, htblColNameValue);
+            System.out.println("Number of deleted rows: " + deletedrows);
 
-            int rowtodelete = tblToUpdate.findRowToUpdORdel(clusteringKeyVal, candidateIdx);
-            if (rowtodelete < 0)
-                System.out.println("No rows matches these conditions.");
-            else
-                candidatePage.deleteEntry(rowtodelete);
-
-            tblToUpdate.savePageToDisk(candidatePage, candidateIdx);
-            
         } else {
-        	
-            tblToUpdate.deleteRowsWithoutCKey(htblColNameValue);
+            int deletedrows = tblToUpdate.deleteRowsWithoutCKey(htblColNameValue);
+            System.out.println("Number of deleted rows: " + deletedrows);
+
         }
 
         // 3- delete page if empty
