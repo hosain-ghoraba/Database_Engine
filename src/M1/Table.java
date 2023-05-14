@@ -1,8 +1,13 @@
 package M1;
+import M2.Axis;
 import M2.Octree;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.text.*;
 
 public class Table implements Serializable
@@ -22,6 +27,64 @@ public class Table implements Serializable
     private Hashtable<String,Integer> htblColNameIndex = new Hashtable<>(); //helper
     private int MaximumRowsCountinTablePage, pagesIDcounter = -1;
     private Vector<Octree> index;
+    private Vector<Tuple3> indicies;
+
+    ///////////////3-Tuple
+
+    
+	static class Tuple3 implements Serializable{
+		String X_idx, Y_idx, Z_idx; //column names
+		
+		public Tuple3(String X_index,String Y_index,String Z_index) {
+			X_idx = X_index;
+			Y_idx = Y_index;
+			Z_idx = Z_index;
+		}
+		
+        public String toString() {
+            return "O("+X_idx + ", " + Y_idx + ", " + Z_idx +")";
+        }
+		
+		public String getFilename() {
+			return X_idx + Y_idx + Z_idx + "Index.ser";
+		}
+		
+		public boolean isFullIndexGivenInQuery(Hashtable<String, Object> htblcolNameVal) { 
+			return htblcolNameVal.containsKey(X_idx) && htblcolNameVal.containsKey(Y_idx) && htblcolNameVal.containsKey(Z_idx);
+		}
+
+        public int getNoOfPartialIndexColumns(Hashtable<String, Object> htblcolNameVal) {
+            return (htblcolNameVal.containsKey(X_idx)? 1 : 0) + (htblcolNameVal.containsKey(Y_idx)? 1 : 0) + (htblcolNameVal.containsKey(Z_idx)? 1 : 0);
+        }
+
+        public Axis[] getGivenAxes(Hashtable<String, Object> htblcolNameVal){
+
+            Axis[] axes = new Axis[getNoOfPartialIndexColumns(htblcolNameVal)];
+            int i = 0;
+            if(htblcolNameVal.containsKey(X_idx))
+                axes[i++] = Axis.X;
+            if(htblcolNameVal.containsKey(Y_idx))
+                axes[i++] = Axis.Y;
+            if(htblcolNameVal.containsKey(Z_idx))
+                axes[i++] = Axis.Z;
+
+            return axes;
+        }
+
+        public Comparable getValueOfAxis(Axis ax, Hashtable<String, Object> htblcolNameVal) {
+            if(ax == Axis.X)
+                return (Comparable) htblcolNameVal.get(X_idx);
+            else if(ax == Axis.Y)
+                return (Comparable) htblcolNameVal.get(Y_idx);
+            else
+                return (Comparable) htblcolNameVal.get(Z_idx);
+        }
+			
+	}
+
+    ////////////////////
+
+
 
     public Table(String strTableName, String strClusteringKeyColumn, Hashtable<String,String> htblColNameType,
                  Hashtable<String,String> htblColNameMin,Hashtable<String,String> htblColNameMax , int MaximumRowsCountinTablePage ) {
@@ -30,6 +93,7 @@ public class Table implements Serializable
         this.strClusteringKeyColumn = strClusteringKeyColumn;
         this.MaximumRowsCountinTablePage = MaximumRowsCountinTablePage;
         index = new Vector<>();
+        indicies = new Vector<>();
         vecColumns = new Vector<>(); // initially ,the vector size is by default 10
 
 
@@ -314,6 +378,18 @@ ______
         return page;
     }
 
+    public Page loadPageByPID(int pid) throws DBAppException {
+    	if(vecPages.size() == 0)
+            throw new DBAppException("Table is Empty & Cannot perform any CRUD operations");
+        if(pid < 0 || pid > pagesIDcounter)
+            throw new DBAppException("Page index not valid or out of bounds");
+
+        String path ="src/resources/tables/"+strTableName+ "/pages/page" + pid + ".ser";
+        Page page = (Page) DBApp.deserialize(path);
+
+        return page;
+    }
+    
     public void savePageToDisk( Page page , int pageIndex) throws DBAppException {
         String path ="src/resources/tables/"+strTableName+ "/pages/page" + page.getPid() + ".ser";
         DBApp.serialize( path,page );
@@ -353,6 +429,10 @@ ______
 
     public void setVecPages(Vector<String> vecPages) {
         this.vecPages = vecPages;
+    }
+
+    public Vector<Tuple3> getIndices(){
+        return indicies;
     }
 
     public Hashtable<String, String> getHtblColNameType() {
@@ -432,11 +512,58 @@ ______
 		
 		return -1;
 	}
+
+    private boolean inputHasIndex(Hashtable<String, Object> colNameVal) throws DBAppException{
+        BufferedReader br;
+		try {
+            br = new BufferedReader(new FileReader("MetaData.csv"));
+            String line ;
+            br.readLine();
+            line = br.readLine();
+            while (line != null) {
+                String[] values = line.split(",");
+                if(values[0].equals(strTableName) && !values[5].contains("null") && colNameVal.containsKey(values[1])){
+                    br.close();
+                    return true;
+                }
+                line = br.readLine();
+            }
+
+            br.close();
+
+            return false;
+        } catch ( IOException e2) {
+            throw new DBAppException("Error reading csv file");
+        }
+    }
     
     public int deleteRowsWithoutCKey(Hashtable<String, Object> colNameVal) throws DBAppException {
+        LinkedList<Integer> addressedPagesID;
+        if(inputHasIndex(colNameVal)){
+            //get the pages to be deleted from the index
+            addressedPagesID = getPagesToDeleteWithIndex(colNameVal);
+            
+        } else{
+
+            //formulate and initiate the pagesIds with the one in vecPages to linear scan the whole table
+            addressedPagesID = new LinkedList<>();
+            for (int i = 0; i < vecPages.size(); i++) {
+                addressedPagesID.add( Integer.parseInt(vecPages.get(i).split("page")[1])  ); //extract page id from name
+            }
+        }
+
+        //continue to scan linearly with old code
+        ///////////////////////////////////////////TODO Delete record from Octree Index
     	int items = 0;
-		for (int i = 0; i < vecPages.size(); i++) {
-            Page page = loadPage(i);
+        Set<Integer> checkedPages = ConcurrentHashMap.newKeySet();
+
+		for (int i = 0; i < addressedPagesID.size(); i++) {
+            if(checkedPages.contains(addressedPagesID.get(i))) continue;
+
+            int pid = addressedPagesID.get(i);
+            checkedPages.add(pid);
+            
+            Page page = loadPageByPID(pid);
 			Iterator<Row> iterator = page.getData().iterator();
 			while (iterator.hasNext()) {
 				Row row = (Row) iterator.next();
@@ -462,5 +589,70 @@ ______
     	
     	return items;
 	}
+
+    private LinkedList<Integer> getPagesToDeleteWithIndex(Hashtable<String, Object> colNameVal) throws DBAppException {
+        //Delete with index logic - either full or partial
+
+        String indexFilename = "";
+        Tuple3 correctindex = null;
+		for (Tuple3 tuple : indicies) {
+            if(tuple.isFullIndexGivenInQuery(colNameVal)){
+                indexFilename = tuple.getFilename();
+                correctindex = tuple;
+            }
+        }
+
+        if(indexFilename.length() == 0){ // get pages to delete with partial index and return
+            return getPagesToDeleteWithPartialIndex(colNameVal);
+        }
+
+        //delete with full index logic ....
+        Octree tree = (Octree) DBApp.deserialize("src/resources/"+ strTableName + "/Indicies/"+indexFilename);
+
+        LinkedList<Integer> pages =tree.getPagesAtPoint((Comparable)colNameVal.get(correctindex.X_idx), (Comparable)colNameVal.get(correctindex.Y_idx), (Comparable)colNameVal.get(correctindex.Z_idx));
+        return pages;
+    }
+
+
+    private LinkedList<Integer> getPagesToDeleteWithPartialIndex(Hashtable<String, Object> colNameVal) throws DBAppException{
+        //Delete with partial index logic    
+
+        // 1- get the index with the most columns given in the query (prefer 2 columns over 1 column)
+
+        int partialidxNO = 0;
+        Tuple3 correctindex = null;
+
+        for (Tuple3 tuple : indicies) {
+            int check = tuple.getNoOfPartialIndexColumns(colNameVal);
+            if(check > partialidxNO){
+                partialidxNO = check;
+                correctindex = tuple;
+
+                if(partialidxNO == 2) break; // Since we got to this piece of code, we are sure that there is no full index given in the query
+                                            // and since the max number of columns in a partial index is 2, we can break, and use this index
+            }
+        }
+
+        if(correctindex == null) return null; // no index to delete from
+        
+        // 2- get the pages to be deleted from the index
+        
+        Octree tree = (Octree) DBApp.deserialize("src/resources/tables/"+ strTableName + "/Indicies/"+correctindex.getFilename());
+
+        Axis[] axes = correctindex.getGivenAxes(colNameVal); // get the index axes that are given in the query
+
+        if(partialidxNO == 1){
+            LinkedList<Integer> pages = tree.getPagesAtPartialPoint(correctindex.getValueOfAxis(axes[0], colNameVal), axes[0]);
+            return pages;
+        } else if(partialidxNO == 2){
+            LinkedList<Integer> pages = tree.getPagesAtPartialPoint(correctindex.getValueOfAxis(axes[0], colNameVal), axes[0]
+                                                                    , correctindex.getValueOfAxis(axes[1], colNameVal), axes[1]);
+            
+            return pages;
+        }
+
+        return null;
+    }
+
 }
 

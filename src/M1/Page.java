@@ -18,7 +18,7 @@ public class Page implements Serializable {
      private Vector<Row> data;  
      private String path;
 
-    public Page(String strTableName , int pid ){
+    public Page(String strTableName , int pid ) throws DBAppException{
         tblBelongTo = strTableName;
         this.pid =pid;
         noOfCurrentRows =0;

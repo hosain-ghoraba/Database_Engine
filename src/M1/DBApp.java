@@ -5,9 +5,11 @@ import java.text.BreakIterator;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.management.ObjectName;
 
+import M1.Table.Tuple3;
 import M2.Methods2;
 import M2.OctPoint;
 import M2.Octree;
@@ -317,7 +319,9 @@ public class DBApp {
                 candidatePage.deleteEntry(rowtodelete);
 
             tblToUpdate.savePageToDisk(candidatePage, candidateIdx);
+            
         } else {
+        	
             tblToUpdate.deleteRowsWithoutCKey(htblColNameValue);
         }
 
@@ -392,21 +396,30 @@ public class DBApp {
         // next, create the index file
         String tablePath = "src/resources/tables/" + strTableName + "/" + strTableName + ".ser";
         Table table = (Table) deserialize(tablePath);
+
         Column x_dimention_column = table.getColumn(strarrColName[0]);
         Column y_dimention_column = table.getColumn(strarrColName[1]);
         Column z_dimention_column = table.getColumn(strarrColName[2]);
+
         Comparable min_x = x_dimention_column.getMinValue();
         Comparable min_y = y_dimention_column.getMinValue();
         Comparable min_z = z_dimention_column.getMinValue();
         Comparable max_x = x_dimention_column.getMaxValue();
         Comparable max_y = y_dimention_column.getMaxValue();
         Comparable max_z = z_dimention_column.getMaxValue();
+
+
         Octree tree = new Octree(new OctPoint(min_x, min_y, min_z), new OctPoint(max_x, max_y, max_z),this.MaximumEntriesinOctreeNode);
         fillTreeFromTable(tree, table, strarrColName);
+
+        // add index to list of indices int the table class
+        table.getIndices().add(new Tuple3(strarrColName[0], strarrColName[1], strarrColName[2]));
+
         String treePath = "src/resources/tables/" + strTableName + "/Indicies/" + indexName + ".ser";
         serialize(treePath, tree);
         serialize(tablePath, table);
         System.out.println("index  " + indexName + "  created successfully!");
+        
         }
         catch(Exception e)
         {
@@ -661,16 +674,20 @@ public class DBApp {
         System.out.println('\n' + "exited with execution time: " /* +start+" " +start+" " */
                 + ((float) (end - start)) / 1000 + "_seconds");
     }
-    public static void serialize(String path, Serializable obj) {
+    public static void serialize(String path, Serializable obj) throws DBAppException {
         try {
+
+            File file = new File(path);
+            file.getParentFile().mkdirs();
+            
             FileOutputStream fileOutStr = new FileOutputStream(path);
             ObjectOutputStream oos = new ObjectOutputStream(fileOutStr);
             oos.writeObject(obj);
             oos.close();
             fileOutStr.close();
         } catch (IOException i) {
-            i.printStackTrace();
-
+            //i.printStackTrace();
+        	throw new DBAppException(i.getMessage());
         }
     }
     public static Object deserialize(String path) throws DBAppException {
@@ -693,8 +710,10 @@ public class DBApp {
             String line ;
             br.readLine();
             line = br.readLine();
-            HashSet <String> set = new HashSet<>();
+            Set <String> set = ConcurrentHashMap.newKeySet();
             while (line != null) {
+            	if(line.length() == 0) {line = br.readLine(); continue;}
+            	
                 String[] values = line.split(",");
                 if(!set.contains(values[0]))    listofCreatedTables.add(values[0]);
                 set.add(values[0]);
