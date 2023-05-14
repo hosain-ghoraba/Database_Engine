@@ -8,7 +8,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 
 import M1.DBApp;
 import M1.DBAppException;
@@ -59,6 +62,59 @@ public class Octree implements Serializable {
 			return children[position].getPagesAtPoint(x, y, z);
 		}
 	} 
+	
+	public LinkedList<Integer> getPagesAtPartialPoint(Comparable obj, Axis ax) {
+		// partial Query with one point given
+		LinkedList<Integer> pgs = new LinkedList<>();
+		if(ax == Axis.X) {
+			//obj is at point X, and search using X
+			Set<Integer> setpages = ConcurrentHashMap.newKeySet();
+			Methods2.fillSetWithPages_satisfyingCondition_forInputValue(this, setpages, "=", null, null, obj, null, null);
+			pgs.addAll(setpages);
+
+		}else if(ax == Axis.Y) {
+			//obj is at point Y, and search using Y
+			Set<Integer> setpages = ConcurrentHashMap.newKeySet();
+			Methods2.fillSetWithPages_satisfyingCondition_forInputValue(this, setpages, null, "=", null, null, obj, null);
+			pgs.addAll(setpages);
+			
+		}else {
+			//obj is at point Z, and search using Z
+			Set<Integer> setpages = ConcurrentHashMap.newKeySet();
+			Methods2.fillSetWithPages_satisfyingCondition_forInputValue(this, setpages, null, null, "=", null,null, obj);
+			pgs.addAll(setpages);
+			
+		}
+		return pgs;
+	}
+	
+	
+	public LinkedList<Integer> getPagesAtPartialPoint(Comparable obj1, Axis ax1, Comparable obj2, Axis ax2) {
+		// partial Query with two points given
+		LinkedList<Integer> pgs = new LinkedList<>();
+		if(ax1 == Axis.X && ax2 == Axis.Y) {
+			//obj is at point XY, and search using XY
+			Set<Integer> setpages = ConcurrentHashMap.newKeySet();
+			Methods2.fillSetWithPages_satisfyingCondition_forInputValue(this, setpages, "=", "=", null, obj1, obj2, null);
+			pgs.addAll(setpages);
+			
+		}else if(ax1 == Axis.X && ax2 == Axis.Z) {
+			//obj is at point XZ, and search using XZ
+			Set<Integer> setpages = ConcurrentHashMap.newKeySet();
+			Methods2.fillSetWithPages_satisfyingCondition_forInputValue(this, setpages, "=", null, "=", obj1,null, obj2);
+			pgs.addAll(setpages);
+			
+		}else {
+			//obj is at point YZ, and search using YZ
+			Set<Integer> setpages = ConcurrentHashMap.newKeySet();
+			Methods2.fillSetWithPages_satisfyingCondition_forInputValue(this, setpages, null, "=", "=", null,obj1, obj2);
+			pgs.addAll(setpages);
+			
+		} 
+		// no other combinations assuming X should be before Y and before Z in input
+		return pgs;
+	}
+	
 
 	public boolean pointExists(Comparable x, Comparable y, Comparable z){ // checks existence in the leaf level only
 		validatePointIsInTreeBounday(x, y, z);
@@ -258,7 +314,7 @@ public class Octree implements Serializable {
 	public OctPoint getRightForwardUp() {
 		return rightForwardUp;
 	}
-	public OctPoint gePoint() {
+	public OctPoint getPoint() {
 		return point;
 	}
 	public HashMap<OctPoint,LinkedList<Integer> > getRecords() {
@@ -270,6 +326,29 @@ public class Octree implements Serializable {
 	public boolean isLeaf() {
 				return (children == null);
 			}
+	
+	public void printOctree() {
+	    printOctreeHelper(this, "");
+	}
+
+	private void printOctreeHelper(Octree node, String prefix) {
+	    if (node.isLeaf()) {
+	        System.out.println(prefix + "Leaf node with " + node.getRecords().size() + " records:");
+	        for (Map.Entry<OctPoint, LinkedList<Integer>> entry : node.getRecords().entrySet()) {
+	            System.out.println(prefix + "- " + entry.getKey() + ": " + entry.getValue());
+	        }
+	    } else {
+	        System.out.println(prefix + "Non-leaf node:");
+	        for (int i = 0; i < 8; i++) {
+	            if (node.getChildren()[i] != null) {
+	                System.out.println(prefix + "- " + i + ":");
+	                printOctreeHelper(node.getChildren()[i], prefix + "  ");
+	            }
+	        }
+	    }
+	}
+
+	
 	
 			public static void main(String[] args) throws DBAppException {
 		DBApp d = new DBApp();
