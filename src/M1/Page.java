@@ -5,6 +5,10 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 import java.util.function.UnaryOperator;
+
+import M1.Table.Tuple3;
+import M2.Octree;
+
 import java.util.Optional;
 
 public class Page implements Serializable {
@@ -24,12 +28,12 @@ public class Page implements Serializable {
         noOfCurrentRows =0;
         data = new Vector<>(DBApp.MaximumRowsCountinTablePage);
         path = "src/resources/tables/" + strTableName + "/pages/page" + pid +".ser";
-        DBApp.serialize(path,data);
+        //DBApp.serialize(path,data);
 
     }
 
     public void insertAnEntry(Row entry) throws DBAppException {
-        DBApp.serialize(path,data);
+        //DBApp.serialize(path,data);
         if (data.contains(entry))
             throw new DBAppException("This entry already exists");
         data.add(entry);
@@ -39,19 +43,20 @@ public class Page implements Serializable {
     		minValInThePage = data.get(0).getData().get(0); // minValueOfThPage is the primary key value of the first tuple
         	maxValInThePage = data.get(data.size()-1).getData().get(0);// maxValueOfThPage is the primary key value of the last tuple
     	}
-        DBApp.serialize(path,data);
+        //DBApp.serialize(path,data);
     }
     
-    public void deleteEntry(int entryIdx) throws DBAppException {
-    	DBApp.serialize(path, data);
+    public Row deleteEntry(int entryIdx) throws DBAppException {
+    	//DBApp.serialize(path, data);
         if(entryIdx < data.size() && entryIdx >= 0) {
-			data.remove(entryIdx);
+			Row returnRow= data.remove(entryIdx);
     		setNoOfCurrentRowsBYOFFSET(-1);
     		if(!isEmpty()) {
     			minValInThePage = data.get(0).getData().get(0); // minValueOfThPage is the primary key value of the first tuple
     			maxValInThePage = data.get(data.size()-1).getData().get(0);// maxValueOfThPage is the primary key value of the last tuple
     		}
-    		DBApp.serialize(path,data);
+    		//DBApp.serialize(path,data);
+    		return returnRow;
     	}
     	else {
 			throw new DBAppException("You cannot delete a non existent row");
@@ -122,9 +127,23 @@ public class Page implements Serializable {
             return;
         }
         
-        DBApp.serialize(path, data);
+        //DBApp.serialize(path, data);
 
         Row row = data.get(entryIdx);
+
+        //remove the old row from all octree indices with old values
+        Vector<Tuple3> indices = table.getIndices();
+        for (Tuple3 tuple : indices) {
+            
+            Octree tree = (Octree) DBApp.deserialize("src/resources/tables/"+ table.getStrTableName() + "/Indicies/"+ tuple.getFilename());
+            Comparable Xobj = (Comparable) row.getData().get(table.getColumnEquivalentIndex(tuple.X_idx));
+            Comparable Yobj = (Comparable) row.getData().get(table.getColumnEquivalentIndex(tuple.Y_idx));
+            Comparable Zobj = (Comparable) row.getData().get(table.getColumnEquivalentIndex(tuple.Z_idx));
+            tree.deletePageFromTree( Xobj, Yobj, Zobj, pid);
+            
+            DBApp.serialize("src/resources/tables/"+ table.getStrTableName() + "/Indicies/"+ tuple.getFilename(), tree);
+        }
+
 
         Enumeration<String> strEnumeration = htblColNameData.keys();
         while (strEnumeration.hasMoreElements()) {
@@ -133,6 +152,22 @@ public class Page implements Serializable {
             table.validateValueType(table.getColumn(strColName), objColValue, DBApp.colType(strColName, table.getStrTableName()));
             row.getData().set(table.getColumnEquivalentIndex(strColName), objColValue);
         }
-        DBApp.serialize(path, data);    
+        //DBApp.serialize(path, data);
+        
+
+        //insert the new row in all octree indices with new values
+        for (Tuple3 tuple : indices) {
+            
+            Octree tree = (Octree) DBApp.deserialize("src/resources/tables/"+ table.getStrTableName() + "/Indicies/"+ tuple.getFilename());
+            Comparable Xobj = (Comparable) row.getData().get(table.getColumnEquivalentIndex(tuple.X_idx));
+            Comparable Yobj = (Comparable) row.getData().get(table.getColumnEquivalentIndex(tuple.Y_idx));
+            Comparable Zobj = (Comparable) row.getData().get(table.getColumnEquivalentIndex(tuple.Z_idx));
+            tree.insertPageIntoTree( Xobj, Yobj, Zobj, pid);
+            
+            DBApp.serialize("src/resources/tables/"+ table.getStrTableName() + "/Indicies/"+ tuple.getFilename(), tree);
+        }
+        
+
+
     }
 }

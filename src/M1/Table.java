@@ -582,8 +582,15 @@ ______
             }
         }
 
-            // TODO : update the row in the index
+        
+            Set<Integer> checkedPages = ConcurrentHashMap.newKeySet();
+
+            // TODO : update the row in the index  //update : I guess done, I hope
             for (Integer pid : addressedPagesID) {
+                if(checkedPages.contains(pid)) continue;
+                checkedPages.add(pid);
+
+                
                 int rowIdxToUpdate = this.findRowToUpdORdel(clstrKeyVal, pid , true);
                 if (rowIdxToUpdate < 0) 
                     continue;
@@ -611,7 +618,7 @@ ______
             line = br.readLine();
             while (line != null) {
                 String[] values = line.split(",");
-                if(values[0].equals(strTableName) && values[5].contains("Index") && colNameVal.containsKey(values[1])){
+                if(values[0].equals(strTableName) && values[4].contains("Index") && colNameVal.containsKey(values[1])){
                     br.close();
                     return true;
                 }
@@ -642,24 +649,45 @@ ______
             try {
                 addressedPagesID.add( Integer.parseInt(vecPages.get(candidateIdx).split("page")[1])  ); //extract page id from name
             } catch (Exception e) {
-                throw new DBAppException("Error reading page and extracting data");
+                throw new DBAppException("Error reading page and extracting data or Table empty");
             }
         }
 
         // old normal code of binary searching on Page Rows
         // once you find the row to delete, break; since it's unique
 
+        
+        Set<Integer> checkedPages = ConcurrentHashMap.newKeySet();
 
-        //TODO: delete from index
+        //TODO: delete from index //update : I guess done, I hope
         for (Integer pid : addressedPagesID) {
+            if(checkedPages.contains(pid)) continue;
+            checkedPages.add(pid);
+            
             
             int rowtodelete = this.findRowToUpdORdel(clusteringKeyVal, pid, true);
             if (rowtodelete < 0)
                 continue;
             else{
                 Page candidatePage = this.loadPage(pid);
-                candidatePage.deleteEntry(rowtodelete);
+                Row row = candidatePage.deleteEntry(rowtodelete);
                 this.savePageToDisk(candidatePage, pid);
+
+                // delete row from all table octree indices
+                
+                Vector<Tuple3> indices = this.getIndices();
+
+                for (Tuple3 tuple : indices) {
+            
+                    Octree tree = (Octree) DBApp.deserialize("src/resources/tables/"+ strTableName + "/Indicies/"+ tuple.getFilename());
+                    Comparable Xobj = (Comparable) row.getData().get(this.getColumnEquivalentIndex(tuple.X_idx));
+                    Comparable Yobj = (Comparable) row.getData().get(this.getColumnEquivalentIndex(tuple.Y_idx));
+                    Comparable Zobj = (Comparable) row.getData().get(this.getColumnEquivalentIndex(tuple.Z_idx));
+                    tree.deletePageFromTree( Xobj, Yobj, Zobj, pid);
+                    
+                    DBApp.serialize("src/resources/tables/"+ strTableName + "/Indicies/"+ tuple.getFilename(), tree);
+                }
+
                 return 1;
             }
 
@@ -684,12 +712,12 @@ ______
                     addressedPagesID.add( Integer.parseInt(vecPages.get(i).split("page")[1])  ); //extract page id from name
                 }
             } catch (Exception e) {
-                throw new DBAppException("Error reading page and extracting data");
+                throw new DBAppException("Error reading page and extracting data or Table empty");
             }
         }
 
         //continue to scan linearly with old code
-        ///////////////////////////////////////////TODO Delete record from Octree Index
+        ///////////////////////////////////////////TODO Delete record from Octree Index //update : I guess done, I hope
     	int items = 0;
         Set<Integer> checkedPages = ConcurrentHashMap.newKeySet();
 
@@ -717,6 +745,20 @@ ______
 				if(ANDING /*is true*/) {	
 					iterator.remove(); //same as page.deleteEntry(row)
 					items++;
+
+                    // delete row from all table octree indices
+                    Vector<Tuple3> indices = this.getIndices();
+
+                    for (Tuple3 tuple : indices) {
+                
+                        Octree tree = (Octree) DBApp.deserialize("src/resources/tables/"+ strTableName + "/Indicies/"+ tuple.getFilename());
+                        Comparable Xobj = (Comparable) row.getData().get(this.getColumnEquivalentIndex(tuple.X_idx));
+                        Comparable Yobj = (Comparable) row.getData().get(this.getColumnEquivalentIndex(tuple.Y_idx));
+                        Comparable Zobj = (Comparable) row.getData().get(this.getColumnEquivalentIndex(tuple.Z_idx));
+                        tree.deletePageFromTree( Xobj, Yobj, Zobj, pid);
+                        
+                        DBApp.serialize("src/resources/tables/"+ strTableName + "/Indicies/"+ tuple.getFilename(), tree);
+                    }
 				}
 			}
 			this.savePageToDisk(page, i);
@@ -743,7 +785,7 @@ ______
         }
 
         //delete with full index logic ....
-        Octree tree = (Octree) DBApp.deserialize("src/resources/"+ strTableName + "/Indicies/"+indexFilename);
+        Octree tree = (Octree) DBApp.deserialize("src/resources/tables/"+ strTableName + "/Indicies/"+indexFilename);
 
         LinkedList<Integer> pages =tree.getPagesAtPoint((Comparable)colNameVal.get(correctindex.X_idx), (Comparable)colNameVal.get(correctindex.Y_idx), (Comparable)colNameVal.get(correctindex.Z_idx));
         return pages;

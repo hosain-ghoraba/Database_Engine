@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.management.BadBinaryOpValueExpException;
 import javax.management.ObjectName;
 
 import M1.Table.Tuple3;
@@ -19,6 +20,8 @@ import M2.Octree;
 import M2.SQLTerm;
 
 public class DBApp {
+    private static boolean OUTPUT_RESULTS = false; // if true, print the results of the queries to the console
+                                                  //TODO: change this to false when submitting to improve performance
     static NULL NULL = new NULL();
     public static int MaximumRowsCountinTablePage;
     public int MaximumEntriesinOctreeNode;
@@ -275,6 +278,11 @@ public class DBApp {
         // 1- fetch the table from the disk
         String path = "src/resources/tables/" + strTableName + "/" + strTableName + ".ser";
         Table tblToUpdate = (Table) deserialize(path);
+        
+        if(tblToUpdate.getVecPages().size() == 0) {
+        	System.out.println("Table empty! No Rows to delete.");
+        	return;
+        }
 
         // 2- delete the row from the table (not yet deleted)
         Object clusteringKeyVal = null;
@@ -312,24 +320,20 @@ public class DBApp {
         //int size = tblToUpdate.getVecPages().size();
         //Iterator<String> iteratePg = tblToUpdate.getVecPages().iterator();
 
-        List<String> tempPages = new ArrayList<String>();
-        for (int i = 0; i < tblToUpdate.getVecPages().size(); i++) {
-            tempPages.add(tblToUpdate.getVecPages().get(i));
-        }
 
-        ListIterator<String> iteratetmp = tempPages.listIterator();
-        int index = iteratetmp.nextIndex();
+        ListIterator<String> iterate = tblToUpdate.getVecPages().listIterator();
+        int index = iterate.nextIndex();
 
-        while (iteratetmp.hasNext()) {
-            String pagetodelete = (String) iteratetmp.next();
+        while (iterate.hasNext()) {
+            String pagetodelete = (String) iterate.next();
             if (tblToUpdate.loadPage(index).isEmpty()) {
-                iteratetmp.remove();// deleted from temporary list
+                iterate.remove();// deleted from temporary list
 
-                tblToUpdate.getVecPages().remove(index);// deleted from original list
+               // tblToUpdate.getVecPages().remove(index);// deleted from original list
 
                 //new File(this.getClass().getResource("/resources/tables/" + strTableName + "/pages/" + pagetodelete + ".ser").toURI()).delete();
                  // delete from disk
-            }else index = iteratetmp.nextIndex();
+            }else index = iterate.nextIndex();
         }
 
         // 4-return table back to disk after update
@@ -338,6 +342,7 @@ public class DBApp {
         }
         catch(Exception e)
         {
+        	e.printStackTrace();
             throw new DBAppException(e.getMessage());
         }
 
@@ -498,7 +503,10 @@ public class DBApp {
             throw new DBAppException(e.getMessage());
         }
     }
+    //Print helpers for the SQL equivalent command and the table of the operation 
     public static void OperationSignatureDisplay(OpType operation, Table table, Hashtable<String,Object> htblColNameVal) {
+        if(!OUTPUT_RESULTS) return;
+        
         switch(operation) {
             case INSERT:
 
@@ -557,6 +565,8 @@ public class DBApp {
         }
     }
     public static void OperationSignatureDisplay(Table table, Hashtable<String,String> htblColNameType, OpType operation){
+        if(!OUTPUT_RESULTS) return;
+        
         switch(operation){
             case CREATE:
 
@@ -587,6 +597,8 @@ public class DBApp {
 
     }
     public static void OperationSignatureDisplay(OpType operation, Table table, Hashtable<String,Object> htblColNameVal, String clusterKey) {
+        if(!OUTPUT_RESULTS) return;
+
 	    if(operation == OpType.UPDATE) {
 	        StringBuilder output3 = new StringBuilder("-------SQL Equivalent Command:\n"
 	        		+ "UPDATE " +table.getStrTableName()+ " SET\n");
@@ -611,6 +623,7 @@ public class DBApp {
 
 	    }else	System.out.println("No enough or Wrong Info Given");
     }
+    //M1 misc
     public void readConfig() throws DBAppException {
         /*
          * this method objective is to read the DBApp configuration file in order to
@@ -1164,71 +1177,120 @@ public class DBApp {
 
 
     }
-
     public static void main(String[] args) throws IOException, DBAppException {
-        starty();
+
+    	starty();
+    	
         DBApp db = new DBApp();
+		// System.out.println(db.getAllTableIndicies("University"));
+//		db.createIndex("University", new String[] { "age", "Name", "Job" });
 
-        // db.DELETETableDependencies("University");
-        // db.createIndex("University", new String[]{"Id", "Name", "Job"});
+		Hashtable<String, String> htNameType = new Hashtable<>();
+		htNameType.put("Id", "java.lang.Integer");
+		htNameType.put("Name", "java.lang.String");
+		htNameType.put("Job", "java.lang.String");
+		htNameType.put("age", "java.lang.Integer");
+		Hashtable<String, String> htNameMin = new Hashtable<>();
+		htNameMin.put("Id", "1");
+		htNameMin.put("Name", "AAA");
+		htNameMin.put("Job", "aaa");
+		htNameMin.put("age", "10");
+		Hashtable<String, String> htNameMax = new Hashtable<>();
+		htNameMax.put("Id", "1000");
+		htNameMax.put("Name", "zz");
+		htNameMax.put("Job", "zzz");
+		htNameMax.put("age", "99");
 
-		// Hashtable<String, String> htNameType = new Hashtable<>();
-		// htNameType.put("Id", "java.lang.Integer");
-		// htNameType.put("Name", "java.lang.String");
-		// htNameType.put("Job", "java.lang.String");
-		// Hashtable<String, String> htNameMin = new Hashtable<>();
-		// htNameMin.put("Id", "1");
-		// htNameMin.put("Name", "AAA");
-		// htNameMin.put("Job", "aaa");
-		// Hashtable<String, String> htNameMax = new Hashtable<>();
-		// htNameMax.put("Id", "1000");
-		// htNameMax.put("Name", "zz");
-		// htNameMax.put("Job", "zzz");
-		// db.createTable("University", "Id", htNameType, htNameMin, htNameMax);
+//		db.DELETETableDependencies("University");
+//		db.createTable("University", "Id", htNameType, htNameMin, htNameMax);
+
+//        // generating 200 records
+//		Hashtable<String, Object>[] records = new Hashtable[200];
+//		for (int i = 0; i < records.length; i++)
+//			records[i] = new Hashtable<String, Object>();
+//		String[] names = { "ahmad", "mohamed", "ali", "omar", "zaky", "khaled", "hassan", "hussain", "youssef",
+//				"yassin", "akrm", "bebo", "loai", "hashem", "mona", "khadija", "bola", "hamdi", "wael", "sharkawy" };
+//		String[] jobs = { "doctor", "engineer", "lawyer", "teacher", "policeman", "firefighter", "dentist", "nurse",
+//				"farmer", "pilot", "blacksmith", "carpenter", "plumber", "electrician", "mechanic", "architect",
+//				"designer", "artist", "chef", "waiter" };
+//		for (int i = 0; i < records.length; i++) {
+//			Hashtable<String, Object> hashtable = records[i];
+//			hashtable.put("Id", i + 1);
+//			hashtable.put("Name", names[i % names.length]);
+//			hashtable.put("Job", jobs[i % jobs.length]);
+////          hashtable.put("Name", "testName");
+////          hashtable.put("Job", "testJob");
+//			hashtable.put("age", (int) (Math.random() * 10) + 22);
+//			db.insertIntoTable("University", hashtable);
+//
+//		}
+       
+
+        
+      //Delete ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      		Hashtable<String, Object> delete1 = new Hashtable<>(); //partial query index
+      		delete1.put("Job", "engineer");
+
+      		Hashtable<String, Object> delete2 = new Hashtable<>(); //delete all test
+
+      		Hashtable<String, Object> delete3 = new Hashtable<>(); //clustering key only test
+      		delete3.put("Id", 70);
+
+      		Hashtable<String, Object> delete4 = new Hashtable<>(); //full index test (unordered)
+      		delete4.put("Job", "carpenter");
+      		delete4.put("age", 12);
+      		delete4.put("Name", "bebo"); 
+      		
+      		Hashtable<String, Object> delete5 = new Hashtable<>(); //full index test (unordered) with CK given
+      		delete5.put("Job", "waiter");
+      		delete5.put("age", 30);
+      		delete5.put("Name", "sharkawy");
+      		delete5.put("Id", 100);   
+
+      		
+      		// Update^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      		Hashtable<String, Object> update1 = new Hashtable<>();
+      		update1.put("Name", "SeragMohema");
+      		update1.put("Job", "AmnDawla");
+
+      		Hashtable<String, Object> update2 = new Hashtable<>();
+      		update2.put("Name", "mido");
+      		update2.put("Job", "harakat");
+      		
+      		Hashtable<String, Object> update3 = new Hashtable<>();
+      		update3.put("Name", "abood");
+      		update3.put("Job", NULL);
 
 
-        // // generating 200 records
-        // Hashtable<String,Object>[] records = new Hashtable[200];
-        // for(int i = 0; i < records.length; i++)
-        //     records[i] = new Hashtable<String, Object>();
-        // String[] names = {"ahmad", "mohamed", "ali", "omar", "zaky", "khaled", "hassan", "hussain", "youssef", "yassin",
-        //                    "akrm", "bebo", "loai", "hashem", "mona", "khadija", "bola", "hamdi", "wael", "sharkawy" };
-        // String[] jobs = {"doctor", "engineer", "lawyer", "teacher", "policeman", "firefighter", "dentist", "nurse", "farmer", "pilot",
-        //                    "blacksmith", "carpenter", "plumber", "electrician", "mechanic", "architect", "designer", "artist", "chef", "waiter" };
-        // for(int i = 0; i < records.length; i++)
-        // {
-        //     Hashtable<String, Object> hashtable = records[i];
-        //     hashtable.put("Id", i+1);
-        //     // hashtable.put("Name", names[i]);
-        //     // hashtable.put("Job", jobs[i]);
-        //     hashtable.put("Name", "testName");
-        //     hashtable.put("Job", "testJob");
-        //     db.insertIntoTable("University", hashtable);
+//      		db.deleteFromTable("University", delete5);
+//      		db.updateTable("University", "45", update1);
+      		
+      		
+//
+//
+//		ArrayList<SQLTerm>  listSQLTerms = new ArrayList<>();
+//        listSQLTerms.add(new SQLTerm("University", "Name", ">", "A"));
+//        listSQLTerms.add(new SQLTerm("University", "Job", ">", "A"));
+//        listSQLTerms.add(new SQLTerm("University", "Id", "!=", 7));
+//        listSQLTerms.add(new SQLTerm("University", "Job", ">", "A"));
+//        listSQLTerms.add(new SQLTerm("University", "Name", ">", "A"));
+//        listSQLTerms.add(new SQLTerm("University", "Id", "<", 8));
+//
+//
+//        String[] strarrOperators = new String[] {"AND","AND","OR","AND","AND"};
+//
+//        Iterator<Row> iterator = db.selectFromTable(listSQLTerms.toArray(new SQLTerm[listSQLTerms.size()]), strarrOperators);
+//        while(iterator.hasNext()){
+//            System.out.println(iterator.next());
+//        }
+        System.out.println(db.listofCreatedTables.toString());
 
-        // }
-            
-
-
-
-
-		// ArrayList<SQLTerm>  listSQLTerms = new ArrayList<>();
-        // listSQLTerms.add(new SQLTerm("University", "Name", ">", "A"));
-        // listSQLTerms.add(new SQLTerm("University", "Job", ">", "A"));
-        // listSQLTerms.add(new SQLTerm("University", "Id", ">", 2));
-        // listSQLTerms.add(new SQLTerm("University", "Job", ">", "A"));
-        // listSQLTerms.add(new SQLTerm("University", "Name", ">", "A"));
-        // listSQLTerms.add(new SQLTerm("University", "Id", "<", 50));
+//        Table x = (Table) deserialize("src/resources/tables/University/University.ser");
+//        System.out.println(x);
+//        Octree o = (Octree) deserialize("src/resources/tables/University/Indicies/" + x.getIndices().get(0).getFilename());
+//        o.printOctree();
 
 
-        // String[] strarrOperators = new String[] {"AND","AND","OR","AND","AND"};
-
-        // Iterator<Row> iterator = db.selectFromTable(listSQLTerms.toArray(new SQLTerm[listSQLTerms.size()]), strarrOperators);
-        // while(iterator.hasNext()){
-        //     System.out.println(iterator.next());
-        // }
-        // System.out.println(db.listofCreatedTables.toString());
-
-        endy();
-
+endy();
 }
 }
