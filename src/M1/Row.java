@@ -2,6 +2,7 @@ package M1;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Vector;
 
 import M2.Methods2;
@@ -13,7 +14,10 @@ public class Row implements Serializable,Comparable<Row> {
        rowData = d ;
 
     }
-
+    
+    public int hashCode() { // added by hosain
+        return Objects.hash(rowData.get(0));
+    }
     @Override
     public boolean equals(Object obj) {
     	Row r;

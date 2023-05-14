@@ -3,6 +3,7 @@ package M2;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.sql.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -11,9 +12,11 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.Vector;
 
 import M1.DBAppException;
 import M1.Page;
+import M1.Row;
 
 public class Methods2 {
 
@@ -283,8 +286,18 @@ public class Methods2 {
 	
 	public static void main(String[] args) {
 
-		Object o = Integer.valueOf(0);
-		System.out.println(o.getClass().getName());
+		Vector<Object> v = new Vector<Object>();
+		v.add(new Date(0, 0, 0));
+
+		Vector<Object> v2 = new Vector<Object>();
+		v2.add(new Date(0, 0, 0));
+
+		Row r = new Row(v);
+		Row r2 = new Row(v2);
+
+		System.out.println(r.equals(r2));
+
+
 
     }
 
