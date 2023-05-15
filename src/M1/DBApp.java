@@ -1182,7 +1182,7 @@ public class DBApp {
     	starty();
     	
         DBApp db = new DBApp();
-		// System.out.println(db.getAllTableIndicies("University"));
+//		 System.out.println(db.getAllTableIndicies("University"));
 //		db.createIndex("University", new String[] { "age", "Name", "Job" });
 
 		Hashtable<String, String> htNameType = new Hashtable<>();
@@ -1204,7 +1204,7 @@ public class DBApp {
 //		db.DELETETableDependencies("University");
 //		db.createTable("University", "Id", htNameType, htNameMin, htNameMax);
 
-//        // generating 200 records
+        // generating 200 records
 //		Hashtable<String, Object>[] records = new Hashtable[200];
 //		for (int i = 0; i < records.length; i++)
 //			records[i] = new Hashtable<String, Object>();
@@ -1213,7 +1213,7 @@ public class DBApp {
 //		String[] jobs = { "doctor", "engineer", "lawyer", "teacher", "policeman", "firefighter", "dentist", "nurse",
 //				"farmer", "pilot", "blacksmith", "carpenter", "plumber", "electrician", "mechanic", "architect",
 //				"designer", "artist", "chef", "waiter" };
-//		for (int i = 0; i < records.length; i++) {
+//		for (int i = 0; i < 30; i++) {
 //			Hashtable<String, Object> hashtable = records[i];
 //			hashtable.put("Id", i + 1);
 //			hashtable.put("Name", names[i % names.length]);
@@ -1222,6 +1222,9 @@ public class DBApp {
 ////          hashtable.put("Job", "testJob");
 //			hashtable.put("age", (int) (Math.random() * 10) + 22);
 //			db.insertIntoTable("University", hashtable);
+//
+//	        //Octree o = (Octree) deserialize("src/resources/tables/University/Indicies/ageNameJobIndex.ser");
+//	        //o.printOctree();
 //
 //		}
        

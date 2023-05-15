@@ -49,6 +49,10 @@ public class Table implements Serializable
 			return X_idx + Y_idx + Z_idx + "Index.ser";
 		}
 		
+        public String getFullPath(String tablename) {
+            return "src/resources/tables/" +tablename + "/Indicies/"+ getFilename();
+        }
+
 		public boolean isFullIndexGivenInQuery(Hashtable<String, Object> htblcolNameVal) { 
 			return htblcolNameVal.containsKey(X_idx) && htblcolNameVal.containsKey(Y_idx) && htblcolNameVal.containsKey(Z_idx);
 		}
@@ -80,6 +84,18 @@ public class Table implements Serializable
                 return (Comparable) htblcolNameVal.get(Z_idx);
         }
 			
+        public Comparable[] getXYZfromRow(Row entry, Table table) {
+            Comparable[] XYZ = new Comparable[3];
+            XYZ[0] = (Comparable) entry.getData().get(table.getColumnEquivalentIndex(X_idx));
+            XYZ[1] = (Comparable) entry.getData().get(table.getColumnEquivalentIndex(Y_idx));
+            XYZ[2] = (Comparable) entry.getData().get(table.getColumnEquivalentIndex(Z_idx));
+           
+            return XYZ; 
+        }
+
+        public Octree getOctree(String tablename) throws DBAppException {
+            return (Octree) DBApp.deserialize(this.getFullPath(tablename));
+        }
 	}
 
     ////////////////////
@@ -208,78 +224,139 @@ public class Table implements Serializable
             return null;
     }
         
-    public void insertAnEntry(Row entry) throws DBAppException{
-        if(vecPages.size() == 0){ // table has no page
-            Page page = new Page(strTableName,pagesIDcounter + 1);
-            this.addNewPage(page);
-            page.insertAnEntry(entry);
-            this.savePageToDisk(page, vecPages.size()-1);
+	public void insertAnEntry(Row entry) throws DBAppException {
+		if (vecPages.size() == 0) { // table has no page
+			Page page = new Page(strTableName, pagesIDcounter + 1);
+			this.addNewPage(page);
+			page.insertAnEntry(entry);
+			this.savePageToDisk(page, vecPages.size() - 1);
+
+			// add the new row to all octree indices
+			this.addToAllOctreeIndicies(entry, page.getPid());
+
+		} else {
+			// there are some pages in the table----------------------
+
+			Object clustringKey = entry.getData().get(0);
+
+			// need to determine the id of the right page to insert the entry into .
+			int pidOfCorrectPage = binarySrch(clustringKey);
+			Page correctPage = loadPage(pidOfCorrectPage);
+
+			if (!correctPage.isFull()) {
+
+				// fortunately , there is a place
+				correctPage.insertAnEntry(entry);
+				this.savePageToDisk(correctPage, vecPages.size() - 1);
+
+				// add the new row to all octree indices
+				this.addToAllOctreeIndicies(entry, correctPage.getPid());
+				return;
+
+			} else {
+
+				// Unfortunately , page is full
+				if (pidOfCorrectPage == vecPages.size() - 1) { // correct page is last page and it is full
+					Page newPage = new Page(strTableName, pagesIDcounter + 1);
+					this.addNewPage(newPage);
+
+					if (((Comparable) clustringKey).compareTo(correctPage.getMaxValInThePage()) >= 0) {
+						// the biggest value so insert into the new page directly
+						newPage.insertAnEntry(entry);
+
+						// add the new row to all octree indices
+						this.addToAllOctreeIndicies(entry, newPage.getPid());
+
+					} else {
+						Row tmp = correctPage.getData().remove(MaximumRowsCountinTablePage - 1);
+						correctPage.insertAnEntry(entry);
+						newPage.insertAnEntry(tmp);
+
+						// add the new row to all octree indices And update the shifted row
+						for (Tuple3 tuple : indicies) {
+							Comparable[] pointShifted = tuple.getXYZfromRow(tmp, this);
+							Comparable[] pointNew = tuple.getXYZfromRow(entry, this);
+							Octree octree = tuple.getOctree(strTableName);
+
+							octree.insertPageIntoTree(pointNew[0], pointNew[1], pointNew[2], correctPage.getPid());
+							octree.updatePageAtPoint(pointShifted[0], pointShifted[1], pointShifted[2],
+									/* from */ correctPage.getPid(), /* to */newPage.getPid());
+
+							DBApp.serialize(tuple.getFullPath(strTableName), octree);
+						}
+					}
+					this.savePageToDisk(newPage, vecPages.size() - 1);
+					this.savePageToDisk(correctPage, vecPages.size() - 2);
+					return;
+
+				} else { // correct page is not last page and it is full
+					int i;
+					for (i = pidOfCorrectPage; i < vecPages.size(); i++) // check other next pages , if they are all
+																			// full or not
+						if (loadPage(i).getNoOfCurrentRows() < MaximumRowsCountinTablePage)
+							break;
+
+					Row tmp;
+					if (i == vecPages.size()) { // all next pages are full , no option other than creating new page
+						Page newPage = new Page(strTableName, pagesIDcounter + 1);
+						this.addNewPage(newPage);
+						for (int j = vecPages.size() - 1; j > pidOfCorrectPage; j--) {
+							Page fromPage = this.loadPage(j - 1), toPage = this.loadPage(j);
+							tmp = fromPage.getData().remove(MaximumRowsCountinTablePage - 1);
+							toPage.insertAnEntry(tmp);
+							this.savePageToDisk(fromPage, j - 1);
+							this.savePageToDisk(toPage, j);
+
+							// update in all octree indices
+							this.updateAllOctreeIndicies(tmp, fromPage.getPid(), toPage.getPid());
+						}
+					} else { // some page has an empty place
+						for (int j = i; j > pidOfCorrectPage; j--) {
+							Page fromPage = this.loadPage(j - 1), toPage = this.loadPage(j);
+							tmp = fromPage.getData().remove(MaximumRowsCountinTablePage - 1);
+							toPage.insertAnEntry(tmp);
+							this.savePageToDisk(fromPage, j - 1);
+							this.savePageToDisk(toPage, j);
+
+							// update in all octree indices
+							this.updateAllOctreeIndicies(tmp, fromPage.getPid(), toPage.getPid());
+						}
+					}
+
+					// insert the addressed Entry in the correct page
+					correctPage = this.loadPage(pidOfCorrectPage);
+					correctPage.insertAnEntry(entry);
+					this.savePageToDisk(correctPage, pidOfCorrectPage);
+
+					// add in all octree indices
+					this.addToAllOctreeIndicies(entry, correctPage.getPid());
+
+					return;
+				}
+			}
+		}
+
+	}
+
+
+    private void addToAllOctreeIndicies(Row entry, int pidOfCorrectPage) throws DBAppException {
+        for (Tuple3 tuple : indicies) {
+            Comparable [] point = tuple.getXYZfromRow(entry, this);
+            Octree octree = tuple.getOctree(strTableName);
+
+            octree.insertPageIntoTree(point[0], point[1], point[2], pidOfCorrectPage);
+            DBApp.serialize(tuple.getFullPath(strTableName), octree);
         }
-        else{ // there are some pages in the table
-            Object clustringKey = entry.getData().get(0) ;
-            // need to determine the id of the right page to insert the entry into .
-            int pidOfCorrectPage = binarySrch(clustringKey) ;
-
-
-            Page correctPage = loadPage(pidOfCorrectPage);
-
-            if(!correctPage.isFull()) { // fortunately , there is a place
-                correctPage.insertAnEntry(entry);
-                this.savePageToDisk(correctPage, vecPages.size()-1);
-                return;
-            }
-            else{  // Unfortunately , page is full
-                if(pidOfCorrectPage == vecPages.size()-1  ) { //correct page is last page and it is full
-                    Page newPage = new Page(strTableName, pagesIDcounter + 1);
-                    this.addNewPage(newPage);
-
-                    if(((Comparable)clustringKey).compareTo(correctPage.getMaxValInThePage()) >= 0)
-                         newPage.insertAnEntry(entry);
-                    else{
-                        Row tmp = correctPage.getData().remove(MaximumRowsCountinTablePage-1);
-                        correctPage.insertAnEntry(entry);
-                        newPage.insertAnEntry(tmp);
-                    }
-                    this.savePageToDisk(newPage, vecPages.size()-1);
-                    this.savePageToDisk(correctPage, vecPages.size()-2);
-                    return;
-                }else { // correct page is not last page and it is full
-                      int i ;
-                      for ( i = pidOfCorrectPage; i <vecPages.size();i++) // check other next pages , if they are all full or not
-                          if(loadPage(i).getNoOfCurrentRows() < MaximumRowsCountinTablePage)
-                              break;
-
-                      Row tmp;
-                      if(i==vecPages.size()) {   // all next pages are full , no option other than creating new page
-                          Page newPage = new Page(strTableName, pagesIDcounter+1);
-                          this.addNewPage(newPage);
-                          for(int j = vecPages.size()-1 ; j> pidOfCorrectPage ; j--) {
-                        	  Page fromPage = this.loadPage(j-1), toPage = this.loadPage(j);
-                              tmp = fromPage.getData().remove(MaximumRowsCountinTablePage - 1);
-                              toPage.insertAnEntry(tmp);
-                              this.savePageToDisk(fromPage, j-1);
-                              this.savePageToDisk(toPage, j);
-                          }
-                      }
-                      else{                     // some page has an empty place
-                          for (int j = i; j > pidOfCorrectPage ; j--) {
-                        	  Page fromPage = this.loadPage(j-1), toPage = this.loadPage(j);
-                              tmp = fromPage.getData().remove(MaximumRowsCountinTablePage - 1);
-                              toPage.insertAnEntry(tmp);
-                              this.savePageToDisk(fromPage, j-1);
-                              this.savePageToDisk(toPage, j);
-                          }
-                      }
-                      correctPage = this.loadPage(pidOfCorrectPage);
-                      correctPage.insertAnEntry(entry);
-                      this.savePageToDisk(correctPage, pidOfCorrectPage);
-                      return;
-                }
-            }
-        }
-
     }
+    private void updateAllOctreeIndicies(Row temp, int pidFromPage , int pidToPage) throws DBAppException {
+        for (Tuple3 tuple : indicies) {
+            Comparable [] point = tuple.getXYZfromRow(temp, this);
+            Octree octree = tuple.getOctree(strTableName);
 
+            octree.updatePageAtPoint(point[0], point[1], point[2], pidFromPage, pidToPage);
+            DBApp.serialize(tuple.getFullPath(strTableName), octree);
+      }
+    }
 
 //consider these cases in binary searching
 /*
