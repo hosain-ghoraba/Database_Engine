@@ -503,6 +503,10 @@ ______
         else
             candidatePageData = this.loadPage(candidateIdx).getData();
 
+        // checking if the key is not in the bounds of the page (min & max values), then it doesn't exist
+        if(((Comparable) key).compareTo(candidatePageData.get(0).getData().get(getColumnEquivalentIndex(strClusteringKeyColumn))) < 0 ||
+                ((Comparable) key).compareTo(candidatePageData.get(candidatePageData.size()-1).getData().get(getColumnEquivalentIndex(strClusteringKeyColumn))) > 0)
+            return -1;
 
 		//binary searching on row to be updated or deleted
         int lo = 0, hi = candidatePageData.size() - 1;
@@ -721,14 +725,14 @@ ______
     	int items = 0;
         Set<Integer> checkedPages = ConcurrentHashMap.newKeySet();
 
-		for (int i = 0; i < addressedPagesID.size(); i++) {
-            if(checkedPages.contains(addressedPagesID.get(i))) continue;
-
-            int pid = addressedPagesID.get(i);
+		for (int pid : addressedPagesID) {
+            if(checkedPages.contains(pid)) continue;
             checkedPages.add(pid);
+
             
             Page page = loadPageByPID(pid);
 			Iterator<Row> iterator = page.getData().iterator();
+            boolean pageUpdated = false;
 			while (iterator.hasNext()) {
 				Row row = (Row) iterator.next();
 				boolean ANDING = true;
@@ -746,6 +750,8 @@ ______
 					iterator.remove(); //same as page.deleteEntry(row)
 					items++;
 
+                    pageUpdated = true;
+
                     // delete row from all table octree indices
                     Vector<Tuple3> indices = this.getIndices();
 
@@ -761,7 +767,7 @@ ______
                     }
 				}
 			}
-			this.savePageToDisk(page, i);
+			if(pageUpdated) this.savePageToDisk(page, pid);
 		}
     	
     	

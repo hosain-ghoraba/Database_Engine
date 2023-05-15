@@ -37,20 +37,20 @@ public class Octree implements Serializable {
 	}	
 
 	// fundamental methods
-	public void insertPageIntoTree(Comparable x, Comparable y, Comparable z , Integer page) {
+	public void insertPageIntoTree(Comparable x, Comparable y, Comparable z , Integer page) throws DBAppException {
 		this.insertHelper(x, y, z , page, new LinkedList<Octree>());
 	}
-	public void deletePageFromTree(Comparable x, Comparable y, Comparable z , Integer page) { // deletes ONLY one instance of the page, in case multiple instances of the same page exist in the same point
+	public void deletePageFromTree(Comparable x, Comparable y, Comparable z , Integer page) throws DBAppException { // deletes ONLY one instance of the page, in case multiple instances of the same page exist in the same point
 		this.deleteHelper(x, y, z , page, new LinkedList<Octree>());
 	}
-	public void updatePageAtPoint(Comparable x, Comparable y, Comparable z , Integer oldPage, Integer newPage) {// replaces ONLY one instance of the page, in case multiple instances of the same page exist in the same point
+	public void updatePageAtPoint(Comparable x, Comparable y, Comparable z , Integer oldPage, Integer newPage) throws DBAppException {// replaces ONLY one instance of the page, in case multiple instances of the same page exist in the same point
 		validateNotNull(x, y, z);
 		if(!this.pointExists(x, y, z))
-			throw new IllegalArgumentException("Point " + x + " " + y + " " + z + " doesn't exist in the octree");
+			throw new DBAppException("Point " + x + " " + y + " " + z + " doesn't exist in the octree");
 		deletePageFromTree(x, y, z, oldPage);
 		insertPageIntoTree(x, y, z, newPage);
 	}	
-	public LinkedList<Integer> getPagesAtPoint(Comparable x, Comparable y, Comparable z) {
+	public LinkedList<Integer> getPagesAtPoint(Comparable x, Comparable y, Comparable z) throws DBAppException {
 		validateNotNull(x, y, z);
 		if(!this.pointExists(x, y, z))
 			//throw new IllegalArgumentException("Point " + x + " " + y + " " + z + " doesn't exist in the octree");
@@ -117,7 +117,7 @@ public class Octree implements Serializable {
 	}
 	
 
-	public boolean pointExists(Comparable x, Comparable y, Comparable z){ // checks existence in the leaf level only
+	public boolean pointExists(Comparable x, Comparable y, Comparable z) throws DBAppException{ // checks existence in the leaf level only
 		validatePointIsInTreeBounday(x, y, z);
 		if(this.isLeaf())
 			return records.containsKey(new OctPoint(x,y,z));
@@ -136,7 +136,7 @@ public class Octree implements Serializable {
 	}
 
 //// below are helper private methods ////
-	private void insertHelper(Comparable x, Comparable y, Comparable z , Integer page , LinkedList<Octree> traversedSoFar) {
+	private void insertHelper(Comparable x, Comparable y, Comparable z , Integer page , LinkedList<Octree> traversedSoFar) throws DBAppException {
 		validateNotNull(x, y, z);
 		validatePointIsInTreeBounday(x, y, z);		
 		traversedSoFar.add(this);
@@ -167,10 +167,10 @@ public class Octree implements Serializable {
 			
 		}
 	}
-	private void deleteHelper(Comparable x, Comparable y, Comparable z , Integer page, LinkedList<Octree> traversedSoFar) {
+	private void deleteHelper(Comparable x, Comparable y, Comparable z , Integer page, LinkedList<Octree> traversedSoFar) throws DBAppException {
 		validateNotNull(x, y, z);
 		if(!this.pointExists(x, y, z))
-			throw new IllegalArgumentException("PointToDelete " + x + " " + y + " " + z + " doesn't exist in the octree");
+			throw new DBAppException("'IllegalArguments in Octree': PointToDelete " + x + " " + y + " " + z + " doesn't exist in the octree");
 		traversedSoFar.addLast(this);
 		if(! this.isLeaf())
 		{
@@ -183,7 +183,7 @@ public class Octree implements Serializable {
 			LinkedList<Integer> pages = records.get(PointToDelete);
 			boolean succefullyDeleted = pages.remove(page); // remove page from list of pages
 			if(!succefullyDeleted)
-				throw new IllegalArgumentException("the input page " + page + "  was not found in the list of pages of Point " + x + " " + y + " " + z + "");	
+				throw new DBAppException("'IllegalArguments in Octree': the input page " + page + "  was not found in the list of pages of Point " + x + " " + y + " " + z + "");	
 			if(pages.size() == 0)  // if the list became empty, remove the point with its empty list from the records
 			{
 				records.remove(PointToDelete);
@@ -220,7 +220,7 @@ public class Octree implements Serializable {
 		this.point = null;
 		
 	}
-	private void split() {
+	private void split() throws DBAppException {
 		
 		Comparable Xsmall = this.leftBackBottom.getX();
 		Comparable Ysmall = this.leftBackBottom.getY();
@@ -259,22 +259,22 @@ public class Octree implements Serializable {
 		records = null; // after all the records are transferred to the children, the records are no longer needed in the parent
 
 	}	
-	private void validateNotNull(Comparable x, Comparable y, Comparable z) {
+	private void validateNotNull(Comparable x, Comparable y, Comparable z) throws DBAppException {
 		if(x == null)
-			throw new IllegalArgumentException("x axis value can't be null");
+			throw new DBAppException("'IllegalArguments in Octree': x axis value can't be null");
 		if(y == null)
-			throw new IllegalArgumentException("y axis value can't be null");
+			throw new DBAppException("'IllegalArguments in Octree': y axis value can't be null");
 		if(z == null)
-			throw new IllegalArgumentException("z axis value can't be null");
+			throw new DBAppException("'IllegalArguments in Octree': z axis value can't be null");
 
 
 	}
-	private void  validatePointIsInTreeBounday(Comparable x, Comparable y, Comparable z) {
+	private void  validatePointIsInTreeBounday(Comparable x, Comparable y, Comparable z) throws DBAppException {
 		boolean xIsInBoundary = (x.compareTo(this.leftBackBottom.getX()) >= 0) && (x.compareTo(this.rightForwardUp.getX()) <= 0);
 		boolean yIsInBoundary = (y.compareTo(this.leftBackBottom.getY()) >= 0) && (y.compareTo(this.rightForwardUp.getY()) <= 0);
 		boolean zIsInBoundary = (z.compareTo(this.leftBackBottom.getZ()) >= 0) && (z.compareTo(this.rightForwardUp.getZ()) <= 0);
 		if(!xIsInBoundary || !yIsInBoundary || !zIsInBoundary)
-			throw new IllegalArgumentException("Point " + x + " " + y + " " + z + " can't exist in the tree because it is not even between " + leftBackBottom + " and " + rightForwardUp + " !");
+			throw new DBAppException("'IllegalArguments in Octree': Point " + x + " " + y + " " + z + " can't exist in the tree because it is not even between " + leftBackBottom + " and " + rightForwardUp + " !");
 	}	
 	private void printTreeHelper(int curLevel) { // to visualize the output, each level has a unique indentation before it
 
