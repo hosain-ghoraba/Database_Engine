@@ -71,19 +71,14 @@ public class CheckerOfString {
     public String nextWord() throws DBAppException {
         if (wordIndex == words.size())
             throw new DBAppException("invalid SQL program");
-        if (words.get(wordIndex).charAt(0) != '\'')
-            return words.get(wordIndex++).toLowerCase();
-        else
-            return words.get(wordIndex++);
+        return words.get(wordIndex++);
     }
 
     public String readNextWord() throws DBAppException {
         if (wordIndex == words.size())
             throw new DBAppException("invalid SQL program");
-        if (words.get(wordIndex).charAt(0) != '\'')
-            return words.get(wordIndex).toLowerCase();
-        else
-            return words.get(wordIndex);
+        
+        return words.get(wordIndex);
     }
     public boolean hasMoreWords() {
         return !(wordIndex == words.size());

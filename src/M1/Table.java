@@ -16,9 +16,6 @@ public class Table implements Serializable
     private String strClusteringKeyColumn;
     private Vector<Column> vecColumns;
 
-    public Vector<Octree> getIndex() {
-        return index;
-    }
 
     private Vector<String> vecPages;
     private Hashtable<String,String> htblColNameType;
@@ -26,13 +23,12 @@ public class Table implements Serializable
     private Hashtable<String,String> htblColNameMax;
     private Hashtable<String,Integer> htblColNameIndex = new Hashtable<>(); //helper
     private int MaximumRowsCountinTablePage, pagesIDcounter = -1;
-    private Vector<Octree> index;
     private Vector<Tuple3> indicies;
 
     ///////////////3-Tuple
 
     
-	static class Tuple3 implements Serializable{
+	public static class Tuple3 implements Serializable{
 		String X_idx, Y_idx, Z_idx; //column names
 		
 		public Tuple3(String X_index,String Y_index,String Z_index) {
@@ -108,7 +104,6 @@ public class Table implements Serializable
         this.strTableName = strTableName;
         this.strClusteringKeyColumn = strClusteringKeyColumn;
         this.MaximumRowsCountinTablePage = MaximumRowsCountinTablePage;
-        index = new Vector<>();
         indicies = new Vector<>();
         vecColumns = new Vector<>(); // initially ,the vector size is by default 10
 

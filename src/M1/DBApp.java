@@ -20,7 +20,7 @@ import M2.Octree;
 import M2.SQLTerm;
 
 public class DBApp {
-    private static boolean OUTPUT_RESULTS = false; // if true, print the results of the queries to the console
+    private static boolean OUTPUT_RESULTS = true; // if true, print the results of the queries to the console
                                                   //TODO: change this to false when submitting to improve performance
     static NULL NULL = new NULL();
     public static int MaximumRowsCountinTablePage;
@@ -548,7 +548,7 @@ public class DBApp {
 
                 	output2.append(cols2[i]+" = ");
 					output2.append(htblColNameVal.getOrDefault(cols2[i], "Null"));
-					if( i < cols2.length-1) output2.append("AND ");
+					if( i < cols2.length-1) output2.append(" AND ");
 					else output2.append(";");
 				}
             }
@@ -1241,7 +1241,7 @@ public class DBApp {
 
       		Hashtable<String, Object> delete4 = new Hashtable<>(); //full index test (unordered)
       		delete4.put("Job", "carpenter");
-      		delete4.put("age", 12);
+      		delete4.put("age", 26);
       		delete4.put("Name", "bebo"); 
       		
       		Hashtable<String, Object> delete5 = new Hashtable<>(); //full index test (unordered) with CK given
@@ -1265,8 +1265,11 @@ public class DBApp {
       		update3.put("Job", NULL);
 
 
-//      		db.deleteFromTable("University", delete5);
-//      		db.updateTable("University", "45", update1);
+//			db.deleteFromTable("University", delete1);
+//			db.deleteFromTable("University", delete3);
+//			db.deleteFromTable("University", delete4);
+//			db.deleteFromTable("University", delete5);
+//			db.updateTable("University", "45", update1);
       		
       		
 //
@@ -1288,8 +1291,8 @@ public class DBApp {
 //        }
         System.out.println(db.listofCreatedTables.toString());
 
-//        Table x = (Table) deserialize("src/resources/tables/University/University.ser");
-//        System.out.println(x);
+        Table x = (Table) deserialize("src/resources/tables/University/University.ser");
+        System.out.println(x);
 //        Octree o = (Octree) deserialize("src/resources/tables/University/Indicies/" + x.getIndices().get(0).getFilename());
 //        o.printOctree();
 

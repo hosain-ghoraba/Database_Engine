@@ -2,6 +2,7 @@ package M2;
 
 import M1.*;
 import M1.DBAppException;
+import M1.Table.Tuple3;
 
 import java.io.*;
 
@@ -10,6 +11,38 @@ import java.util.*;
 import M1.DBApp;
 
 public class Parser {
+	
+	public Parser() throws DBAppException {
+		Scanner sc = new Scanner(System.in);
+		System.out.println(" you must end every sql statement with space before pressing enter"
+		        +"\n\n ----EXAMPLES OF SQL STATEMENTS FOR TESTING"
+		                +"\ncreate table employee(id int check(id between 1 and 1000),name varchar check (name between 'a' and 'zzzzzzzz'),salary double check(salary between 0 and 10000),dob date check(dob between '1930/01/01' and '2030/12/31'),primary key(id))"
+		                +"\ninsert into employee values(103,'akrm',1000,'1990/10/10);"
+		                +"\ndelete from employee where id = 103 ;"
+		                +"\nupdate employee set name = 'akram' where id = 103 ;"
+		                +"\ndrop table employee ;"
+		                +"\ndrop index nameAgeIDIndex on Employee ;");
+		        
+		System.out.println("Enter your SQL Statements HERE & to end console session type 'exit' or 'end':::::\n\n");
+		
+		while (true) {
+			System.out.println("Enter statement: ");
+			String instruction = sc.nextLine();
+			if (instruction.equalsIgnoreCase("exit") || instruction.equalsIgnoreCase("end")) {
+				System.out.println("\n\nEXITED Program! Thank You for trying");
+				break;
+			}
+			//CheckerOfString sa = new CheckerOfString(instruction);
+
+			Iterator res = this.parseSQL(instruction);
+			while (res != null && res.hasNext()) {
+				System.out.println(res.next());
+			}
+
+		}
+		DBApp d = new DBApp();
+		d.toString();
+	}
 
     public Iterator parseSQL(String s) throws DBAppException {
         return parseSQL(new StringBuffer(s));
@@ -42,6 +75,12 @@ public class Parser {
                 return null;
             } else if (command.equals("select")) {
                 return select(checker);
+            }else if (command.equals("drop")) {
+				drop(checker);
+				return null;
+            } else if (command.equals("show")) {
+				show(checker);
+				return null;
             } else {
                 throw new DBAppException("undefined instruction " + command);
             }
@@ -108,6 +147,9 @@ public class Parser {
                 }
                 String value = checker.nextWord();
                 Column c = table.getColumn(columnName);
+                if(c == null) {
+                	throw new DBAppException("Invalid column name");
+                }
                 String type = c.getStrColType();
                 if (type.equals("java.lang.String") || type.equals("java.util.Date"))
                     if (value.charAt(0) != '\'' || value.charAt(value.length() - 1) != '\'')
@@ -182,7 +224,18 @@ public class Parser {
                         else
                             value = value.substring(1, value.length() - 1);
 
-                    Object val = Methods2.parseType(value, type);
+                    Object val;
+                    try {
+						
+                    	val = Methods2.parseType(value, type);
+					} catch (Exception e) {
+						System.err.print("Check table definition:\n "+ tableName + " ===> ");
+						for (Column column : columns) {
+							System.err.print( column.getStrColName()+"::" + column.getStrColType()+" , ");
+						}
+						System.err.println("\n Please retry with same order!\n");
+						throw e;
+					}
                     colNameValue.put(columns.get(i).getStrColName(), val);
                     if (checker.readNextWord().equals(")"))
                         break;
@@ -324,75 +377,136 @@ public class Parser {
         file.delete();
     }
 
+    private static void removeIndexOnColsFromCSV(String strTableName,String indxName) throws DBAppException{
+        // first, read all data and extract all tables other than the given table
+        List<String> data = new ArrayList<>();
+        BufferedReader br;
+        try {
+            br = new BufferedReader(new FileReader("MetaData.csv"));
+            String line = br.readLine();
 
-    public static void main(String[] args) throws DBAppException {
-         // you must end every sql statement with space before pressing enter
+            while (line != null) {
+                String[] attributes = line.split(",");
+                if(attributes[0].equals(strTableName) && attributes[4].equals(indxName)){
+                    line="";
+                    for(int i=0;i<attributes.length;i++){
+                        if(i!=4)
+                            line+=attributes[i]+  ( (i<6)? ",": "" );
+                        else
+                            line+="null,";
+                    }
 
-// مثال لتجربة الكود
-        //create table employee(id int check(id between 1 and 1000),name varchar check (name between 'a' and 'zzzzzzzz'),salary double check(salary between 0 and 10000),dob date check(dob between '1930/01/01' and '2030/12/31'),primary key(id))
-        //insert into employee values(103,'akrm',1000,'1990/10/10);
-        //delete from employee where id = 103 ;
-        //update employee set name = 'akram' where id = 103 ;
-
-
-        Parser p = new Parser();
- DBApp dbApp = new DBApp();
-        Scanner sc = new Scanner(System.in);
-        while (true) {
-            String instruction = sc.nextLine();
-            if (instruction.equals("exit"))
-                break;
-            CheckerOfString sa = new CheckerOfString(instruction);
-            if (sa.readNextWord().equals("show")) {
-                sa.nextWord();
-                if (sa.readNextWord().equals("table")) {
-                    sa.nextWord();
-                    String tableName = sa.nextWord();
-                    String path = "src/resources/tables/" + tableName + "/" + tableName + ".ser";
-                    Table t = (Table) DBApp.deserialize(path);
-                    System.out.println(t);
-                } else if (sa.nextWord().equals("index")) {
-                    int id = Integer.parseInt(sa.nextWord());
-                    sa.nextWord();
-                    sa.nextWord();
-                    String tableName = sa.nextWord();
-                    String path = "src/resources/tables/" + tableName + "/" + tableName + ".ser";
-                    Table t = (Table) DBApp.deserialize(path);
-                    System.out.println(t.getIndex().get(id));
                 }
-            } else if (sa.nextWord().equals("drop")) {
-                if (sa.readNextWord().equals("table")) {
-                    sa.nextWord();
-                    String tableName = sa.nextWord();
-                    dbApp.DELETETableDependencies(tableName);
-                    String path = "src/resources/tables/" + tableName;
-                    File index = new File(path);
-                    deleteDirectory(index);
-                    System.out.println("the table " + tableName + " has been deleted");
-                } else if (sa.nextWord().equals("index")) {
-                    int id = Integer.parseInt(sa.nextWord());
-                    sa.nextWord();
-                    sa.nextWord();
-                    String tableName = sa.nextWord();
-                    String path = "src/resources/tables/" + tableName + "/index" + id;
-                    File f = new File(path);
-                    deleteDirectory(f);
-                    path = "src/resources/tables/" + tableName + "/" + tableName + ".ser";
-                    Table t = (Table) DBApp.deserialize(path);
-                    t.getIndex().remove(id);
-                    DBApp.serialize(path, t);
-                    System.out.println("the index " + id + " on table " + tableName + " have been deleted");
-                }
-            } else {
-                Iterator res = p.parseSQL(instruction);
-                while (res != null && res.hasNext()) {
-                    System.out.println(res.next());
-                }
+                data.add(line);
+
+                line = br.readLine();
             }
-
+            br.close();
+        } catch ( IOException e) {
+            throw new DBAppException("Error reading csv file");
         }
-        DBApp d = new DBApp();
-        d.toString();
+
+        // second, write the new data to the csv file
+        try {
+            File file = new File("MetaData.csv");
+            new FileWriter(file, false).close();;
+            FileWriter fr = new FileWriter(file, true);
+            PrintWriter printWriter = new PrintWriter(fr);
+            StringBuilder stringBuilder = new StringBuilder();
+            for (String line : data) {
+                stringBuilder.append(line);
+                stringBuilder.append('\n');
+            }
+            printWriter.write(stringBuilder.toString());
+            printWriter.flush();
+            printWriter.close();
+        } catch (IOException e) {
+            throw new DBAppException(e.getMessage());
+        }
+
+    }
+    
+    public static void drop(CheckerOfString sa) throws DBAppException {
+		DBApp dbApp = new DBApp();
+
+		if (sa.readNextWord().equals("table")) {
+			sa.nextWord();
+			String tableName = sa.nextWord();
+			dbApp.DELETETableDependencies(tableName);
+			String path = "src/resources/tables/" + tableName;
+			File index = new File(path);
+			deleteDirectory(index);
+			System.out.println("the table " + tableName + " has been deleted");
+		} else if (sa.nextWord().equals("index")) {
+			String indx = sa.nextWord();
+			sa.nextWord();
+			// sa.nextWord();
+			String tableName = sa.nextWord();
+			String path = "src/resources/tables/" + tableName + "/Indicies/" + indx + ".ser";
+			File f = new File(path);
+			deleteDirectory(f);
+			path = "src/resources/tables/" + tableName + "/" + tableName + ".ser";
+			Table t = (Table) DBApp.deserialize(path);
+
+			Iterator<Tuple3> itr = t.getIndices().iterator();
+			while (itr.hasNext()) { // remove index from Vector of table indicies
+				Table.Tuple3 tuple = (Table.Tuple3) itr.next();
+
+				if (tuple.getFilename().equals(indx + ".ser")) {
+					itr.remove();
+					break;
+				}
+			}
+
+			// remove index from csv and replace index field
+			removeIndexOnColsFromCSV(tableName, indx);
+
+			DBApp.serialize(path, t);
+			System.out.println("the index " + indx + " on table " + tableName + " have been deleted");
+		}
+	}
+    
+    
+    public static void show(CheckerOfString sa) throws  DBAppException {
+    	try {
+	    	if (sa.readNextWord().equals("show")) {
+	            sa.nextWord();
+	            if (sa.readNextWord().equals("table")) {
+	                sa.nextWord();
+	                String tableName = sa.nextWord();
+	                String path = "src/resources/tables/" + tableName + "/" + tableName + ".ser";
+	                Table t = (Table) DBApp.deserialize(path);
+	                System.out.println(t);
+	            } else if (sa.nextWord().equals("index")) {
+	                int id = Integer.parseInt(sa.nextWord());
+	                sa.nextWord();
+	                sa.nextWord();
+	                String tableName = sa.nextWord();
+	                String path = "src/resources/tables/" + tableName + "/" + tableName + ".ser";
+	                Table t = (Table) DBApp.deserialize(path);
+	                t.getIndices().get(id).getOctree(tableName).printOctree();;
+	            }
+	        } 
+    	} catch (NumberFormatException e) {
+			throw new DBAppException("Input error"+ e.getMessage());
+		}
+	}
+    
+
+    public static void STARTCODE() throws DBAppException {
+		Parser p = new Parser();
+
+	}
+    public static void main(String[] args) throws DBAppException {
+         // you must end every sql statement with space before pressing enter AND to END type exit or end
+    
+    //EXAMPLE FOR TESTING
+            //create table employee(id int check(id between 1 and 1000),name varchar check (name between 'a' and 'zzzzzzzz'),salary double check(salary between 0 and 10000),dob date check(dob between '1930/01/01' and '2030/12/31'),primary key(id))
+            //insert into employee values(103,'akrm',1000,'1990/10/10);
+            //delete from employee where id = 103 ;
+            //update employee set name = 'akram' where id = 103 ;
+
+            STARTCODE();
 
     }
 }

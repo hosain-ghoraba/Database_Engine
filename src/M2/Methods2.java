@@ -177,7 +177,7 @@ public class Methods2 {
 				return new SimpleDateFormat("yyyy/MM/dd").parse(val);
 			}
 			return val;
-		} catch (ParseException i) {
+		} catch (ParseException | NumberFormatException i) {
 			throw new DBAppException("Cannot parse value to passed type");
 		}
 	}
