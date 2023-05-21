@@ -1,1 +1,1 @@
-# Simple_Database_Engine
+A simulation of a simplified SQL database engine
