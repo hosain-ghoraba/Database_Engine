@@ -1,6 +1,0 @@
-
- TA questions : 
-
-1 - should I assume in select that : if an index will be used,the three SQLterms used in index will come right after each other in the arrSQLTerms array and in the right order ?        
-
-*/
